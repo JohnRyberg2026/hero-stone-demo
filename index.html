@@ -428,25 +428,35 @@ async function chooseRecommendation(r){
 
 $("completeStepBtn").onclick = async()=>{
   if(!stepId) return status("adventureStatus","No demo step found.");
-  const {error}=await sb.from("adventure_steps").update({status:"completed"}).eq("id",stepId);
+  const {error}=await sb.rpc("set_alpha_adventure_step_status",{p_step_id:stepId,p_status:"completed"});
   if(error) return status("adventureStatus","Step error: "+error.message);
+  $("completeStepBtn").disabled=true;
+  $("completeStepBtn").textContent="Step Completed ✓";
   status("adventureStatus","Step completed — simulated for the Kickstarter demonstration.");
 };
 
-$("completeAdventureBtn").onclick = ()=>{
-  show("completeCard",true); step(6); $("completeCard").scrollIntoView({behavior:"smooth"});
+$("completeAdventureBtn").onclick = async()=>{
+  if(!adventureId) return status("adventureStatus","No demo adventure selected.");
+  status("adventureStatus","Completing shared demo adventure...");
+  const {error}=await sb.rpc("complete_demo_adventure",{p_adventure_id:adventureId});
+  if(error) return status("adventureStatus","Completion error: "+error.message);
+  show("adventureCard",false);
+  show("completeCard",true);
+  step(6);
+  status("completeStatus","Adventure Complete — both partners are synchronized.\nEach partner may now save their own private demo feedback.");
+  $("completeCard").scrollIntoView({behavior:"smooth"});
 };
 
 $("saveFeedbackBtn").onclick = async()=>{
   if(!adventureId) return status("completeStatus","No adventure selected.");
-  status("completeStatus","Saving demo completion...");
-  const {error}=await sb.rpc("complete_adventure_with_feedback",{
+  status("completeStatus","Saving your private demo feedback...");
+  const {error}=await sb.rpc("save_demo_adventure_feedback",{
     p_adventure_id:adventureId,
     p_rating:$("rating").value,
     p_comment:$("feedback").value.trim()
   });
-  if(error) return status("completeStatus","Completion error: "+error.message);
-  status("completeStatus","Demo adventure completed successfully.\nReal learning profile remains protected from Demo Mode.");
+  if(error) return status("completeStatus","Feedback error: "+error.message);
+  status("completeStatus","Your demo feedback was saved privately.\nReal learning profile remains protected from Demo Mode.");
 };
 
 $("showHistoryBtn").onclick = async()=>{
