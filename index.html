@@ -96,12 +96,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <input id="mood" value="fun,spontaneous" placeholder="Mood, comma separated"/>
     <textarea id="requestNote" rows="2" placeholder="Optional request"></textarea>
     <button id="questBtn">Find Our Adventure</button>
+    <button class="secondary" id="syncPartnerBtn">Load Partner’s Adventure</button>
     <div class="status" id="questStatus">Demo mode keeps this experience separate from real relationship history.</div>
   </section>
 
   <section class="card hidden" id="recommendationsCard">
     <h2>4. Choose an adventure</h2>
+    <p class="small">Both phones can load the same shared choices. Only one partner needs to choose.</p>
     <div id="recommendations"></div>
+    <button class="secondary" id="refreshPartnerBtn">Refresh Partner Sync</button>
   </section>
 
   <section class="card hidden" id="adventureCard">
@@ -237,7 +240,7 @@ $("questBtn").onclick = async()=>{
 };
 
 async function loadRecommendations(){
-  const {data,error}=await sb.from("recommendations").select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget").eq("request_id",requestId).order("created_at");
+  const {data,error}=await sb.from("recommendations").select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at").eq("request_id",requestId).order("created_at");
   if(error) return status("questStatus","Recommendation load error: "+error.message);
   const box=$("recommendations"); box.innerHTML="";
   (data||[]).forEach(r=>{
@@ -248,6 +251,70 @@ async function loadRecommendations(){
   });
   show("recommendationsCard",true);
 }
+
+
+async function loadSharedDemoState(){
+  if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
+  status("questStatus","Checking the shared HEART STONE...");
+
+  const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
+    .select("id,created_at")
+    .eq("heart_stone_id",heartStoneId)
+    .eq("is_demo",true)
+    .order("created_at",{ascending:false})
+    .limit(1);
+  if(reqErr) return status("questStatus","Partner sync error: "+reqErr.message);
+  const latest=reqs?.[0];
+  if(!latest) return status("questStatus","No shared demo adventure has been created yet.");
+
+  requestId=latest.id;
+  const {data:recs,error:recErr}=await sb.from("recommendations")
+    .select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at")
+    .eq("request_id",requestId)
+    .order("created_at");
+  if(recErr) return status("questStatus","Partner sync error: "+recErr.message);
+  if(!recs?.length) return status("questStatus","The shared request exists, but its choices are not ready yet. Try Refresh Partner Sync.");
+
+  const selected=recs.find(r=>r.selected_at);
+  if(selected){
+    const {data:advs,error:advErr}=await sb.from("adventures")
+      .select("id,title,status,source_recommendation_id")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .eq("source_recommendation_id",selected.id)
+      .order("created_at",{ascending:false})
+      .limit(1);
+    if(advErr) return status("questStatus","Partner adventure load error: "+advErr.message);
+    if(advs?.[0]){
+      adventureId=advs[0].id;
+      $("adventureTitle").textContent=selected.title;
+      $("adventureDescription").textContent=selected.summary||"";
+      show("recommendationsCard",false);
+      show("adventureCard",true);
+      const {data:steps}=await sb.from("adventure_steps").select("id,status,title,description").eq("adventure_id",adventureId).order("position");
+      stepId=steps?.[0]?.id||null;
+      status("questStatus","Partner sync complete — the selected adventure is now on this phone.");
+      step(5);
+      $("adventureCard").scrollIntoView({behavior:"smooth"});
+      return;
+    }
+  }
+
+  const box=$("recommendations"); box.innerHTML="";
+  recs.forEach(r=>{
+    const div=document.createElement("div"); div.className="recommendation";
+    div.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="small">${escapeHtml(r.recommendation_class||"")}</div><p>${escapeHtml(r.summary||"")}</p><button>Choose This</button>`;
+    div.querySelector("button").onclick=()=>chooseRecommendation(r);
+    box.appendChild(div);
+  });
+  show("recommendationsCard",true);
+  status("questStatus","Partner sync complete — shared adventure choices loaded.");
+  step(4);
+  $("recommendationsCard").scrollIntoView({behavior:"smooth"});
+}
+
+$("syncPartnerBtn").onclick=loadSharedDemoState;
+$("refreshPartnerBtn").onclick=loadSharedDemoState;
 
 async function chooseRecommendation(r){
   const {data,error}=await sb.rpc("accept_alpha_recommendation",{p_recommendation_id:r.id});
