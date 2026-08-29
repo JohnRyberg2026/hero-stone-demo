@@ -144,6 +144,9 @@ let heartStoneId = localStorage.getItem("hs_heart_stone_id") || "";
 let requestId = null;
 let adventureId = null;
 let stepId = null;
+let autoSyncTimer = null;
+let lastSharedFingerprint = "";
+let autoSyncBusy = false;
 
 const $ = id => document.getElementById(id);
 function status(id,msg){ $(id).textContent=msg; }
@@ -175,6 +178,7 @@ async function loadExistingHeartStone(){
     localStorage.setItem("hs_heart_stone_id",id);
     status("inviteStatus","Already connected. HEART STONE ID: "+id+"\nNo new invitation is needed.");
     step(3);
+    startAutomaticPartnerSync();
   }
   return id;
 }
@@ -189,7 +193,7 @@ $("signInBtn").onclick = async()=>{
 };
 
 $("signOutBtn").onclick = async()=>{
-  await sb.auth.signOut(); status("authStatus","Signed out."); show("signOutBtn",false);
+  await sb.auth.signOut(); if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; } status("authStatus","Signed out."); show("signOutBtn",false);
 };
 
 $("createInviteBtn").onclick = async()=>{
@@ -202,7 +206,7 @@ $("createInviteBtn").onclick = async()=>{
   if(error) return status("inviteStatus","Invitation error: "+error.message);
   const row=Array.isArray(data)?data[0]:data;
   heartStoneId=row?.heart_stone_id || heartStoneId;
-  if(heartStoneId) localStorage.setItem("hs_heart_stone_id",heartStoneId);
+  if(heartStoneId){ localStorage.setItem("hs_heart_stone_id",heartStoneId); startAutomaticPartnerSync(); }
   $("inviteToken").value=row?.invitation_token||"";
   status("inviteStatus","Invitation created.\nHEART STONE ID: "+heartStoneId+"\nCopy the token to Phone 2.");
 };
@@ -215,6 +219,7 @@ $("acceptInviteBtn").onclick = async()=>{
   localStorage.setItem("hs_heart_stone_id",heartStoneId);
   status("inviteStatus","Connected. HEART STONE ID: "+heartStoneId);
   step(3);
+  startAutomaticPartnerSync();
 };
 
 $("questBtn").onclick = async()=>{
@@ -331,6 +336,79 @@ async function loadSharedDemoState(){
   status("questStatus","Partner sync complete — shared adventure choices loaded.");
   step(4);
   $("recommendationsCard").scrollIntoView({behavior:"smooth"});
+}
+
+
+
+async function getSharedDemoFingerprint(){
+  if(!heartStoneId) return "";
+  const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
+    .select("id,created_at")
+    .eq("heart_stone_id",heartStoneId)
+    .eq("is_demo",true)
+    .order("created_at",{ascending:false})
+    .limit(1);
+  if(reqErr || !reqs?.[0]) return "";
+
+  const req=reqs[0];
+  const {data:recs,error:recErr}=await sb.from("recommendations")
+    .select("id,selected_at")
+    .eq("request_id",req.id)
+    .order("created_at");
+  if(recErr) return "";
+
+  const selected=(recs||[]).find(r=>r.selected_at);
+  let adventure=null;
+  let steps=[];
+  if(selected){
+    const {data:advs}=await sb.from("adventures")
+      .select("id,status,updated_at")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .eq("source_recommendation_id",selected.id)
+      .order("created_at",{ascending:false})
+      .limit(1);
+    adventure=advs?.[0]||null;
+    if(adventure){
+      const {data:stepRows}=await sb.from("adventure_steps")
+        .select("id,status")
+        .eq("adventure_id",adventure.id)
+        .order("position");
+      steps=stepRows||[];
+    }
+  }
+
+  return JSON.stringify({
+    request:req.id,
+    recommendations:(recs||[]).map(r=>[r.id,r.selected_at||null]),
+    adventure:adventure ? [adventure.id,adventure.status,adventure.updated_at||null] : null,
+    steps:steps.map(x=>[x.id,x.status])
+  });
+}
+
+async function checkForPartnerUpdates(){
+  if(autoSyncBusy || !heartStoneId) return;
+  autoSyncBusy=true;
+  try{
+    const fp=await getSharedDemoFingerprint();
+    if(fp && fp!==lastSharedFingerprint){
+      const hadPrevious=!!lastSharedFingerprint;
+      lastSharedFingerprint=fp;
+      if(hadPrevious){
+        await loadSharedDemoState();
+        status("questStatus","Partner update received automatically — both phones are synchronized.");
+      }
+    }
+  } finally {
+    autoSyncBusy=false;
+  }
+}
+
+function startAutomaticPartnerSync(){
+  if(autoSyncTimer) clearInterval(autoSyncTimer);
+  lastSharedFingerprint="";
+  checkForPartnerUpdates();
+  autoSyncTimer=setInterval(checkForPartnerUpdates,2000);
 }
 
 $("syncPartnerBtn").onclick=loadSharedDemoState;
