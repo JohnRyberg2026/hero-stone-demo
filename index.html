@@ -269,6 +269,10 @@ async function loadExistingHeartStone(){
     setConnectedUI(true);
     step(3);
     startAutomaticPartnerSync();
+    // Resume an in-progress shared demo automatically. If one exists,
+    // the Ask HEART STONE chooser is hidden and the couple returns
+    // directly to Our Adventure without needing to press anything.
+    await loadExistingActiveDemoAdventure();
   }
   return id;
 }
