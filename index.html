@@ -42,6 +42,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .dot.on{background:var(--accent)}
 .hero{font-size:26px;font-weight:800;line-height:1.1;margin:4px 0 8px}
 .bigcheck{font-size:48px;text-align:center}
+.field-label{font-weight:800;margin:16px 0 7px;display:block}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:4px}
+.choice-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.choice{background:#f4ebe2;color:#2c211c;border:1px solid #e0cdbb;margin:0;padding:11px 8px;font-weight:700}
+.choice.selected{background:#9d2638;color:#fff;border-color:#9d2638}
+.choice small{display:block;font-weight:500;font-size:11px;opacity:.82;margin-top:2px}
+.helper{font-size:12px;color:#7b6c62;margin:4px 0 10px}
 .footer{text-align:center;color:#9a8b80;font-size:11px;margin-top:20px}
 </style>
 </head>
@@ -60,7 +67,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   <section class="card" id="authCard">
     <h2>1. Sign in</h2>
-    <p>Use one Alpha account on each phone.</p>
     <input id="email" type="email" placeholder="Email"/>
     <input id="password" type="password" placeholder="Password"/>
     <button id="signInBtn">Sign In</button>
@@ -87,29 +93,74 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <section class="card" id="questCard">
     <h2>3. Ask HEART STONE</h2>
     <div class="hero">What should we do together?</div>
+
+    <label class="field-label" for="adventureType">What kind of experience sounds good?</label>
     <select id="adventureType">
       <option value="date_quest">Date Quest</option>
       <option value="wild_adventure">Wild Adventure</option>
       <option value="surprise">Surprise Us</option>
     </select>
-    <div class="row">
-      <input id="minutes" type="number" value="120" min="15" placeholder="Minutes"/>
-      <input id="distance" type="number" value="30" min="1" placeholder="Drive mins"/>
+
+    <span class="field-label">How much time do we have?</span>
+    <div class="choice-grid" data-choice-for="minutes">
+      <button type="button" class="choice" data-value="45">Quick date<small>About 45 minutes</small></button>
+      <button type="button" class="choice selected" data-value="120">A couple hours<small>About 2 hours</small></button>
+      <button type="button" class="choice" data-value="240">Half a day<small>About 4 hours</small></button>
+      <button type="button" class="choice" data-value="360">Make a day of it<small>About 6 hours</small></button>
     </div>
-    <input id="budget" value="moderate" placeholder="Budget"/>
-    <input id="whenLabel" value="today" placeholder="When"/>
-    <input id="mood" value="fun,spontaneous" placeholder="Mood, comma separated"/>
-    <textarea id="requestNote" rows="2" placeholder="Optional request"></textarea>
+
+    <span class="field-label">How far do we feel like going?</span>
+    <div class="choice-grid" data-choice-for="distance">
+      <button type="button" class="choice" data-value="10">Stay close<small>Within 10 minutes</small></button>
+      <button type="button" class="choice" data-value="20">Nearby<small>Within 20 minutes</small></button>
+      <button type="button" class="choice selected" data-value="30">A little exploring<small>Within 30 minutes</small></button>
+      <button type="button" class="choice" data-value="60">Worth the drive<small>Up to an hour</small></button>
+    </div>
+
+    <span class="field-label">What feels comfortable for spending?</span>
+    <div class="choice-grid three" data-choice-for="budget">
+      <button type="button" class="choice" data-value="simple">$<small>Keep it simple</small></button>
+      <button type="button" class="choice selected" data-value="moderate">$$<small>A little treat</small></button>
+      <button type="button" class="choice" data-value="special">$$$<small>Make it special</small></button>
+    </div>
+
+    <span class="field-label">When are we going?</span>
+    <div class="choice-grid three" data-choice-for="whenLabel">
+      <button type="button" class="choice selected" data-value="today">Tonight</button>
+      <button type="button" class="choice" data-value="weekend">This weekend</button>
+      <button type="button" class="choice" data-value="later">Another day</button>
+    </div>
+
+    <span class="field-label">What kind of mood are we in?</span>
+    <p class="helper">Choose as many as you like.</p>
+    <div class="choice-grid three" id="moodChoices">
+      <button type="button" class="choice selected" data-mood="fun">Fun</button>
+      <button type="button" class="choice" data-mood="romantic">Romantic</button>
+      <button type="button" class="choice" data-mood="relaxed">Relaxed</button>
+      <button type="button" class="choice" data-mood="adventurous">Adventurous</button>
+      <button type="button" class="choice selected" data-mood="spontaneous">Spontaneous</button>
+      <button type="button" class="choice" data-mood="surprise">Surprise us</button>
+    </div>
+
+    <label class="field-label" for="requestNote">Anything you'd love HEART STONE to know?</label>
+    <textarea id="requestNote" rows="2" placeholder="For example: somewhere outside, dessert sounds good, or nothing too crowded..."></textarea>
+
+    <input id="minutes" type="hidden" value="120"/>
+    <input id="distance" type="hidden" value="30"/>
+    <input id="budget" type="hidden" value="moderate"/>
+    <input id="whenLabel" type="hidden" value="today"/>
+    <input id="mood" type="hidden" value="fun,spontaneous"/>
+
     <button id="questBtn">Find Our Adventure</button>
-    <button class="secondary" id="syncPartnerBtn">Load Partner’s Adventure</button>
-    <div class="status" id="questStatus">Demo mode keeps this experience separate from real relationship history.</div>
+    <button class="secondary hidden" id="syncPartnerBtn">Load Partner’s Adventure</button>
+    <div class="status" id="questStatus">Your demo choices stay separate from your real HEART STONE history.</div>
   </section>
 
   <section class="card hidden" id="recommendationsCard">
     <h2>4. Choose an adventure</h2>
     <p class="small">Both phones can load the same shared choices. Only one partner needs to choose.</p>
     <div id="recommendations"></div>
-    <button class="secondary" id="refreshPartnerBtn">Refresh Partner Sync</button>
+    <button class="secondary hidden" id="refreshPartnerBtn">Refresh Partner Sync</button>
   </section>
 
   <section class="card hidden" id="adventureCard">
@@ -164,6 +215,28 @@ function setConnectedUI(connected){
   show("inviteCard",!connected);
   if(connected) step(3);
 }
+
+function wireFriendlyQuestChoices(){
+  document.querySelectorAll("[data-choice-for]").forEach(group=>{
+    const target=group.getAttribute("data-choice-for");
+    group.querySelectorAll(".choice").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        group.querySelectorAll(".choice").forEach(b=>b.classList.remove("selected"));
+        btn.classList.add("selected");
+        $(target).value=btn.dataset.value;
+      });
+    });
+  });
+  document.querySelectorAll("#moodChoices .choice").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      btn.classList.toggle("selected");
+      const moods=[...document.querySelectorAll("#moodChoices .choice.selected")].map(b=>b.dataset.mood);
+      if(!moods.length){ btn.classList.add("selected"); moods.push(btn.dataset.mood); }
+      $("mood").value=moods.join(",");
+    });
+  });
+}
+wireFriendlyQuestChoices();
 
 
 async function currentUser(){
