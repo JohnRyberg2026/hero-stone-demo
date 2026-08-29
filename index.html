@@ -485,7 +485,7 @@ async function loadSharedDemoState(){
   const selected=recs.find(r=>r.selected_at);
   if(selected){
     const {data:advs,error:advErr}=await sb.from("adventures")
-      .select("id,title,status,source_recommendation_id")
+      .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
       .eq("heart_stone_id",heartStoneId)
       .eq("is_demo",true)
       .eq("source_recommendation_id",selected.id)
