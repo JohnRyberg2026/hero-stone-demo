@@ -168,8 +168,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   <section class="card hidden" id="recommendationsCard">
     <h2>4. Choose an adventure</h2>
-    <p class="small">Both phones can load the same shared choices. Only one partner needs to choose.</p>
+    <p class="small">These choices are private to you. Your partner won’t see anything until you send the invitation.</p>
     <div id="recommendations"></div>
+    <button class="secondary" id="moreRecommendationsBtn">Show Me 3 More ↻</button>
     <button class="secondary hidden" id="refreshPartnerBtn">Refresh Partner Sync</button>
   </section>
 
@@ -423,6 +424,18 @@ async function loadExistingActiveDemoAdventure(){
   const adv=advs[0];
   adventureId=adv.id;
 
+  if(!adv.adventure_revealed_at){
+    show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
+    show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+    const {data:{user}}=await sb.auth.getUser();
+    const inviter=(adv.created_by_user_id===user?.id);
+    $("acceptedTitle").textContent=inviter?"❤️ THEY SAID YES!":"❤️ IT'S A DATE";
+    $("acceptedMessage").textContent=inviter?"Your partner accepted. Your adventure is ready.":"Your invitation is accepted. Your adventure is waiting...";
+    status("inviteStatus","Either of you can reveal your adventure.");
+    step(4); $("dateInvitationCard").scrollIntoView({behavior:"smooth"});
+    return true;
+  }
+
   let title=adv.title||"Our Adventure";
   let summary="";
   if(adv.source_recommendation_id){
@@ -465,7 +478,7 @@ async function loadSharedDemoState(){
   status("questStatus","Checking the shared HEART STONE...");
 
   const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
-    .select("id,created_at")
+    .select("id,created_at,created_by_user_id")
     .eq("heart_stone_id",heartStoneId)
     .eq("is_demo",true)
     .order("created_at",{ascending:false})
@@ -483,6 +496,16 @@ async function loadSharedDemoState(){
   if(!recs?.length) return status("questStatus","The shared request exists, but its choices are not ready yet. Try Refresh Partner Sync.");
 
   const selected=recs.find(r=>r.selected_at);
+  if(!selected){
+    const {data:{user}}=await sb.auth.getUser();
+    if(latest.created_by_user_id!==user?.id){
+      // Recommendation browsing is private. The partner sees nothing until an invitation exists.
+      show("recommendationsCard",false);
+      show("dateInvitationCard",false);
+      show("questCard",true);
+      return;
+    }
+  }
   if(selected){
     const {data:advs,error:advErr}=await sb.from("adventures")
       .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
@@ -602,7 +625,7 @@ async function loadSharedDemoState(){
 async function getSharedDemoFingerprint(){
   if(!heartStoneId) return "";
   const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
-    .select("id,created_at")
+    .select("id,created_at,created_by_user_id")
     .eq("heart_stone_id",heartStoneId)
     .eq("is_demo",true)
     .order("created_at",{ascending:false})
@@ -621,7 +644,7 @@ async function getSharedDemoFingerprint(){
   let steps=[];
   if(selected){
     const {data:advs}=await sb.from("adventures")
-      .select("id,status,updated_at")
+      .select("id,status,updated_at,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
       .eq("heart_stone_id",heartStoneId)
       .eq("is_demo",true)
       .eq("source_recommendation_id",selected.id)
@@ -640,7 +663,7 @@ async function getSharedDemoFingerprint(){
   return JSON.stringify({
     request:req.id,
     recommendations:(recs||[]).map(r=>[r.id,r.selected_at||null]),
-    adventure:adventure ? [adventure.id,adventure.status,adventure.updated_at||null] : null,
+    adventure:adventure ? [adventure.id,adventure.status,adventure.updated_at||null,adventure.invitation_style||null,adventure.invitation_opened_at||null,adventure.invitation_accepted_at||null,adventure.adventure_revealed_at||null] : null,
     steps:steps.map(x=>[x.id,x.status])
   });
 }
@@ -672,6 +695,11 @@ function startAutomaticPartnerSync(){
 
 $("syncPartnerBtn").onclick=loadSharedDemoState;
 $("refreshPartnerBtn").onclick=loadSharedDemoState;
+$("moreRecommendationsBtn").onclick=()=>{
+  show("recommendationsCard",false);
+  status("questStatus","Finding three fresh ideas just for you...");
+  $("questBtn").click();
+};
 
 async function chooseRecommendation(r){
   const {data,error}=await sb.rpc("propose_demo_recommendation",{p_recommendation_id:r.id});
