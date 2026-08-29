@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>HEART STONE™ Kickstarter Demo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#f7f2ea; --panel:#fffdf9; --ink:#2d241f; --muted:#75675e;
+  --accent:#8d2534; --accent2:#c99457; --line:#eadfd4; --ok:#1f7a55;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:
+linear-gradient(180deg,#fbf7f1 0,#f3ebe1 100%);color:var(--ink)}
+.wrap{max-width:520px;margin:auto;min-height:100vh;padding:18px 16px 40px}
+.brand{text-align:center;padding:18px 6px 8px}
+.logo{font-size:30px;font-weight:800;letter-spacing:.08em;color:var(--accent)}
+.tag{color:var(--muted);font-size:14px;margin-top:5px}
+.demo{display:inline-block;margin-top:9px;padding:5px 10px;border:1px solid var(--accent2);
+border-radius:999px;color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.08em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px;margin-top:14px;
+box-shadow:0 8px 28px rgba(76,47,30,.07)}
+h2{font-size:20px;margin:0 0 12px} h3{margin:4px 0 8px}
+p{line-height:1.45;color:var(--muted)}
+input,select,textarea{width:100%;padding:13px 14px;margin:6px 0;border:1px solid #d8c9bc;border-radius:14px;
+font:inherit;background:white;color:var(--ink)}
+button{width:100%;padding:14px 16px;margin:7px 0;border:0;border-radius:15px;font-weight:750;font-size:16px;
+cursor:pointer;background:var(--accent);color:white}
+button.secondary{background:#efe4d9;color:var(--ink)}
+button.gold{background:var(--accent2);color:#2c2017}
+button.good{background:var(--ok)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hidden{display:none!important}
+.status{font-size:13px;padding:10px 12px;border-radius:12px;background:#f0ece7;color:#5b4b41;margin-top:10px;white-space:pre-wrap}
+.recommendation{border:1px solid var(--line);border-radius:17px;padding:14px;margin:10px 0;background:#fff}
+.recommendation strong{display:block;font-size:17px;margin-bottom:4px}
+.small{font-size:12px;color:var(--muted)}
+.progress{display:flex;gap:5px;margin:12px 0}
+.dot{height:6px;flex:1;border-radius:5px;background:#e5d9ce}
+.dot.on{background:var(--accent)}
+.hero{font-size:26px;font-weight:800;line-height:1.1;margin:4px 0 8px}
+.bigcheck{font-size:48px;text-align:center}
+.field-label{font-weight:800;margin:16px 0 7px;display:block}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:4px}
+.choice-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.choice{background:#f4ebe2;color:#2c211c;border:1px solid #e0cdbb;margin:0;padding:11px 8px;font-weight:700}
+.choice.selected{background:#9d2638;color:#fff;border-color:#9d2638}
+.choice small{display:block;font-weight:500;font-size:11px;opacity:.82;margin-top:2px}
+.helper{font-size:12px;color:#7b6c62;margin:4px 0 10px}
+.footer{text-align:center;color:#9a8b80;font-size:11px;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="logo">HEART STONE™</div>
+    <div class="tag">Where We Create the Timeless Story of Our Love.</div>
+    <div class="demo">KICKSTARTER DEMO MODE</div>
+  </div>
+
+  <div class="progress">
+    <div class="dot on" id="p1"></div><div class="dot" id="p2"></div><div class="dot" id="p3"></div>
+    <div class="dot" id="p4"></div><div class="dot" id="p5"></div><div class="dot" id="p6"></div>
+  </div>
+
+  <section class="card" id="authCard">
+    <h2>1. Sign in</h2>
+    <input id="email" type="email" placeholder="Email"/>
+    <input id="password" type="password" placeholder="Password"/>
+    <button id="signInBtn">Sign In</button>
+    <button class="secondary hidden" id="signOutBtn">Sign Out</button>
+    <div class="status" id="authStatus">Not signed in.</div>
+    <div class="hidden" id="connectedState">
+      <div class="hero">❤️ HEART STONE Connected</div>
+      <p>You’re signed in and connected to your partner.</p>
+      <button class="secondary" id="connectedSignOutBtn">Sign Out</button>
+    </div>
+  </section>
+
+  <section class="card" id="inviteCard">
+    <h2>2. Connect the couple</h2>
+    <p>Phone 1 creates an invitation. Phone 2 enters the invitation token and accepts.</p>
+    <input id="partnerEmail" type="email" placeholder="Partner email"/>
+    <input id="partnerName" placeholder="Partner first name"/>
+    <button id="createInviteBtn">Create Invitation</button>
+    <textarea id="inviteToken" rows="3" placeholder="Invitation token"></textarea>
+    <button class="gold" id="acceptInviteBtn">Accept Invitation</button>
+    <div class="status" id="inviteStatus">Waiting for invitation step.</div>
+  </section>
+
+  <section class="card" id="questCard">
+    <h2>3. Ask HEART STONE</h2>
+    <div class="hero">What should we do together?</div>
+
+    <label class="field-label" for="adventureType">What kind of experience sounds good?</label>
+    <select id="adventureType">
+      <option value="date_quest">Date Quest</option>
+      <option value="wild_adventure">Wild Adventure</option>
+      <option value="surprise">Surprise Us</option>
+    </select>
+
+    <span class="field-label">How much time do we have?</span>
+    <div class="choice-grid" data-choice-for="minutes">
+      <button type="button" class="choice" data-value="45">Quick date<small>About 45 minutes</small></button>
+      <button type="button" class="choice selected" data-value="120">A couple hours<small>About 2 hours</small></button>
+      <button type="button" class="choice" data-value="240">Half a day<small>About 4 hours</small></button>
+      <button type="button" class="choice" data-value="360">Make a day of it<small>About 6 hours</small></button>
+    </div>
+
+    <span class="field-label">How far do we feel like going?</span>
+    <div class="choice-grid" data-choice-for="distance">
+      <button type="button" class="choice" data-value="10">Stay close<small>Within 10 minutes</small></button>
+      <button type="button" class="choice" data-value="20">Nearby<small>Within 20 minutes</small></button>
+      <button type="button" class="choice selected" data-value="30">A little exploring<small>Within 30 minutes</small></button>
+      <button type="button" class="choice" data-value="60">Worth the drive<small>Up to an hour</small></button>
+    </div>
+
+    <span class="field-label">What feels comfortable for spending?</span>
+    <div class="choice-grid three" data-choice-for="budget">
+      <button type="button" class="choice" data-value="simple">$<small>Keep it simple</small></button>
+      <button type="button" class="choice selected" data-value="moderate">$$<small>A little treat</small></button>
+      <button type="button" class="choice" data-value="special">$$$<small>Make it special</small></button>
+    </div>
+
+    <span class="field-label">When are we going?</span>
+    <div class="choice-grid three" data-choice-for="whenLabel">
+      <button type="button" class="choice selected" data-value="today">Tonight</button>
+      <button type="button" class="choice" data-value="weekend">This weekend</button>
+      <button type="button" class="choice" data-value="later">Another day</button>
+    </div>
+
+    <span class="field-label">What kind of mood are we in?</span>
+    <p class="helper">Choose as many as you like.</p>
+    <div class="choice-grid three" id="moodChoices">
+      <button type="button" class="choice selected" data-mood="fun">Fun</button>
+      <button type="button" class="choice" data-mood="romantic">Romantic</button>
+      <button type="button" class="choice" data-mood="relaxed">Relaxed</button>
+      <button type="button" class="choice" data-mood="adventurous">Adventurous</button>
+      <button type="button" class="choice selected" data-mood="spontaneous">Spontaneous</button>
+      <button type="button" class="choice" data-mood="surprise">Surprise us</button>
+    </div>
+
+    <label class="field-label" for="requestNote">Anything you'd love HEART STONE to know?</label>
+    <textarea id="requestNote" rows="2" placeholder="For example: somewhere outside, dessert sounds good, or nothing too crowded..."></textarea>
+
+    <input id="minutes" type="hidden" value="120"/>
+    <input id="distance" type="hidden" value="30"/>
+    <input id="budget" type="hidden" value="moderate"/>
+    <input id="whenLabel" type="hidden" value="today"/>
+    <input id="mood" type="hidden" value="fun,spontaneous"/>
+
+    <button id="questBtn">Find Our Adventure</button>
+    <button class="secondary hidden" id="syncPartnerBtn">Load Partner’s Adventure</button>
+    <div class="status" id="questStatus">Your demo choices stay separate from your real HEART STONE history.</div>
+  </section>
+
+  <section class="card hidden" id="recommendationsCard">
+    <h2>4. Choose an adventure</h2>
+    <p class="small">Both phones can load the same shared choices. Only one partner needs to choose.</p>
+    <div id="recommendations"></div>
+    <button class="secondary hidden" id="refreshPartnerBtn">Refresh Partner Sync</button>
+  </section>
+
+  <section class="card hidden" id="adventureCard">
+    <h2>5. Our Adventure</h2>
+    <div class="hero" id="adventureTitle">Adventure</div>
+    <p id="adventureDescription"></p>
+    <button class="gold" id="completeStepBtn">Complete Step</button>
+    <button class="good" id="completeAdventureBtn">Complete Adventure</button>
+    <div class="status" id="adventureStatus">Ready to demonstrate the experience.</div>
+  </section>
+
+  <section class="card hidden" id="completeCard">
+    <div class="bigcheck">♥</div>
+    <h2 style="text-align:center">Adventure Complete</h2>
+    <p style="text-align:center">In Demo Mode, HEART STONE demonstrates the full lifecycle without adding simulated activity to the couple's real learning history.</p>
+    <select id="rating">
+      <option value="loved">We loved it</option>
+      <option value="liked">We liked it</option>
+      <option value="neutral">It was okay</option>
+      <option value="disliked">Not for us</option>
+    </select>
+    <textarea id="feedback" rows="2">Kickstarter demonstration completed.</textarea>
+    <button id="saveFeedbackBtn">Save Demo Feedback</button>
+    <button class="secondary" id="showHistoryBtn">Show Demo History</button>
+    <div class="status" id="completeStatus">Ready for feedback.</div>
+  </section>
+
+  <div class="footer">HEART STONE™ Alpha • Simulated demonstration activity is clearly marked as Demo Mode.</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://iqxhqxlcraatdheslqeo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let heartStoneId = localStorage.getItem("hs_heart_stone_id") || "";
+let requestId = null;
+let adventureId = null;
+let stepId = null;
+let autoSyncTimer = null;
+let lastSharedFingerprint = "";
+let autoSyncBusy = false;
+
+const $ = id => document.getElementById(id);
+function status(id,msg){ $(id).textContent=msg; }
+function step(n){ for(let i=1;i<=6;i++) $("p"+i).classList.toggle("on",i<=n); }
+function show(id,on=true){ $(id).classList.toggle("hidden",!on); }
+function setConnectedUI(connected){
+  ["email","password","signInBtn","authStatus"].forEach(id=>show(id,!connected));
+  show("signOutBtn",false);
+  show("connectedState",connected);
+  show("inviteCard",!connected);
+  if(connected) step(3);
+}
+
+function wireFriendlyQuestChoices(){
+  document.querySelectorAll("[data-choice-for]").forEach(group=>{
+    const target=group.getAttribute("data-choice-for");
+    group.querySelectorAll(".choice").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        group.querySelectorAll(".choice").forEach(b=>b.classList.remove("selected"));
+        btn.classList.add("selected");
+        $(target).value=btn.dataset.value;
+      });
+    });
+  });
+  document.querySelectorAll("#moodChoices .choice").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      btn.classList.toggle("selected");
+      const moods=[...document.querySelectorAll("#moodChoices .choice.selected")].map(b=>b.dataset.mood);
+      if(!moods.length){ btn.classList.add("selected"); moods.push(btn.dataset.mood); }
+      $("mood").value=moods.join(",");
+    });
+  });
+}
+wireFriendlyQuestChoices();
+
+
+async function currentUser(){
+  const {data} = await sb.auth.getUser();
+  return data?.user || null;
+}
+
+async function loadExistingHeartStone(){
+  const u = await currentUser();
+  if(!u) return null;
+  const {data,error} = await sb
+    .from("heart_stone_memberships")
+    .select("heart_stone_id,status,joined_at")
+    .eq("user_id",u.id)
+    .eq("status","active")
+    .order("joined_at",{ascending:false})
+    .limit(1);
+  if(error) {
+    status("inviteStatus","Could not load existing HEART STONE: "+error.message);
+    return null;
+  }
+  const id=data?.[0]?.heart_stone_id||null;
+  if(id){
+    heartStoneId=id;
+    localStorage.setItem("hs_heart_stone_id",id);
+    setConnectedUI(true);
+    step(3);
+    startAutomaticPartnerSync();
+  }
+  return id;
+}
+
+$("signInBtn").onclick = async()=>{
+  status("authStatus","Signing in...");
+  const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error) return status("authStatus","Sign-in error: "+error.message);
+  status("authStatus","Signed in as "+data.user.email);
+  step(2);
+  const connected = await loadExistingHeartStone();
+  if(!connected){ show("signOutBtn",true); }
+};
+
+async function signOutUser(){
+  await sb.auth.signOut();
+  if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; }
+  setConnectedUI(false);
+  status("authStatus","Signed out.");
+}
+$("signOutBtn").onclick = signOutUser;
+$("connectedSignOutBtn").onclick = signOutUser;
+
+$("createInviteBtn").onclick = async()=>{
+  status("inviteStatus","Creating invitation...");
+  const {data,error}=await sb.rpc("create_heart_stone_invitation",{
+    p_partner_email:$("partnerEmail").value.trim(),
+    p_partner_first_name:$("partnerName").value.trim(),
+    p_expires_hours:24
+  });
+  if(error) return status("inviteStatus","Invitation error: "+error.message);
+  const row=Array.isArray(data)?data[0]:data;
+  heartStoneId=row?.heart_stone_id || heartStoneId;
+  if(heartStoneId){ localStorage.setItem("hs_heart_stone_id",heartStoneId); startAutomaticPartnerSync(); }
+  $("inviteToken").value=row?.invitation_token||"";
+  status("inviteStatus","Invitation created.\nHEART STONE ID: "+heartStoneId+"\nCopy the token to Phone 2.");
+};
+
+$("acceptInviteBtn").onclick = async()=>{
+  status("inviteStatus","Accepting invitation...");
+  const {data,error}=await sb.rpc("accept_heart_stone_invitation",{p_token:$("inviteToken").value.trim()});
+  if(error) return status("inviteStatus","Accept error: "+error.message);
+  heartStoneId=data;
+  localStorage.setItem("hs_heart_stone_id",heartStoneId);
+  status("inviteStatus","Connected. HEART STONE ID: "+heartStoneId);
+  step(3);
+  startAutomaticPartnerSync();
+};
+
+$("questBtn").onclick = async()=>{
+  if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
+  status("questStatus","HEART STONE is choosing...");
+  const moods=$("mood").value.split(",").map(x=>x.trim()).filter(Boolean);
+  const {data,error}=await sb.rpc("begin_demo_quest",{
+    p_heart_stone_id:heartStoneId,
+    p_adventure_type:$("adventureType").value,
+    p_when_label:$("whenLabel").value.trim(),
+    p_available_minutes:Number($("minutes").value),
+    p_budget_label:$("budget").value.trim(),
+    p_mood:moods,
+    p_max_distance_minutes:Number($("distance").value),
+    p_optional_request:$("requestNote").value.trim()||null,
+    p_limit:3
+  });
+  if(error) return status("questStatus","Quest error: "+error.message);
+  requestId=data;
+  status("questStatus","Recommendations ready.");
+  await loadRecommendations();
+  step(4);
+};
+
+async function loadRecommendations(){
+  const {data,error}=await sb.from("recommendations").select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at").eq("request_id",requestId).order("created_at");
+  if(error) return status("questStatus","Recommendation load error: "+error.message);
+  const box=$("recommendations"); box.innerHTML="";
+  (data||[]).forEach(r=>{
+    const div=document.createElement("div"); div.className="recommendation";
+    div.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="small">${escapeHtml(r.recommendation_class||"")}</div><p>${escapeHtml(r.summary||"")}</p><button>Choose This</button>`;
+    div.querySelector("button").onclick=()=>chooseRecommendation(r);
+    box.appendChild(div);
+  });
+  show("recommendationsCard",true);
+}
+
+
+async function loadSharedDemoState(){
+  if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
+  status("questStatus","Checking the shared HEART STONE...");
+
+  const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
+    .select("id,created_at")
+    .eq("heart_stone_id",heartStoneId)
+    .eq("is_demo",true)
+    .order("created_at",{ascending:false})
+    .limit(1);
+  if(reqErr) return status("questStatus","Partner sync error: "+reqErr.message);
+  const latest=reqs?.[0];
+  if(!latest) return status("questStatus","No shared demo adventure has been created yet.");
+
+  requestId=latest.id;
+  const {data:recs,error:recErr}=await sb.from("recommendations")
+    .select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at")
+    .eq("request_id",requestId)
+    .order("created_at");
+  if(recErr) return status("questStatus","Partner sync error: "+recErr.message);
+  if(!recs?.length) return status("questStatus","The shared request exists, but its choices are not ready yet. Try Refresh Partner Sync.");
+
+  const selected=recs.find(r=>r.selected_at);
+  if(selected){
+    const {data:advs,error:advErr}=await sb.from("adventures")
+      .select("id,title,status,source_recommendation_id")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .eq("source_recommendation_id",selected.id)
+      .order("created_at",{ascending:false})
+      .limit(1);
+    if(advErr) return status("questStatus","Partner adventure load error: "+advErr.message);
+    if(advs?.[0]){
+      adventureId=advs[0].id;
+      $("adventureTitle").textContent=selected.title;
+      $("adventureDescription").textContent=selected.summary||"";
+      show("recommendationsCard",false);
+
+      const {data:steps}=await sb.from("adventure_steps")
+        .select("id,status,title,description")
+        .eq("adventure_id",adventureId)
+        .order("position");
+      stepId=steps?.[0]?.id||null;
+      const firstStepCompleted=steps?.[0]?.status==="completed";
+
+      if(advs[0].status==="completed"){
+        show("adventureCard",false);
+        show("completeCard",true);
+        status("completeStatus","Partner sync complete — this demo adventure was completed on the other phone.\nReal learning profile remains protected from Demo Mode.");
+        status("questStatus","Partner sync complete — completed adventure received.");
+        step(6);
+        $("completeCard").scrollIntoView({behavior:"smooth"});
+        return;
+      }
+
+      show("completeCard",false);
+      show("adventureCard",true);
+      $("completeStepBtn").disabled=firstStepCompleted;
+      $("completeStepBtn").textContent=firstStepCompleted ? "Step Completed ✓" : "Complete Step";
+      status("adventureStatus",firstStepCompleted ? "This step was completed on the partner's phone." : "Ready to demonstrate the experience.");
+      status("questStatus","Partner sync complete — the selected adventure is now on this phone.");
+      step(5);
+      $("adventureCard").scrollIntoView({behavior:"smooth"});
+      return;
+    }
+  }
+
+  const box=$("recommendations"); box.innerHTML="";
+  recs.forEach(r=>{
+    const div=document.createElement("div"); div.className="recommendation";
+    div.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="small">${escapeHtml(r.recommendation_class||"")}</div><p>${escapeHtml(r.summary||"")}</p><button>Choose This</button>`;
+    div.querySelector("button").onclick=()=>chooseRecommendation(r);
+    box.appendChild(div);
+  });
+  show("recommendationsCard",true);
+  status("questStatus","Partner sync complete — shared adventure choices loaded.");
+  step(4);
+  $("recommendationsCard").scrollIntoView({behavior:"smooth"});
+}
+
+
+
+async function getSharedDemoFingerprint(){
+  if(!heartStoneId) return "";
+  const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
+    .select("id,created_at")
+    .eq("heart_stone_id",heartStoneId)
+    .eq("is_demo",true)
+    .order("created_at",{ascending:false})
+    .limit(1);
+  if(reqErr || !reqs?.[0]) return "";
+
+  const req=reqs[0];
+  const {data:recs,error:recErr}=await sb.from("recommendations")
+    .select("id,selected_at")
+    .eq("request_id",req.id)
+    .order("created_at");
+  if(recErr) return "";
+
+  const selected=(recs||[]).find(r=>r.selected_at);
+  let adventure=null;
+  let steps=[];
+  if(selected){
+    const {data:advs}=await sb.from("adventures")
+      .select("id,status,updated_at")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .eq("source_recommendation_id",selected.id)
+      .order("created_at",{ascending:false})
+      .limit(1);
+    adventure=advs?.[0]||null;
+    if(adventure){
+      const {data:stepRows}=await sb.from("adventure_steps")
+        .select("id,status")
+        .eq("adventure_id",adventure.id)
+        .order("position");
+      steps=stepRows||[];
+    }
+  }
+
+  return JSON.stringify({
+    request:req.id,
+    recommendations:(recs||[]).map(r=>[r.id,r.selected_at||null]),
+    adventure:adventure ? [adventure.id,adventure.status,adventure.updated_at||null] : null,
+    steps:steps.map(x=>[x.id,x.status])
+  });
+}
+
+async function checkForPartnerUpdates(){
+  if(autoSyncBusy || !heartStoneId) return;
+  autoSyncBusy=true;
+  try{
+    const fp=await getSharedDemoFingerprint();
+    if(fp && fp!==lastSharedFingerprint){
+      const hadPrevious=!!lastSharedFingerprint;
+      lastSharedFingerprint=fp;
+      if(hadPrevious){
+        await loadSharedDemoState();
+        status("questStatus","Partner update received automatically — both phones are synchronized.");
+      }
+    }
+  } finally {
+    autoSyncBusy=false;
+  }
+}
+
+function startAutomaticPartnerSync(){
+  if(autoSyncTimer) clearInterval(autoSyncTimer);
+  lastSharedFingerprint="";
+  checkForPartnerUpdates();
+  autoSyncTimer=setInterval(checkForPartnerUpdates,2000);
+}
+
+$("syncPartnerBtn").onclick=loadSharedDemoState;
+$("refreshPartnerBtn").onclick=loadSharedDemoState;
+
+async function chooseRecommendation(r){
+  const {data,error}=await sb.rpc("accept_alpha_recommendation",{p_recommendation_id:r.id});
+  if(error) return alert("Choose error: "+error.message);
+  adventureId=data;
+  $("adventureTitle").textContent=r.title;
+  $("adventureDescription").textContent=r.summary||"";
+  show("adventureCard",true); step(5);
+  const {data:steps}=await sb.from("adventure_steps").select("id,status,title,description").eq("adventure_id",adventureId).order("position");
+  stepId=steps?.[0]?.id||null;
+  $("adventureCard").scrollIntoView({behavior:"smooth"});
+}
+
+$("completeStepBtn").onclick = async()=>{
+  if(!stepId) return status("adventureStatus","No demo step found.");
+  const {error}=await sb.rpc("set_alpha_adventure_step_status",{p_step_id:stepId,p_status:"completed"});
+  if(error) return status("adventureStatus","Step error: "+error.message);
+  $("completeStepBtn").disabled=true;
+  $("completeStepBtn").textContent="Step Completed ✓";
+  status("adventureStatus","Step completed — simulated for the Kickstarter demonstration.");
+};
+
+$("completeAdventureBtn").onclick = async()=>{
+  if(!adventureId) return status("adventureStatus","No demo adventure selected.");
+  status("adventureStatus","Completing shared demo adventure...");
+  const {error}=await sb.rpc("complete_demo_adventure",{p_adventure_id:adventureId});
+  if(error) return status("adventureStatus","Completion error: "+error.message);
+  show("adventureCard",false);
+  show("completeCard",true);
+  step(6);
+  status("completeStatus","Adventure Complete — both partners are synchronized.\nEach partner may now save their own private demo feedback.");
+  $("completeCard").scrollIntoView({behavior:"smooth"});
+};
+
+$("saveFeedbackBtn").onclick = async()=>{
+  if(!adventureId) return status("completeStatus","No adventure selected.");
+  status("completeStatus","Saving your private demo feedback...");
+  const {error}=await sb.rpc("save_demo_adventure_feedback",{
+    p_adventure_id:adventureId,
+    p_rating:$("rating").value,
+    p_comment:$("feedback").value.trim()
+  });
+  if(error) return status("completeStatus","Feedback error: "+error.message);
+  status("completeStatus","Your demo feedback was saved privately.\nReal learning profile remains protected from Demo Mode.");
+};
+
+$("showHistoryBtn").onclick = async()=>{
+  if(!heartStoneId) return status("completeStatus","No HEART STONE ID.");
+  const {data,error}=await sb.rpc("get_demo_adventure_history",{p_heart_stone_id:heartStoneId,p_limit:10});
+  if(error) return status("completeStatus","History error: "+error.message);
+  status("completeStatus","DEMO HISTORY\n"+JSON.stringify(data,null,2));
+};
+
+function escapeHtml(s){
+  return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+
+(async()=>{
+  const u=await currentUser();
+  if(u){
+    status("authStatus","Signed in as "+u.email);
+    step(2);
+    const connected = await loadExistingHeartStone();
+    if(!connected){ show("signOutBtn",true); }
+  } else if(heartStoneId) {
+    status("inviteStatus","This phone remembers HEART STONE ID: "+heartStoneId);
+  }
+})();
+</script>
+</body>
+</html>
