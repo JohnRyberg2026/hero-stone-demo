@@ -50,6 +50,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .choice small{display:block;font-weight:500;font-size:11px;opacity:.82;margin-top:2px}
 .helper{font-size:12px;color:#7b6c62;margin:4px 0 10px}
 .footer{text-align:center;color:#9a8b80;font-size:11px;margin-top:20px}
+
+.invite-stage{text-align:center;padding:18px 8px}
+.envelope{width:min(320px,88%);height:205px;margin:18px auto;position:relative;border-radius:12px;background:linear-gradient(145deg,#f3e4bd,#d8b96f);box-shadow:0 18px 45px rgba(0,0,0,.35);overflow:hidden;border:1px solid rgba(255,255,255,.35)}
+.envelope:before{content:"";position:absolute;inset:0;background:linear-gradient(32deg,transparent 49%,rgba(100,66,20,.18) 50%,transparent 51%),linear-gradient(-32deg,transparent 49%,rgba(100,66,20,.18) 50%,transparent 51%)}
+.envelope-flap{position:absolute;left:0;top:0;width:100%;height:56%;background:linear-gradient(160deg,#ead69f,#cda956);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .7s ease;z-index:3}
+.envelope.open .envelope-flap{transform:rotateX(180deg)}
+.wax{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:#8f1730;color:white;font-size:30px;z-index:4;box-shadow:0 5px 14px rgba(0,0,0,.3);border:3px double rgba(255,255,255,.5)}
+.invitation-paper{margin:12px auto;padding:22px;max-width:390px;border-radius:14px;background:rgba(255,250,237,.97);color:#372916;box-shadow:0 14px 36px rgba(0,0,0,.3)}
+.style-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}.style-grid button{margin:0}.style-grid button.selected{outline:3px solid rgba(255,215,120,.8)}
+.yes-title{font-size:30px;font-weight:800;text-align:center;margin:8px 0}.heartpulse{font-size:56px;animation:pulse 1.1s infinite}@keyframes pulse{50%{transform:scale(1.12)}}
 </style>
 </head>
 <body>
@@ -164,11 +174,34 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </section>
 
   <section class="card hidden" id="dateInvitationCard">
-    <h2>A Date Invitation ❤️</h2>
-    <p class="small">Your partner chose something for the two of you.</p>
-    <div class="rec"><strong id="inviteTitle">Our Adventure</strong><p id="inviteSummary"></p></div>
-    <button class="good" id="acceptDateBtn">I'd Love To ❤️</button>
-    <button class="secondary" id="declineDateBtn">Not Tonight</button>
+    <div id="senderStylePanel" class="hidden">
+      <h2>❤️ Make it an invitation</h2>
+      <p class="small">How should HEART STONE invite your partner?</p>
+      <div class="style-grid" id="styleGrid">
+        <button data-style="romantic">❤️ Romantic</button><button data-style="playful">😏 Playful</button>
+        <button data-style="mysterious">✨ Mysterious</button><button data-style="adventurous">🧭 Adventurous</button>
+        <button data-style="surprise" style="grid-column:1/-1">💎 Surprise Me</button>
+      </div>
+      <button class="good" id="sendInvitationBtn">Send My Invitation ❤️</button>
+    </div>
+    <div id="sealedEnvelopePanel" class="invite-stage hidden">
+      <h2>❤️ For You</h2><p>A HEART STONE invitation is waiting...</p>
+      <div class="envelope" id="envelope"><div class="envelope-flap"></div><div class="wax">♥</div></div>
+      <button class="gold" id="openInvitationBtn">Open My Invitation ❤️</button>
+    </div>
+    <div id="openedInvitationPanel" class="hidden">
+      <div class="invitation-paper"><div class="heartpulse">❤️</div><h2>A Date Invitation</h2>
+        <p id="invitationMessage">Someone special wants some time with you.</p>
+        <p><strong>The adventure stays a surprise until you say yes.</strong></p>
+      </div>
+      <button class="good" id="acceptDateBtn">I'd Love To ❤️</button>
+      <button class="secondary" id="declineDateBtn">Not Tonight</button>
+    </div>
+    <div id="acceptedPanel" class="hidden">
+      <div class="heartpulse">❤️</div><div class="yes-title" id="acceptedTitle">IT'S A DATE</div>
+      <p id="acceptedMessage" style="text-align:center">Your adventure is waiting...</p>
+      <button class="gold" id="revealAdventureBtn">Reveal Our Adventure 🧭</button>
+    </div>
     <div class="status" id="inviteStatus">Waiting for your answer.</div>
   </section>
 
@@ -379,7 +412,7 @@ async function loadExistingActiveDemoAdventure(){
   if(!heartStoneId) return false;
 
   const {data:advs,error:advErr}=await sb.from("adventures")
-    .select("id,title,status,source_recommendation_id")
+    .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
     .eq("heart_stone_id",heartStoneId)
     .eq("is_demo",true)
     .eq("status","active")
@@ -474,17 +507,32 @@ async function loadSharedDemoState(){
 
       if(advs[0].status==="proposed"){
         adventureId=advs[0].id;
-        show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false);
-        show("dateInvitationCard",true);
-        $("inviteTitle").textContent=advs[0].title||"A Date Invitation";
-        $("inviteSummary").textContent="Your partner chose this adventure for the two of you.";
+        show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
         const {data:{user}}=await sb.auth.getUser();
         const inviter=(advs[0].created_by_user_id===user?.id);
-        $("acceptDateBtn").style.display=inviter?"none":"block";
-        $("declineDateBtn").style.display=inviter?"none":"block";
-        status("inviteStatus",inviter?"Invitation sent ❤️ Waiting for your partner to answer.":"Your partner invited you. What do you say?");
-        step(4);
-        return;
+        show("acceptedPanel",false);
+        if(inviter){
+          show("sealedEnvelopePanel",false); show("openedInvitationPanel",false);
+          if(!advs[0].invitation_style){
+            show("senderStylePanel",true);
+            status("inviteStatus","Choose the feeling, then send something special.");
+          }else{
+            show("senderStylePanel",false);
+            status("inviteStatus","Invitation sent ❤️ Waiting for your partner to open it.");
+          }
+        }else{
+          show("senderStylePanel",false);
+          if(!advs[0].invitation_opened_at){
+            show("sealedEnvelopePanel",true); show("openedInvitationPanel",false);
+            status("inviteStatus","A little something is waiting for you. ❤️");
+          }else{
+            show("sealedEnvelopePanel",false); show("openedInvitationPanel",true);
+            const messages={romantic:"Someone special is asking for a little time together. ❤️",playful:"Psst... someone has plans for the two of you. 😏",mysterious:"A little mystery is waiting for the two of you. ✨",adventurous:"Your next adventure is calling. 🧭",surprise:"Someone special has a surprise waiting for you. 💎"};
+            $("invitationMessage").textContent=messages[advs[0].invitation_style]||messages.surprise;
+            status("inviteStatus","The adventure stays a surprise until you say yes.");
+          }
+        }
+        step(4); return;
       }
 
       if(advs[0].status==="completed"){
@@ -509,6 +557,18 @@ async function loadSharedDemoState(){
         step(3);
         $("questCard").scrollIntoView({behavior:"smooth"});
         return;
+      }
+
+      if(advs[0].status==="active" && !advs[0].adventure_revealed_at){
+        adventureId=advs[0].id;
+        show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
+        show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+        const {data:{user}}=await sb.auth.getUser();
+        const inviter=(advs[0].created_by_user_id===user?.id);
+        $("acceptedTitle").textContent=inviter?"❤️ THEY SAID YES!":"❤️ IT'S A DATE";
+        $("acceptedMessage").textContent=inviter?"Your partner accepted. Your adventure is ready.":"Your invitation is accepted. Your adventure is waiting...";
+        status("inviteStatus","Either of you can reveal your adventure.");
+        step(4); return;
       }
 
       setAdventureFocus(true);
@@ -617,16 +677,12 @@ async function chooseRecommendation(r){
   const {data,error}=await sb.rpc("propose_demo_recommendation",{p_recommendation_id:r.id});
   if(error) return alert("Choose error: "+error.message);
   adventureId=data;
-  setAdventureFocus(true);
-  show("adventureCard",false);
-  show("dateInvitationCard",true);
-  $("inviteTitle").textContent=r.title;
-  $("inviteSummary").textContent=r.summary||"";
-  $("acceptDateBtn").style.display="none";
-  $("declineDateBtn").style.display="none";
-  status("inviteStatus","Invitation sent ❤️ Waiting for your partner to answer.");
-  step(4);
-  $("dateInvitationCard").scrollIntoView({behavior:"smooth"});
+  setAdventureFocus(true); show("adventureCard",false); show("dateInvitationCard",true);
+  show("senderStylePanel",true); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",false);
+  selectedInvitationStyle="surprise";
+  document.querySelectorAll("#styleGrid button").forEach(b=>b.classList.toggle("selected",b.dataset.style==="surprise"));
+  status("inviteStatus","Choose the feeling, then send something special.");
+  step(4); $("dateInvitationCard").scrollIntoView({behavior:"smooth"});
 }
 
 $("completeStepBtn").onclick = async()=>{
@@ -651,13 +707,42 @@ $("completeAdventureBtn").onclick = async()=>{
   $("completeCard").scrollIntoView({behavior:"smooth"});
 };
 
+document.querySelectorAll("#styleGrid button").forEach(btn=>{
+  btn.onclick=()=>{selectedInvitationStyle=btn.dataset.style;document.querySelectorAll("#styleGrid button").forEach(b=>b.classList.toggle("selected",b===btn));};
+});
+$("sendInvitationBtn").onclick=async()=>{
+  if(!adventureId)return;
+  status("inviteStatus","Sealing your HEART STONE invitation...");
+  const {error}=await sb.rpc("set_demo_invitation_style",{p_adventure_id:adventureId,p_style:selectedInvitationStyle});
+  if(error)return status("inviteStatus","Invitation error: "+error.message);
+  show("senderStylePanel",false); status("inviteStatus","Invitation sent ❤️ Waiting for your partner to open it.");
+};
+$("openInvitationBtn").onclick=async()=>{
+  if(!adventureId)return;
+  $("envelope").classList.add("open"); $("openInvitationBtn").disabled=true;
+  const {error}=await sb.rpc("open_demo_date_invitation",{p_adventure_id:adventureId});
+  if(error){$("openInvitationBtn").disabled=false;return status("inviteStatus","Invitation error: "+error.message);}
+  setTimeout(async()=>{show("sealedEnvelopePanel",false);show("openedInvitationPanel",true);await loadSharedDemoState();},650);
+};
 $("acceptDateBtn").onclick=async()=>{
   if(!adventureId) return;
   status("inviteStatus","Accepting your date invitation...");
   const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:adventureId,p_accept:true});
   if(error) return status("inviteStatus","Invitation error: "+error.message);
-  show("dateInvitationCard",false);
+  show("openedInvitationPanel",false); show("acceptedPanel",true);
+  $("acceptedTitle").textContent="❤️ IT'S A DATE";
+  $("acceptedMessage").textContent="Your adventure is waiting...";
+  status("inviteStatus","Your partner will see the good news too. ❤️");
   await loadSharedDemoState(true);
+};
+
+$("revealAdventureBtn").onclick=async()=>{
+  if(!adventureId)return;
+  status("inviteStatus","Revealing your adventure...");
+  const {error}=await sb.rpc("reveal_demo_adventure",{p_adventure_id:adventureId});
+  if(error)return status("inviteStatus","Reveal error: "+error.message);
+  show("dateInvitationCard",false);
+  await loadSharedDemoState();
 };
 
 $("declineDateBtn").onclick=async()=>{
