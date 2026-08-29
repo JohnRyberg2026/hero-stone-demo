@@ -290,9 +290,29 @@ async function loadSharedDemoState(){
       $("adventureTitle").textContent=selected.title;
       $("adventureDescription").textContent=selected.summary||"";
       show("recommendationsCard",false);
-      show("adventureCard",true);
-      const {data:steps}=await sb.from("adventure_steps").select("id,status,title,description").eq("adventure_id",adventureId).order("position");
+
+      const {data:steps}=await sb.from("adventure_steps")
+        .select("id,status,title,description")
+        .eq("adventure_id",adventureId)
+        .order("position");
       stepId=steps?.[0]?.id||null;
+      const firstStepCompleted=steps?.[0]?.status==="completed";
+
+      if(advs[0].status==="completed"){
+        show("adventureCard",false);
+        show("completeCard",true);
+        status("completeStatus","Partner sync complete — this demo adventure was completed on the other phone.\nReal learning profile remains protected from Demo Mode.");
+        status("questStatus","Partner sync complete — completed adventure received.");
+        step(6);
+        $("completeCard").scrollIntoView({behavior:"smooth"});
+        return;
+      }
+
+      show("completeCard",false);
+      show("adventureCard",true);
+      $("completeStepBtn").disabled=firstStepCompleted;
+      $("completeStepBtn").textContent=firstStepCompleted ? "Step Completed ✓" : "Complete Step";
+      status("adventureStatus",firstStepCompleted ? "This step was completed on the partner's phone." : "Ready to demonstrate the experience.");
       status("questStatus","Partner sync complete — the selected adventure is now on this phone.");
       step(5);
       $("adventureCard").scrollIntoView({behavior:"smooth"});
