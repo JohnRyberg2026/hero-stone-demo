@@ -208,6 +208,10 @@ const $ = id => document.getElementById(id);
 function status(id,msg){ $(id).textContent=msg; }
 function step(n){ for(let i=1;i<=6;i++) $("p"+i).classList.toggle("on",i<=n); }
 function show(id,on=true){ $(id).classList.toggle("hidden",!on); }
+function setAdventureFocus(on=true){
+  show("questCard",!on);
+  if(on) show("recommendationsCard",false);
+}
 function setConnectedUI(connected){
   ["email","password","signInBtn","authStatus"].forEach(id=>show(id,!connected));
   show("signOutBtn",false);
@@ -329,7 +333,14 @@ $("questBtn").onclick = async()=>{
     p_optional_request:$("requestNote").value.trim()||null,
     p_limit:3
   });
-  if(error) return status("questStatus","Quest error: "+error.message);
+  if(error){
+    if((error.message||"").includes("ACTIVE_ADVENTURE_ALREADY_EXISTS")){
+      status("questStatus","You already have an adventure in progress. Loading it now...");
+      const loaded=await loadExistingActiveDemoAdventure();
+      if(loaded) return;
+    }
+    return status("questStatus","Quest error: "+error.message);
+  }
   requestId=data;
   status("questStatus","Recommendations ready.");
   await loadRecommendations();
@@ -349,6 +360,58 @@ async function loadRecommendations(){
   show("recommendationsCard",true);
 }
 
+
+async function loadExistingActiveDemoAdventure(){
+  if(!heartStoneId) return false;
+
+  const {data:advs,error:advErr}=await sb.from("adventures")
+    .select("id,title,status,source_recommendation_id")
+    .eq("heart_stone_id",heartStoneId)
+    .eq("is_demo",true)
+    .eq("status","active")
+    .order("created_at",{ascending:false})
+    .limit(1);
+  if(advErr || !advs?.[0]) return false;
+
+  const adv=advs[0];
+  adventureId=adv.id;
+
+  let title=adv.title||"Our Adventure";
+  let summary="";
+  if(adv.source_recommendation_id){
+    const {data:rec}=await sb.from("recommendations")
+      .select("id,request_id,title,summary")
+      .eq("id",adv.source_recommendation_id)
+      .maybeSingle();
+    if(rec){
+      requestId=rec.request_id||requestId;
+      title=rec.title||title;
+      summary=rec.summary||"";
+    }
+  }
+
+  $("adventureTitle").textContent=title;
+  $("adventureDescription").textContent=summary;
+  show("recommendationsCard",false);
+
+  const {data:steps}=await sb.from("adventure_steps")
+    .select("id,status,title,description")
+    .eq("adventure_id",adventureId)
+    .order("position");
+  stepId=steps?.[0]?.id||null;
+  const firstStepCompleted=steps?.[0]?.status==="completed";
+
+  setAdventureFocus(true);
+  show("completeCard",false);
+  show("adventureCard",true);
+  $("completeStepBtn").disabled=firstStepCompleted;
+  $("completeStepBtn").textContent=firstStepCompleted ? "Step Completed ✓" : "Complete Step";
+  status("adventureStatus",firstStepCompleted ? "This step is already complete." : "Your adventure is already in progress.");
+  status("questStatus","Your current adventure was loaded automatically.");
+  step(5);
+  $("adventureCard").scrollIntoView({behavior:"smooth"});
+  return true;
+}
 
 async function loadSharedDemoState(){
   if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
@@ -396,6 +459,7 @@ async function loadSharedDemoState(){
       const firstStepCompleted=steps?.[0]?.status==="completed";
 
       if(advs[0].status==="completed"){
+        setAdventureFocus(true);
         show("adventureCard",false);
         show("completeCard",true);
         status("completeStatus","Partner sync complete — this demo adventure was completed on the other phone.\nReal learning profile remains protected from Demo Mode.");
@@ -405,6 +469,7 @@ async function loadSharedDemoState(){
         return;
       }
 
+      setAdventureFocus(true);
       show("completeCard",false);
       show("adventureCard",true);
       $("completeStepBtn").disabled=firstStepCompleted;
@@ -512,6 +577,7 @@ async function chooseRecommendation(r){
   adventureId=data;
   $("adventureTitle").textContent=r.title;
   $("adventureDescription").textContent=r.summary||"";
+  setAdventureFocus(true);
   show("adventureCard",true); step(5);
   const {data:steps}=await sb.from("adventure_steps").select("id,status,title,description").eq("adventure_id",adventureId).order("position");
   stepId=steps?.[0]?.id||null;
@@ -532,6 +598,7 @@ $("completeAdventureBtn").onclick = async()=>{
   status("adventureStatus","Completing shared demo adventure...");
   const {error}=await sb.rpc("complete_demo_adventure",{p_adventure_id:adventureId});
   if(error) return status("adventureStatus","Completion error: "+error.message);
+  setAdventureFocus(true);
   show("adventureCard",false);
   show("completeCard",true);
   step(6);
