@@ -66,6 +66,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button id="signInBtn">Sign In</button>
     <button class="secondary hidden" id="signOutBtn">Sign Out</button>
     <div class="status" id="authStatus">Not signed in.</div>
+    <div class="hidden" id="connectedState">
+      <div class="hero">❤️ HEART STONE Connected</div>
+      <p>You’re signed in and connected to your partner.</p>
+      <button class="secondary" id="connectedSignOutBtn">Sign Out</button>
+    </div>
   </section>
 
   <section class="card" id="inviteCard">
@@ -152,6 +157,14 @@ const $ = id => document.getElementById(id);
 function status(id,msg){ $(id).textContent=msg; }
 function step(n){ for(let i=1;i<=6;i++) $("p"+i).classList.toggle("on",i<=n); }
 function show(id,on=true){ $(id).classList.toggle("hidden",!on); }
+function setConnectedUI(connected){
+  ["email","password","signInBtn","authStatus"].forEach(id=>show(id,!connected));
+  show("signOutBtn",false);
+  show("connectedState",connected);
+  show("inviteCard",!connected);
+  if(connected) step(3);
+}
+
 
 async function currentUser(){
   const {data} = await sb.auth.getUser();
@@ -176,7 +189,7 @@ async function loadExistingHeartStone(){
   if(id){
     heartStoneId=id;
     localStorage.setItem("hs_heart_stone_id",id);
-    status("inviteStatus","Already connected. HEART STONE ID: "+id+"\nNo new invitation is needed.");
+    setConnectedUI(true);
     step(3);
     startAutomaticPartnerSync();
   }
@@ -188,13 +201,19 @@ $("signInBtn").onclick = async()=>{
   const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
   if(error) return status("authStatus","Sign-in error: "+error.message);
   status("authStatus","Signed in as "+data.user.email);
-  show("signOutBtn",true); step(2);
-  await loadExistingHeartStone();
+  step(2);
+  const connected = await loadExistingHeartStone();
+  if(!connected){ show("signOutBtn",true); }
 };
 
-$("signOutBtn").onclick = async()=>{
-  await sb.auth.signOut(); if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; } status("authStatus","Signed out."); show("signOutBtn",false);
-};
+async function signOutUser(){
+  await sb.auth.signOut();
+  if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; }
+  setConnectedUI(false);
+  status("authStatus","Signed out.");
+}
+$("signOutBtn").onclick = signOutUser;
+$("connectedSignOutBtn").onclick = signOutUser;
 
 $("createInviteBtn").onclick = async()=>{
   status("inviteStatus","Creating invitation...");
@@ -474,9 +493,9 @@ function escapeHtml(s){
   const u=await currentUser();
   if(u){
     status("authStatus","Signed in as "+u.email);
-    show("signOutBtn",true);
     step(2);
-    await loadExistingHeartStone();
+    const connected = await loadExistingHeartStone();
+    if(!connected){ show("signOutBtn",true); }
   } else if(heartStoneId) {
     status("inviteStatus","This phone remembers HEART STONE ID: "+heartStoneId);
   }
