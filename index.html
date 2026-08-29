@@ -169,6 +169,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <p id="adventureDescription"></p>
     <button class="gold" id="completeStepBtn">Complete Step</button>
     <button class="good" id="completeAdventureBtn">Complete Adventure</button>
+    <button class="secondary" id="cancelAdventureBtn">Cancel Adventure</button>
     <div class="status" id="adventureStatus">Ready to demonstrate the experience.</div>
   </section>
 
@@ -473,6 +474,19 @@ async function loadSharedDemoState(){
         return;
       }
 
+      if(advs[0].status==="abandoned"){
+        adventureId=null;
+        stepId=null;
+        show("adventureCard",false);
+        show("completeCard",false);
+        show("recommendationsCard",false);
+        show("questCard",true);
+        status("questStatus","That adventure was canceled. No problem — choose another whenever you’re ready.");
+        step(3);
+        $("questCard").scrollIntoView({behavior:"smooth"});
+        return;
+      }
+
       setAdventureFocus(true);
       show("completeCard",false);
       show("adventureCard",true);
@@ -608,6 +622,24 @@ $("completeAdventureBtn").onclick = async()=>{
   step(6);
   status("completeStatus","Adventure Complete — both partners are synchronized.\nEach partner may now save their own private demo feedback.");
   $("completeCard").scrollIntoView({behavior:"smooth"});
+};
+
+$("cancelAdventureBtn").onclick = async()=>{
+  if(!adventureId) return status("adventureStatus","No demo adventure selected.");
+  const confirmed=window.confirm("Cancel this adventure? It will not count as completed.");
+  if(!confirmed) return;
+  status("adventureStatus","Canceling this shared adventure...");
+  const {error}=await sb.rpc("cancel_demo_adventure",{p_adventure_id:adventureId});
+  if(error) return status("adventureStatus","Cancel error: "+error.message);
+  adventureId=null;
+  stepId=null;
+  show("adventureCard",false);
+  show("completeCard",false);
+  show("recommendationsCard",false);
+  show("questCard",true);
+  status("questStatus","Adventure canceled. Nothing was marked complete — choose another whenever you’re ready.");
+  step(3);
+  $("questCard").scrollIntoView({behavior:"smooth"});
 };
 
 $("saveFeedbackBtn").onclick = async()=>{
