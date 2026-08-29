@@ -497,14 +497,12 @@ async function loadSharedDemoState(){
 
   const selected=recs.find(r=>r.selected_at);
   if(!selected){
-    const {data:{user}}=await sb.auth.getUser();
-    if(latest.created_by_user_id!==user?.id){
-      // Recommendation browsing is private. The partner sees nothing until an invitation exists.
-      show("recommendationsCard",false);
-      show("dateInvitationCard",false);
-      show("questCard",true);
-      return;
-    }
+    // Private recommendation browsing NEVER syncs to the partner device.
+    // Only the browser that pressed Find Our Adventure renders its choices locally.
+    show("recommendationsCard",false);
+    show("dateInvitationCard",false);
+    show("questCard",true);
+    return;
   }
   if(selected){
     const {data:advs,error:advErr}=await sb.from("adventures")
@@ -607,17 +605,11 @@ async function loadSharedDemoState(){
     }
   }
 
-  const box=$("recommendations"); box.innerHTML="";
-  recs.forEach(r=>{
-    const div=document.createElement("div"); div.className="recommendation";
-    div.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="small">${escapeHtml(r.recommendation_class||"")}</div><p>${escapeHtml(r.summary||"")}</p><button>Choose This</button>`;
-    div.querySelector("button").onclick=()=>chooseRecommendation(r);
-    box.appendChild(div);
-  });
-  show("recommendationsCard",true);
-  status("questStatus","Partner sync complete — shared adventure choices loaded.");
-  step(4);
-  $("recommendationsCard").scrollIntoView({behavior:"smooth"});
+  // Never expose unselected recommendation choices through partner synchronization.
+  show("recommendationsCard",false);
+  show("dateInvitationCard",false);
+  show("questCard",true);
+  return;
 }
 
 
@@ -640,6 +632,7 @@ async function getSharedDemoFingerprint(){
   if(recErr) return "";
 
   const selected=(recs||[]).find(r=>r.selected_at);
+  if(!selected) return "NO_INVITATION";
   let adventure=null;
   let steps=[];
   if(selected){
@@ -651,6 +644,8 @@ async function getSharedDemoFingerprint(){
       .order("created_at",{ascending:false})
       .limit(1);
     adventure=advs?.[0]||null;
+    // A proposed choice is still private until the sender actually sends the invitation.
+    if(adventure && adventure.status==="proposed" && !adventure.invitation_style) return "NO_INVITATION";
     if(adventure){
       const {data:stepRows}=await sb.from("adventure_steps")
         .select("id,status")
