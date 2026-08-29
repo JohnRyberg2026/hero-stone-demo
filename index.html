@@ -163,6 +163,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button class="secondary hidden" id="refreshPartnerBtn">Refresh Partner Sync</button>
   </section>
 
+  <section class="card hidden" id="dateInvitationCard">
+    <h2>A Date Invitation ❤️</h2>
+    <p class="small">Your partner chose something for the two of you.</p>
+    <div class="rec"><strong id="inviteTitle">Our Adventure</strong><p id="inviteSummary"></p></div>
+    <button class="good" id="acceptDateBtn">I'd Love To ❤️</button>
+    <button class="secondary" id="declineDateBtn">Not Tonight</button>
+    <div class="status" id="inviteStatus">Waiting for your answer.</div>
+  </section>
+
   <section class="card hidden" id="adventureCard">
     <h2>5. Our Adventure</h2>
     <div class="hero" id="adventureTitle">Adventure</div>
@@ -463,6 +472,21 @@ async function loadSharedDemoState(){
       stepId=steps?.[0]?.id||null;
       const firstStepCompleted=steps?.[0]?.status==="completed";
 
+      if(advs[0].status==="proposed"){
+        adventureId=advs[0].id;
+        show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false);
+        show("dateInvitationCard",true);
+        $("inviteTitle").textContent=advs[0].title||"A Date Invitation";
+        $("inviteSummary").textContent="Your partner chose this adventure for the two of you.";
+        const {data:{user}}=await sb.auth.getUser();
+        const inviter=(advs[0].created_by_user_id===user?.id);
+        $("acceptDateBtn").style.display=inviter?"none":"block";
+        $("declineDateBtn").style.display=inviter?"none":"block";
+        status("inviteStatus",inviter?"Invitation sent ❤️ Waiting for your partner to answer.":"Your partner invited you. What do you say?");
+        step(4);
+        return;
+      }
+
       if(advs[0].status==="completed"){
         setAdventureFocus(true);
         show("adventureCard",false);
@@ -590,16 +614,19 @@ $("syncPartnerBtn").onclick=loadSharedDemoState;
 $("refreshPartnerBtn").onclick=loadSharedDemoState;
 
 async function chooseRecommendation(r){
-  const {data,error}=await sb.rpc("accept_alpha_recommendation",{p_recommendation_id:r.id});
+  const {data,error}=await sb.rpc("propose_demo_recommendation",{p_recommendation_id:r.id});
   if(error) return alert("Choose error: "+error.message);
   adventureId=data;
-  $("adventureTitle").textContent=r.title;
-  $("adventureDescription").textContent=r.summary||"";
   setAdventureFocus(true);
-  show("adventureCard",true); step(5);
-  const {data:steps}=await sb.from("adventure_steps").select("id,status,title,description").eq("adventure_id",adventureId).order("position");
-  stepId=steps?.[0]?.id||null;
-  $("adventureCard").scrollIntoView({behavior:"smooth"});
+  show("adventureCard",false);
+  show("dateInvitationCard",true);
+  $("inviteTitle").textContent=r.title;
+  $("inviteSummary").textContent=r.summary||"";
+  $("acceptDateBtn").style.display="none";
+  $("declineDateBtn").style.display="none";
+  status("inviteStatus","Invitation sent ❤️ Waiting for your partner to answer.");
+  step(4);
+  $("dateInvitationCard").scrollIntoView({behavior:"smooth"});
 }
 
 $("completeStepBtn").onclick = async()=>{
@@ -622,6 +649,25 @@ $("completeAdventureBtn").onclick = async()=>{
   step(6);
   status("completeStatus","Adventure Complete — both partners are synchronized.\nEach partner may now save their own private demo feedback.");
   $("completeCard").scrollIntoView({behavior:"smooth"});
+};
+
+$("acceptDateBtn").onclick=async()=>{
+  if(!adventureId) return;
+  status("inviteStatus","Accepting your date invitation...");
+  const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:adventureId,p_accept:true});
+  if(error) return status("inviteStatus","Invitation error: "+error.message);
+  show("dateInvitationCard",false);
+  await loadSharedDemoState(true);
+};
+
+$("declineDateBtn").onclick=async()=>{
+  if(!adventureId) return;
+  const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:adventureId,p_accept:false});
+  if(error) return status("inviteStatus","Invitation error: "+error.message);
+  adventureId=null; stepId=null;
+  show("dateInvitationCard",false); show("adventureCard",false); show("recommendationsCard",false); show("questCard",true);
+  status("questStatus","Not tonight ❤️ No problem. Choose something else whenever you’re ready.");
+  step(3);
 };
 
 $("cancelAdventureBtn").onclick = async()=>{
