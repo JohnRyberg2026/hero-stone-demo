@@ -244,6 +244,7 @@ let heartStoneId = localStorage.getItem("hs_heart_stone_id") || "";
 let requestId = null;
 let adventureId = null;
 let stepId = null;
+let privateRequestId = null;
 let autoSyncTimer = null;
 let lastSharedFingerprint = "";
 let autoSyncBusy = false;
@@ -390,12 +391,17 @@ $("questBtn").onclick = async()=>{
     return status("questStatus","Quest error: "+error.message);
   }
   requestId=data;
+  privateRequestId=data;
   status("questStatus","Recommendations ready.");
   await loadRecommendations();
   step(4);
 };
 
 async function loadRecommendations(){
+  if(!requestId || privateRequestId!==requestId){
+    show("recommendationsCard",false);
+    return;
+  }
   const {data,error}=await sb.from("recommendations").select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at").eq("request_id",requestId).order("created_at");
   if(error) return status("questStatus","Recommendation load error: "+error.message);
   const box=$("recommendations"); box.innerHTML="";
@@ -497,11 +503,7 @@ async function loadSharedDemoState(){
 
   const selected=recs.find(r=>r.selected_at);
   if(!selected){
-    // Private recommendation browsing NEVER syncs to the partner device.
-    // Only the browser that pressed Find Our Adventure renders its choices locally.
-    show("recommendationsCard",false);
-    show("dateInvitationCard",false);
-    show("questCard",true);
+    // Recommendation browsing is private. Passive sync does absolutely nothing.
     return;
   }
   if(selected){
@@ -616,49 +618,35 @@ async function loadSharedDemoState(){
 
 async function getSharedDemoFingerprint(){
   if(!heartStoneId) return "";
-  const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
-    .select("id,created_at,created_by_user_id")
+
+  const {data:advs,error:advErr}=await sb.from("adventures")
+    .select("id,status,updated_at,source_recommendation_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
     .eq("heart_stone_id",heartStoneId)
     .eq("is_demo",true)
+    .not("invitation_style","is",null)
     .order("created_at",{ascending:false})
     .limit(1);
-  if(reqErr || !reqs?.[0]) return "";
 
-  const req=reqs[0];
-  const {data:recs,error:recErr}=await sb.from("recommendations")
-    .select("id,selected_at")
-    .eq("request_id",req.id)
-    .order("created_at");
-  if(recErr) return "";
+  if(advErr || !advs?.[0]) return "NO_SENT_INVITATION";
 
-  const selected=(recs||[]).find(r=>r.selected_at);
-  if(!selected) return "NO_INVITATION";
-  let adventure=null;
-  let steps=[];
-  if(selected){
-    const {data:advs}=await sb.from("adventures")
-      .select("id,status,updated_at,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
-      .eq("heart_stone_id",heartStoneId)
-      .eq("is_demo",true)
-      .eq("source_recommendation_id",selected.id)
-      .order("created_at",{ascending:false})
-      .limit(1);
-    adventure=advs?.[0]||null;
-    // A proposed choice is still private until the sender actually sends the invitation.
-    if(adventure && adventure.status==="proposed" && !adventure.invitation_style) return "NO_INVITATION";
-    if(adventure){
-      const {data:stepRows}=await sb.from("adventure_steps")
-        .select("id,status")
-        .eq("adventure_id",adventure.id)
-        .order("position");
-      steps=stepRows||[];
-    }
-  }
+  const adventure=advs[0];
+  const {data:stepRows}=await sb.from("adventure_steps")
+    .select("id,status")
+    .eq("adventure_id",adventure.id)
+    .order("position");
+  const steps=stepRows||[];
 
   return JSON.stringify({
-    request:req.id,
-    recommendations:(recs||[]).map(r=>[r.id,r.selected_at||null]),
-    adventure:adventure ? [adventure.id,adventure.status,adventure.updated_at||null,adventure.invitation_style||null,adventure.invitation_opened_at||null,adventure.invitation_accepted_at||null,adventure.adventure_revealed_at||null] : null,
+    adventure:[
+      adventure.id,
+      adventure.status,
+      adventure.updated_at||null,
+      adventure.source_recommendation_id||null,
+      adventure.invitation_style||null,
+      adventure.invitation_opened_at||null,
+      adventure.invitation_accepted_at||null,
+      adventure.adventure_revealed_at||null
+    ],
     steps:steps.map(x=>[x.id,x.status])
   });
 }
@@ -697,6 +685,7 @@ $("moreRecommendationsBtn").onclick=()=>{
 };
 
 async function chooseRecommendation(r){
+  privateRequestId=null;
   const {data,error}=await sb.rpc("propose_demo_recommendation",{p_recommendation_id:r.id});
   if(error) return alert("Choose error: "+error.message);
   adventureId=data;
