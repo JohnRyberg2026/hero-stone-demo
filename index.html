@@ -671,6 +671,9 @@ async function loadSharedDemoState(){
     }else{
       show("senderStylePanel",false);
       if(!adv.invitation_opened_at){
+        // This DOM is reused across adventures. Reset it for every new envelope.
+        $("envelope").classList.remove("open");
+        $("openInvitationBtn").disabled=false;
         show("sealedEnvelopePanel",true); show("openedInvitationPanel",false);
         status("inviteStatus","A HEART STONE invitation is waiting... ❤️");
       }else{
@@ -969,6 +972,8 @@ async function chooseRecommendation(r){
   adventureId=data;
   setAdventureFocus(true); show("adventureCard",false); show("dateInvitationCard",true);
   show("senderStylePanel",true); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",false);
+  if($("envelope")) $("envelope").classList.remove("open");
+  if($("openInvitationBtn")) $("openInvitationBtn").disabled=false;
   selectedInvitationStyle="surprise";
   document.querySelectorAll("#styleGrid button").forEach(b=>b.classList.toggle("selected",b.dataset.style==="surprise"));
   status("inviteStatus","Choose the feeling, then send something special.");
