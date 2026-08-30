@@ -498,6 +498,17 @@ async function loadSharedDemoState(){
     .not("invitation_style","is",null).in("status",["proposed","active"])
     .order("created_at",{ascending:false}).limit(1);
   if(invitedErr) return status("questStatus","Invitation sync error: "+invitedErr.message);
+  if(invited?.[0] && invited[0].status==="active" && invited[0].invitation_accepted_at && !invited[0].adventure_revealed_at){
+    const adv=invited[0]; adventureId=adv.id;
+    show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
+    show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+    const {data:{user:currentUser}}=await sb.auth.getUser();
+    const inviter=(adv.created_by_user_id===currentUser?.id);
+    $("acceptedTitle").textContent=inviter ? "❤️ THEY SAID YES!" : "❤️ IT'S A DATE";
+    $("acceptedText").textContent=inviter ? "Your partner accepted. Your adventure is ready." : "Your adventure is waiting...";
+    status("inviteStatus",inviter ? "Your invitation was accepted. ❤️" : "It's a date. ❤️");
+    step(4); return;
+  }
   if(invited?.[0] && invited[0].status==="proposed"){
     const adv=invited[0]; adventureId=adv.id;
     show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true); show("acceptedPanel",false);
