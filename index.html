@@ -1196,28 +1196,73 @@ $("homeContinueBtn").onclick=async()=>{
   dismissedDraftAdventureId="";
   localStorage.removeItem("hs_dismissed_draft_demo_id");
 
-  // Build 42: Continue is a real screen transition, not an expansion
-  // underneath Home.
   status("homeStatus","Checking your shared HEART STONE...");
   show("homeCard",false);
-  await loadSharedDemoState();
 
-  // If nothing recoverable was found, return safely to Home.
-  const recoveryVisible=[
-    "questCard","recommendationsCard","dateInvitationCard",
-    "sealedEnvelopePanel","openedInvitationPanel","acceptedPanel",
-    "adventureCard","completeCard","feedbackCard"
-  ].some(id=>{
-    const el=$(id);
-    return el && !el.classList.contains("hidden");
-  });
+  // Build 42 true Continue recovery:
+  // Recover an EXISTING unfinished demo adventure first. Never fall back into
+  // a recommendation request/choice flow, because Continue must resume—not create.
+  try{
+    const {data:{user}}=await sb.auth.getUser();
+    const {data:existing,error:existingErr}=await sb.from("adventures")
+      .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .in("status",["proposed","active"])
+      .order("created_at",{ascending:false})
+      .limit(1);
 
-  if(!recoveryVisible){
-    homeRestingMode=true;
-    localStorage.setItem("hs_home_resting_mode","1");
-    show("homeCard",true);
-    status("homeStatus","There isn't an adventure waiting right now.");
+    if(existingErr) throw existingErr;
+    const adv=existing?.[0]||null;
+
+    if(adv){
+      adventureId=adv.id;
+
+      // Private unsent proposal: only its creator may resume the invitation draft.
+      if(adv.status==="proposed" && !adv.invitation_style){
+        if(adv.created_by_user_id===user?.id){
+          show("questCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("dateInvitationCard",true);
+          show("acceptedPanel",false);
+          show("sealedEnvelopePanel",false);
+          show("openedInvitationPanel",false);
+          show("senderStylePanel",true);
+          status("inviteStatus","Choose the feeling, then send something special.");
+          step(4);
+          $("dateInvitationCard").scrollIntoView({behavior:"smooth",block:"start"});
+          return;
+        }
+
+        // Partner cannot see another person's private unsent draft.
+        homeRestingMode=true;
+        localStorage.setItem("hs_home_resting_mode","1");
+        show("homeCard",true);
+        status("homeStatus","There isn't an adventure waiting for you right now.");
+        return;
+      }
+
+      // Sent invitation / accepted / revealed / active adventure:
+      // existing shared-state lifecycle already knows how to restore each stage.
+      await loadSharedDemoState();
+      return;
+    }
+  }catch(e){
+    console.error("Continue recovery error",e);
   }
+
+  // No unfinished adventure exists. Do NOT reopen old recommendation choices.
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  show("questCard",false);
+  show("recommendationsCard",false);
+  show("dateInvitationCard",false);
+  show("adventureCard",false);
+  show("completeCard",false);
+  show("homeCard",true);
+  status("homeStatus","There isn't an adventure waiting right now.");
 };
 $("homeMemoriesBtn").onclick=()=>status("homeStatus","Our Memories is coming in the next HEART STONE build.");
 $("homeStoryBtn").onclick=()=>status("homeStatus","Our Story is coming in the next HEART STONE build.");
