@@ -721,7 +721,23 @@ async function checkForPartnerUpdates(){
   autoSyncBusy=true;
   try{
     const fp=await getSharedDemoFingerprint();
-    if(fp && fp!==lastSharedFingerprint){
+    if(!fp) return;
+
+    let shared=null;
+    try{ shared=JSON.parse(fp); }catch(e){}
+
+    // Critical lifecycle recovery: if the shared adventure has been revealed,
+    // either device must leave the "IT'S A DATE" screen even if its fingerprint
+    // baseline was established after the reveal happened.
+    const adv=shared?.adventure;
+    const invitationVisible=!$("dateInvitationCard").classList.contains("hidden");
+    if(adv?.status==="active" && adv?.adventure_revealed_at && invitationVisible){
+      lastSharedFingerprint=fp;
+      await loadSharedDemoState();
+      return;
+    }
+
+    if(fp!==lastSharedFingerprint){
       const hadPrevious=!!lastSharedFingerprint;
       lastSharedFingerprint=fp;
       if(hadPrevious){
