@@ -435,7 +435,7 @@ async function loadExistingActiveDemoAdventure(){
   if(!heartStoneId) return false;
 
   const {data:advs,error:advErr}=await sb.from("adventures")
-    .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
+    .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
     .eq("heart_stone_id",heartStoneId)
     .eq("is_demo",true)
     .eq("status","active")
@@ -502,7 +502,7 @@ async function loadSharedDemoState(){
 
   // Resolve the latest sent invitation directly so recommendation refreshes cannot confuse device roles.
   const {data:invited,error:invitedErr}=await sb.from("adventures")
-    .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
+    .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
     .eq("heart_stone_id",heartStoneId).eq("is_demo",true)
     .not("invitation_style","is",null).in("status",["proposed","active"])
     .order("created_at",{ascending:false}).limit(1);
@@ -572,7 +572,7 @@ async function loadSharedDemoState(){
   }
   if(selected){
     const {data:advs,error:advErr}=await sb.from("adventures")
-      .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
+      .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
       .eq("heart_stone_id",heartStoneId)
       .eq("is_demo",true)
       .eq("source_recommendation_id",selected.id)
@@ -623,6 +623,24 @@ async function loadSharedDemoState(){
       }
 
       if(advs[0].status==="completed"){
+        if(advs[0].demo_ready_at){
+          dismissedCompletedAdventureId=advs[0].id;
+          localStorage.setItem("hs_dismissed_completed_demo_id", advs[0].id);
+          adventureId=null;
+          stepId=null;
+          requestId=null;
+          privateRequestId=null;
+          seenCandidateIds=[];
+          show("dateInvitationCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("historyBox",false);
+          show("questCard",true);
+          status("questStatus","Ready for your next HEART STONE adventure. ❤️");
+          step(3);
+          return;
+        }
         if(advs[0].id===dismissedCompletedAdventureId){
           adventureId=null;
           stepId=null;
@@ -695,7 +713,7 @@ async function loadSharedDemoState(){
 async function getSharedDemoFingerprint(){
   if(!heartStoneId) return "";
   const {data:advs}=await sb.from("adventures")
-    .select("id,status,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,updated_at")
+    .select("id,status,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at,updated_at")
     .eq("heart_stone_id",heartStoneId)
     .eq("is_demo",true)
     .not("invitation_style","is",null)
@@ -892,11 +910,17 @@ $("saveFeedbackBtn").onclick = async()=>{
   status("completeStatus","Your demo feedback was saved privately.\nReal learning profile remains protected from Demo Mode.");
 };
 
-$("startAnotherBtn").onclick = ()=>{
-  if(adventureId){
-    dismissedCompletedAdventureId=adventureId;
-    localStorage.setItem("hs_dismissed_completed_demo_id", adventureId);
-  }
+$("startAnotherBtn").onclick = async()=>{
+  if(!adventureId) return status("completeStatus","No completed demo adventure is selected.");
+  const session=await ensureFreshAuth();
+  if(!session) return status("completeStatus","Session expired. Please sign in again.");
+
+  status("completeStatus","Getting both of you ready for another adventure...");
+  const {error}=await sb.rpc("start_another_demo_adventure",{p_adventure_id:adventureId});
+  if(error) return status("completeStatus","Start another error: "+error.message);
+
+  dismissedCompletedAdventureId=adventureId;
+  localStorage.setItem("hs_dismissed_completed_demo_id", adventureId);
   adventureId=null;
   stepId=null;
   requestId=null;
