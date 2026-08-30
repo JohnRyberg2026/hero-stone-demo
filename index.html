@@ -1001,6 +1001,9 @@ async function loadSharedDemoState(){
           step(3);
           return;
         }
+        homeRestingMode=false;
+        localStorage.setItem("hs_home_resting_mode","0");
+        show("homeCard",false);
         setAdventureFocus(true);
         show("adventureCard",false);
         show("completeCard",true);
@@ -1040,6 +1043,9 @@ async function loadSharedDemoState(){
         step(4); return;
       }
 
+      homeRestingMode=false;
+      localStorage.setItem("hs_home_resting_mode","0");
+      show("homeCard",false);
       setAdventureFocus(true);
       show("completeCard",false);
       show("adventureCard",true);
@@ -1359,6 +1365,9 @@ $("completeAdventureBtn").onclick = async()=>{
   status("adventureStatus","Completing shared demo adventure...");
   const {error}=await sb.rpc("complete_demo_adventure",{p_adventure_id:adventureId});
   if(error) return status("adventureStatus","Completion error: "+error.message);
+  homeRestingMode=false;
+  localStorage.setItem("hs_home_resting_mode","0");
+  show("homeCard",false);
   setAdventureFocus(true);
   show("adventureCard",false);
   show("completeCard",true);
