@@ -60,12 +60,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .invitation-paper{margin:12px auto;padding:22px;max-width:390px;border-radius:14px;background:rgba(255,250,237,.97);color:#372916;box-shadow:0 14px 36px rgba(0,0,0,.3)}
 .style-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}.style-grid button{margin:0}.style-grid button.selected{outline:3px solid rgba(255,215,120,.8)}
 .yes-title{font-size:30px;font-weight:800;text-align:center;margin:8px 0}.heartpulse{font-size:56px;animation:pulse 1.1s infinite}@keyframes pulse{50%{transform:scale(1.12)}}
-
-#hsDiagPanel{position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:rgba(18,18,18,.96);color:#fff;
-font:12px/1.35 monospace;padding:10px;border-radius:10px;max-height:38vh;overflow:auto;display:none;
-box-shadow:0 8px 30px rgba(0,0,0,.45)}
-#hsDiagPanel strong{font-family:system-ui,sans-serif}
-
 </style>
 </head>
 <body>
@@ -296,17 +290,12 @@ let adventureId = null;
 let stepId = null;
 let privateRequestId = null;
 let seenCandidateIds = [];
+let selectedInvitationStyle = "surprise";
 let autoSyncTimer = null;
 let lastSharedFingerprint = "";
 let suppressSharedRenderUntil = 0;
 let autoSyncBusy = false;
 let dismissedCompletedAdventureId = localStorage.getItem("hs_dismissed_completed_demo_id") || "";
-
-window.addEventListener("scroll",()=>{ if(hsDiagActive) hsDiag("SCROLL"); },{passive:true});
-window.addEventListener("visibilitychange",()=>{ if(hsDiagActive) hsDiag("visibility="+document.visibilityState); });
-window.addEventListener("pagehide",()=>{ if(hsDiagActive) hsDiag("PAGEHIDE"); });
-window.addEventListener("pageshow",()=>{ if(hsDiagActive) hsDiag("PAGESHOW"); });
-
 
 const $ = id => document.getElementById(id);
 function status(id,msg){ $(id).textContent=msg; }
@@ -317,34 +306,7 @@ async function ensureFreshAuth(){
   return r?.data?.session || session;
 }
 function step(n){ for(let i=1;i<=6;i++) $("p"+i).classList.toggle("on",i<=n); }
-let hsDiagActive=false;
-let hsDiagEvents=[];
-let hsDiagStart=0;
-function hsDiag(event){
-  if(!hsDiagActive) return;
-  const t=(performance.now()-hsDiagStart).toFixed(0);
-  hsDiagEvents.push(`${t}ms  ${event}  scrollY=${Math.round(window.scrollY)}`);
-}
-function hsDiagVisible(){
-  const ids=["senderStylePanel","sealedEnvelopePanel","openedInvitationPanel","acceptedPanel","adventureCard","questCard"];
-  return ids.filter(id=>$(id) && !$(id).classList.contains("hidden")).join(",");
-}
-function hsDiagFinish(){
-  hsDiag(`FINAL visible=${hsDiagVisible()}`);
-  hsDiagActive=false;
-  const panel=$("hsDiagPanel"), log=$("hsDiagLog");
-  if(panel && log){
-    log.innerHTML=hsDiagEvents.map(x=>`<div>${x}</div>`).join("");
-    panel.style.display="block";
-  }
-}
-function show(id,on=true){
-  const el=$(id);
-  if(!el) return;
-  const before=!el.classList.contains("hidden");
-  el.classList.toggle("hidden",!on);
-  if(hsDiagActive && before!==on) hsDiag(`show(${id},${on}) visible=${hsDiagVisible()}`);
-}
+function show(id,on=true){ $(id).classList.toggle("hidden",!on); }
 function setAdventureFocus(on=true){
   show("questCard",!on);
   if(on) show("recommendationsCard",false);
@@ -1062,14 +1024,6 @@ $("sendInvitationBtn").onclick=async()=>{
 $("openInvitationBtn").onclick=async()=>{
   if(!adventureId)return;
 
-  // v21 diagnostic: record every visible panel transition for 3 seconds.
-  hsDiagEvents=[];
-  hsDiagStart=performance.now();
-  hsDiagActive=true;
-  if($("hsDiagPanel")) $("hsDiagPanel").style.display="none";
-  hsDiag(`TAP OPEN visible=${hsDiagVisible()}`);
-  setTimeout(hsDiagFinish,3000);
-
   // Freeze partner polling for this tiny visual transition. If a poll was
   // already in flight, let it finish BEFORE changing the envelope DOM.
   if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; }
@@ -1082,9 +1036,7 @@ $("openInvitationBtn").onclick=async()=>{
   // Keep the sealed screen visually untouched while the database records
   // the open. Changing status/height before the swap can make mobile browsers
   // visibly re-anchor the page.
-  hsDiag("RPC open start");
   const {error}=await sb.rpc("open_demo_date_invitation",{p_adventure_id:adventureId});
-  hsDiag(error ? "RPC open error" : "RPC open success");
   if(error){
     $("openInvitationBtn").disabled=false;
     return status("inviteStatus","Invitation error: "+error.message);
@@ -1102,10 +1054,8 @@ $("openInvitationBtn").onclick=async()=>{
 
   // One atomic visual swap: populate first, then replace the sealed panel.
   const y=window.scrollY;
-  hsDiag("ATOMIC SWAP start");
   show("openedInvitationPanel",true);
   show("sealedEnvelopePanel",false);
-  hsDiag("ATOMIC SWAP end");
   status("inviteStatus","The adventure stays a surprise until you say yes.");
   window.scrollTo(0,y);
 
@@ -1241,8 +1191,5 @@ function escapeHtml(s){
   }
 })();
 </script>
-
-<div id="hsDiagPanel"><strong>HEART STONE transition diagnostic</strong><div id="hsDiagLog"></div></div>
-
 </body>
 </html>
