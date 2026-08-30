@@ -376,6 +376,8 @@ function setAccountCardCollapsed(collapsed){
 
 async function loadHeartStoneHome(){
   if(!heartStoneId) return;
+  const progress=document.querySelector(".progress");
+  if(progress) progress.style.display="none";
   homeRestingMode=true;
   localStorage.setItem("hs_home_resting_mode","1");
   try{
@@ -1196,6 +1198,7 @@ $("backHomeBtn").onclick=async()=>{
   $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
 };
 $("homeCreateBtn").onclick=()=>{
+  const progress=document.querySelector(".progress"); if(progress) progress.style.display="flex";
   homeRestingMode=false;
   localStorage.removeItem("hs_home_resting_mode");
   show("homeCard",false);
@@ -1203,6 +1206,7 @@ $("homeCreateBtn").onclick=()=>{
   $("questCard").scrollIntoView({behavior:"smooth",block:"start"});
 };
 $("homeContinueBtn").onclick=async()=>{
+  const progress=document.querySelector(".progress"); if(progress) progress.style.display="flex";
   homeRestingMode=false;
   localStorage.removeItem("hs_home_resting_mode");
   dismissedDraftAdventureId="";
