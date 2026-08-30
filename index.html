@@ -86,6 +86,38 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="hero">❤️ HEART STONE Connected</div>
       <p>You’re signed in and connected to your partner.</p>
 <p id="signedInEmail" style="font-size:12px;opacity:.72;margin-top:-2px;"></p>
+
+      <div id="profilePanel" style="margin-top:18px;padding-top:16px;border-top:1px solid #eadfd5;text-align:left;">
+        <div style="font-weight:900;font-size:18px;margin-bottom:4px;">Your Profile</div>
+        <div style="font-size:13px;opacity:.72;margin-bottom:12px;">Help HEART STONE speak to you naturally and respectfully.</div>
+
+        <label class="field-label" for="profileFirstName">First name</label>
+        <input id="profileFirstName" type="text" placeholder="Your first name" autocomplete="given-name"/>
+
+        <label class="field-label" for="profileGender">Gender</label>
+        <select id="profileGender">
+          <option value="">Choose if you’d like</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="nonbinary">Nonbinary</option>
+          <option value="self_described">Self-described</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
+        </select>
+
+        <label class="field-label" for="profilePronouns">How should HEART STONE refer to you?</label>
+        <select id="profilePronouns">
+          <option value="">Use neutral language</option>
+          <option value="she_her">She / Her</option>
+          <option value="he_him">He / Him</option>
+          <option value="they_them">They / Them</option>
+          <option value="name_only">Use my name</option>
+          <option value="self_described">Self-described</option>
+        </select>
+
+        <button id="saveProfileBtn" class="gold" type="button">Save My Profile ❤️</button>
+        <div class="status" id="profileStatus">Your choices stay attached to your private profile.</div>
+      </div>
+
       <button class="secondary" id="connectedSignOutBtn">Sign Out</button>
     </div>
   </section>
@@ -282,7 +314,10 @@ function setConnectedUI(connected){
   show("signOutBtn",false);
   show("connectedState",connected);
   show("inviteCard",!connected);
-  if(connected) step(3);
+  if(connected){
+    step(3);
+    loadMyProfile();
+  }
 }
 
 function wireFriendlyQuestChoices(){
@@ -312,6 +347,49 @@ async function currentUser(){
   const {data} = await sb.auth.getUser();
   return data?.user || null;
 }
+
+async function loadMyProfile(){
+  const u=await currentUser();
+  if(!u) return;
+  const {data,error}=await sb.from("profiles")
+    .select("first_name,gender,pronouns")
+    .eq("id",u.id)
+    .maybeSingle();
+  if(error){
+    status("profileStatus","Could not load your profile: "+error.message);
+    return;
+  }
+  if(data){
+    $("profileFirstName").value=data.first_name||"";
+    $("profileGender").value=data.gender||"";
+    $("profilePronouns").value=data.pronouns||"";
+    status("profileStatus","Your profile is ready.");
+  }
+}
+
+$("saveProfileBtn").onclick=async()=>{
+  const u=await currentUser();
+  if(!u) return status("profileStatus","Please sign in first.");
+  const firstName=$("profileFirstName").value.trim();
+  if(!firstName) return status("profileStatus","Please enter your first name.");
+
+  $("saveProfileBtn").disabled=true;
+  status("profileStatus","Saving your profile...");
+
+  const {error}=await sb.from("profiles")
+    .update({
+      first_name:firstName,
+      gender:$("profileGender").value||null,
+      pronouns:$("profilePronouns").value||null,
+      updated_at:new Date().toISOString()
+    })
+    .eq("id",u.id);
+
+  $("saveProfileBtn").disabled=false;
+  if(error) return status("profileStatus","Profile error: "+error.message);
+
+  status("profileStatus","Saved ❤️ HEART STONE will use your choices respectfully.");
+};
 
 async function loadExistingHeartStone(){
   const u = await currentUser();
