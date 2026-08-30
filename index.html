@@ -853,10 +853,21 @@ $("saveFeedbackBtn").onclick = async()=>{
 };
 
 $("showHistoryBtn").onclick = async()=>{
-  if(!heartStoneId) return status("completeStatus","No HEART STONE ID.");
-  const {data,error}=await sb.rpc("get_demo_adventure_history",{p_heart_stone_id:heartStoneId,p_limit:10});
-  if(error) return status("completeStatus","History error: "+error.message);
-  status("completeStatus","DEMO HISTORY\n"+JSON.stringify(data,null,2));
+  const {data,error}=await sb.rpc("get_demo_adventure_history",{p_heart_stone_id:heartStoneId,p_limit:20});
+  if(error)return status("completeStatus","History error: "+error.message);
+  const rows=Array.isArray(data)?data:[];
+  const esc=(v)=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\\\"":"&quot;","'":"&#039;"}[m]));
+  const cards=rows.map(x=>{
+    const d=x.completed_at?new Date(x.completed_at).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"Demo adventure";
+    return `<div style="padding:14px 0;border-bottom:1px solid #eadfd5">
+      <div style="font-weight:800;font-size:16px">${esc(x.title||"HEART STONE Adventure")}</div>
+      <div style="font-size:12px;opacity:.68;margin-top:4px">${esc(d)} · Demo Mode</div>
+    </div>`;
+  }).join("");
+  $("historyBox").innerHTML=`<div style="font-weight:900;font-size:20px;margin-bottom:4px">❤️ Our Demo Adventures</div>
+    <div style="font-size:13px;opacity:.72;margin-bottom:8px">A private-safe preview of adventures completed in Demo Mode. Personal feedback stays private.</div>
+    ${cards||'<div style="padding:18px 0;opacity:.7">No completed demo adventures yet.</div>'}`;
+  show("historyBox",true);
 };
 
 function escapeHtml(s){
