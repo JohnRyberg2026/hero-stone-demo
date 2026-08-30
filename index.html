@@ -250,6 +250,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </section>
 
   <section class="card hidden" id="dateInvitationCard">
+    <div id="invitationHomeNav" style="margin-bottom:10px">
+      <button class="secondary" id="invitationBackHomeBtn" style="width:auto;margin:0;padding:8px 12px">← Back to Our HEART STONE</button>
+    </div>
     <div id="senderStylePanel" class="hidden">
       <h2>❤️ Make it an invitation</h2>
       <p class="small">How should HEART STONE invite your partner?</p>
@@ -1082,6 +1085,34 @@ $("homeProfileBtn").onclick=()=>{
   setAccountCardCollapsed(false);
   $("authCard")?.scrollIntoView({behavior:"smooth",block:"start"});
 };
+async function returnInvitationDraftHome(){
+  if(adventureId){
+    try{
+      const {data:draft}=await sb.from("adventures")
+        .select("id,status,invitation_style")
+        .eq("id",adventureId)
+        .maybeSingle();
+      if(draft && draft.status==="proposed" && !draft.invitation_style){
+        dismissedDraftAdventureId=draft.id;
+        localStorage.setItem("hs_dismissed_draft_demo_id",draft.id);
+      }
+    }catch(e){}
+  }
+  [
+    "questCard","recommendationsCard","dateInvitationCard",
+    "sealedEnvelopePanel","openedInvitationPanel","acceptedPanel",
+    "adventureCard","completeCard","feedbackCard"
+  ].forEach(id=>{
+    const el=$(id);
+    if(el) show(id,false);
+  });
+  show("homeCard",true);
+  status("homeStatus","Your HEART STONE is ready.");
+  $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+$("invitationBackHomeBtn").onclick=returnInvitationDraftHome;
+
 $("backHomeBtn").onclick=async()=>{
   // If the sender has reached "Make it an invitation" but has not sent it,
   // remember that proposal as a tucked-away draft on this device.
