@@ -392,6 +392,7 @@ async function loadHeartStoneHome(){
   }catch(e){}
   setAccountCardCollapsed(true);
   show("homeCard",true);
+  if($("homeStatus")) $("homeStatus").style.display="none";
   show("questCard",false);
 
   // Build 42 Home is the clean resting state. Preserve all data, but do not
