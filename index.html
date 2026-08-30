@@ -340,17 +340,18 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <section class="card hidden" id="completeCard">
     <div class="bigcheck">♥</div>
     <h2 style="text-align:center">Adventure Complete</h2>
-    <p style="text-align:center">In Demo Mode, HEART STONE demonstrates the full lifecycle without adding simulated activity to the couple's real learning history.</p>
+    <p style="text-align:center;font-size:17px">Another chapter belongs to you two. ❤️</p>
+    <p style="text-align:center;opacity:.72">How did this adventure feel?</p>
     <select id="rating">
       <option value="loved">We loved it</option>
       <option value="liked">We liked it</option>
       <option value="neutral">It was okay</option>
       <option value="disliked">Not for us</option>
     </select>
-    <textarea id="feedback" rows="2">Kickstarter demonstration completed.</textarea>
-    <button id="saveFeedbackBtn">Save Demo Feedback</button>
-    <button class="gold" id="startAnotherBtn">Start Another Adventure ❤️</button>
-    <button class="secondary" id="showHistoryBtn">Show Demo History</button>
+    <textarea id="feedback" rows="2" placeholder="Add a private note about this moment..."></textarea>
+    <button id="saveFeedbackBtn">Save Our Moment ❤️</button>
+    <button class="gold" id="startAnotherBtn">Create Another Adventure ❤️</button>
+    <button class="secondary" id="showHistoryBtn">Our Adventure History</button>
     <div class="status" id="completeStatus">Ready for feedback.</div>
     <div id="historyBox" class="status hidden" style="text-align:left;margin-top:12px;"></div>
   </section>
@@ -1003,6 +1004,7 @@ async function loadSharedDemoState(){
         setAdventureFocus(true);
         show("adventureCard",false);
         show("completeCard",true);
+        if($("completeStatus")) $("completeStatus").style.display="none";
         status("completeStatus","Partner sync complete — this demo adventure was completed on the other phone.\nReal learning profile remains protected from Demo Mode.");
         status("questStatus","Partner sync complete — completed adventure received.");
         step(6);
@@ -1360,6 +1362,7 @@ $("completeAdventureBtn").onclick = async()=>{
   setAdventureFocus(true);
   show("adventureCard",false);
   show("completeCard",true);
+  if($("completeStatus")) $("completeStatus").style.display="none";
   step(6);
   status("completeStatus","Adventure Complete — both partners are synchronized.\nEach partner may now save their own private demo feedback.");
   $("completeCard").scrollIntoView({behavior:"smooth"});
