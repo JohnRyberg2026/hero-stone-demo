@@ -838,16 +838,19 @@ async function loadSharedDemoState(){
         // Build 42 Home draft rule: an unsent invitation draft may be tucked
         // away locally. Polling must not redraw it underneath Home. If it is
         // later sent, invitation_style becomes non-null and normal sync resumes.
-        const homeIsResting = $("homeCard") && !$("homeCard").classList.contains("hidden");
         if(
-          homeIsResting &&
           !advs[0].invitation_style &&
           advs[0].id===dismissedDraftAdventureId
         ){
           show("dateInvitationCard",false);
           show("recommendationsCard",false);
+          show("sealedEnvelopePanel",false);
+          show("openedInvitationPanel",false);
+          show("acceptedPanel",false);
           show("adventureCard",false);
           show("completeCard",false);
+          show("feedbackCard",false);
+          show("homeCard",true);
           return;
         }
 
