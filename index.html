@@ -56,7 +56,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .envelope:before{content:"";position:absolute;inset:0;background:linear-gradient(32deg,transparent 49%,rgba(100,66,20,.18) 50%,transparent 51%),linear-gradient(-32deg,transparent 49%,rgba(100,66,20,.18) 50%,transparent 51%)}
 .envelope-flap{position:absolute;left:0;top:0;width:100%;height:56%;background:linear-gradient(160deg,#ead69f,#cda956);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;z-index:3}
 .envelope.open .envelope-flap{transform:none}
-.wax{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:#8f1730;color:white;font-size:30px;z-index:4;box-shadow:0 5px 14px rgba(0,0,0,.3);border:3px double rgba(255,255,255,.5)}
+.wax{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,#c84255 0,#991f35 42%,#671323 100%);z-index:4;box-shadow:0 7px 16px rgba(0,0,0,.38),inset 0 0 0 3px rgba(255,214,170,.18),inset 0 0 0 7px rgba(74,7,20,.25);border:2px solid #661323}
+.wax:before{content:"HS";width:57px;height:57px;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(255,220,178,.62);box-shadow:inset 0 0 0 2px rgba(76,10,23,.3);font-family:Georgia,serif;font-weight:800;font-size:22px;letter-spacing:-2px;color:#f6d6b1;text-shadow:0 1px 1px #57101f}
+.wax:after{content:"♥";position:absolute;font-size:13px;color:#f6d6b1;bottom:10px;left:50%;transform:translateX(-50%)}
 .invitation-paper{margin:12px auto;padding:22px;max-width:390px;border-radius:14px;background:rgba(255,250,237,.97);color:#372916;box-shadow:0 14px 36px rgba(0,0,0,.3)}
 .style-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}.style-grid button{margin:0}.style-grid button.selected{outline:3px solid rgba(255,215,120,.8)}
 .yes-title{font-size:30px;font-weight:800;text-align:center;margin:8px 0}.heartpulse{font-size:56px;animation:pulse 1.1s infinite}@keyframes pulse{50%{transform:scale(1.12)}}
@@ -274,7 +276,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
     <div id="sealedEnvelopePanel" class="invite-stage hidden">
       <h2>❤️ For You</h2><p>A HEART STONE invitation is waiting...</p>
-      <div class="envelope" id="envelope"><div class="envelope-flap"></div><div class="wax">♥</div></div>
+      <div class="envelope" id="envelope"><div class="envelope-flap"></div><div class="wax" aria-label="HEART STONE wax seal"></div></div>
       <button class="gold" id="openInvitationBtn">Open My Invitation ❤️</button>
     </div>
     <div id="openedInvitationPanel" class="hidden">
