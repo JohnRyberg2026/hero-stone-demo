@@ -536,6 +536,9 @@ async function loadExistingActiveDemoAdventure(){
   if(!adv.adventure_revealed_at){
     show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
     show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+    // Acceptance owns the invitation status now; never leave the sender's
+    // pre-acceptance "waiting for your partner" message behind.
+    status("inviteStatus","");
     const {data:{user}}=await sb.auth.getUser();
   if($("signedInEmail")) $("signedInEmail").textContent = user?.email ? ("Signed in as: " + user.email) : "";
     const inviter=(adv.created_by_user_id===user?.id);
@@ -629,10 +632,14 @@ async function loadSharedDemoState(){
     const adv=invited[0]; adventureId=adv.id;
     show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
     show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+    // Acceptance owns the invitation status now; never leave the sender's
+    // pre-acceptance "waiting for your partner" message behind.
+    status("inviteStatus","");
     const {data:{user:currentUser}}=await sb.auth.getUser();
     const inviter=(adv.created_by_user_id===currentUser?.id);
     $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
-    $("acceptedText").textContent=inviter ? "Your partner accepted. Your adventure is ready." : "Your adventure is waiting...";
+    if($("acceptedText")) $("acceptedText").textContent=inviter ? "Your partner accepted. Your adventure is ready." : "Your adventure is waiting...";
+    if($("acceptedMessage")) $("acceptedMessage").textContent=inviter ? "Your partner accepted. Your adventure is ready." : "Your invitation is accepted. Your adventure is waiting...";
     status("inviteStatus",inviter ? "Your invitation was accepted. ❤️" : "It's a date. ❤️");
     step(4); return;
   }
@@ -825,6 +832,9 @@ async function loadSharedDemoState(){
         adventureId=advs[0].id;
         show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
         show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+    // Acceptance owns the invitation status now; never leave the sender's
+    // pre-acceptance "waiting for your partner" message behind.
+    status("inviteStatus","");
         const {data:{user}}=await sb.auth.getUser();
         const inviter=(advs[0].created_by_user_id===user?.id);
         $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
