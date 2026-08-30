@@ -673,36 +673,25 @@ async function loadSharedDemoState(){
 
 async function getSharedDemoFingerprint(){
   if(!heartStoneId) return "";
-
-  const {data:advs,error:advErr}=await sb.from("adventures")
-    .select("id,status,updated_at,source_recommendation_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
+  const {data:advs}=await sb.from("adventures")
+    .select("id,status,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,updated_at")
     .eq("heart_stone_id",heartStoneId)
     .eq("is_demo",true)
     .not("invitation_style","is",null)
     .order("created_at",{ascending:false})
     .limit(1);
 
-  if(advErr || !advs?.[0]) return "NO_SENT_INVITATION";
+  const adv=advs?.[0];
+  if(!adv) return "";
 
-  const adventure=advs[0];
-  const {data:stepRows}=await sb.from("adventure_steps")
-    .select("id,status")
-    .eq("adventure_id",adventure.id)
-    .order("position");
-  const steps=stepRows||[];
+  const {data:steps}=await sb.from("adventure_steps")
+    .select("id,status,updated_at")
+    .eq("adventure_id",adv.id)
+    .order("created_at",{ascending:true});
 
   return JSON.stringify({
-    adventure:[
-      adventure.id,
-      adventure.status,
-      adventure.updated_at||null,
-      adventure.source_recommendation_id||null,
-      adventure.invitation_style||null,
-      adventure.invitation_opened_at||null,
-      adventure.invitation_accepted_at||null,
-      adventure.adventure_revealed_at||null
-    ],
-    steps:steps.map(x=>[x.id,x.status])
+    adventure:adv,
+    steps:(steps||[]).map(x=>({id:x.id,status:x.status,updated_at:x.updated_at}))
   });
 }
 
