@@ -1195,8 +1195,29 @@ $("homeContinueBtn").onclick=async()=>{
   localStorage.removeItem("hs_home_resting_mode");
   dismissedDraftAdventureId="";
   localStorage.removeItem("hs_dismissed_draft_demo_id");
+
+  // Build 42: Continue is a real screen transition, not an expansion
+  // underneath Home.
   status("homeStatus","Checking your shared HEART STONE...");
+  show("homeCard",false);
   await loadSharedDemoState();
+
+  // If nothing recoverable was found, return safely to Home.
+  const recoveryVisible=[
+    "questCard","recommendationsCard","dateInvitationCard",
+    "sealedEnvelopePanel","openedInvitationPanel","acceptedPanel",
+    "adventureCard","completeCard","feedbackCard"
+  ].some(id=>{
+    const el=$(id);
+    return el && !el.classList.contains("hidden");
+  });
+
+  if(!recoveryVisible){
+    homeRestingMode=true;
+    localStorage.setItem("hs_home_resting_mode","1");
+    show("homeCard",true);
+    status("homeStatus","There isn't an adventure waiting right now.");
+  }
 };
 $("homeMemoriesBtn").onclick=()=>status("homeStatus","Our Memories is coming in the next HEART STONE build.");
 $("homeStoryBtn").onclick=()=>status("homeStatus","Our Story is coming in the next HEART STONE build.");
