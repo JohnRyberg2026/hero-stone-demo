@@ -245,8 +245,7 @@ let requestId = null;
 let adventureId = null;
 let stepId = null;
 let privateRequestId = null;
-let recommendationPool = [];
-let recommendationOffset = 0;
+let seenCandidateIds = [];
 let autoSyncTimer = null;
 let lastSharedFingerprint = "";
 let autoSyncBusy = false;
@@ -382,7 +381,7 @@ $("questBtn").onclick = async()=>{
     p_mood:moods,
     p_max_distance_minutes:Number($("distance").value),
     p_optional_request:$("requestNote").value.trim()||null,
-    p_limit:9
+    p_limit:3
   });
   if(error){
     if((error.message||"").includes("ACTIVE_ADVENTURE_ALREADY_EXISTS")){
@@ -394,6 +393,7 @@ $("questBtn").onclick = async()=>{
   }
   requestId=data;
   privateRequestId=data;
+  seenCandidateIds=[];
   status("questStatus","Recommendations ready.");
   await loadRecommendations();
   step(4);
@@ -404,39 +404,23 @@ async function loadRecommendations(){
     show("recommendationsCard",false);
     return;
   }
-
-  const {data,error}=await sb.from("recommendations")
-    .select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at")
-    .eq("request_id",requestId)
-    .order("created_at");
-
+  const {data,error}=await sb.from("recommendations").select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at,source_discovery_candidate_id").eq("request_id",requestId).order("created_at");
   if(error) return status("questStatus","Recommendation load error: "+error.message);
-
-  recommendationPool = data || [];
-  recommendationOffset = 0;
-  renderRecommendationBatch();
-}
-
-function renderRecommendationBatch(){
-  const box=$("recommendations");
-  box.innerHTML="";
-
-  const batch=recommendationPool.slice(recommendationOffset,recommendationOffset+3);
-
-  batch.forEach(r=>{
-    const div=document.createElement("div");
-    div.className="recommendation";
+  (data||[]).forEach(r=>{
+    if(r.source_discovery_candidate_id && !seenCandidateIds.includes(r.source_discovery_candidate_id)){
+      seenCandidateIds.push(r.source_discovery_candidate_id);
+    }
+  });
+  const box=$("recommendations"); box.innerHTML="";
+  (data||[]).forEach(r=>{
+    const div=document.createElement("div"); div.className="recommendation";
     div.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="small">${escapeHtml(r.recommendation_class||"")}</div><p>${escapeHtml(r.summary||"")}</p><button>Choose This</button>`;
     div.querySelector("button").onclick=()=>chooseRecommendation(r);
     box.appendChild(div);
   });
-
-  const moreBtn=$("moreRecommendationsBtn");
-  moreBtn.disabled = recommendationOffset + 3 >= recommendationPool.length;
-  moreBtn.textContent = moreBtn.disabled ? "No More New Ideas Yet" : "Show Me 3 More ↻";
-
   show("recommendationsCard",true);
 }
+
 
 async function loadExistingActiveDemoAdventure(){
   if(!heartStoneId) return false;
@@ -701,11 +685,20 @@ function startAutomaticPartnerSync(){
 
 $("syncPartnerBtn").onclick=loadSharedDemoState;
 $("refreshPartnerBtn").onclick=loadSharedDemoState;
-$("moreRecommendationsBtn").onclick=()=>{
-  if(recommendationOffset + 3 >= recommendationPool.length) return;
-  recommendationOffset += 3;
-  status("questStatus","Here are three different ideas.");
-  renderRecommendationBatch();
+$("moreRecommendationsBtn").onclick=async()=>{
+  if(!requestId || privateRequestId!==requestId) return;
+  status("questStatus","Finding three fresh ideas just for you...");
+  const {error}=await sb.rpc("refresh_demo_recommendations",{
+    p_request_id:requestId,
+    p_exclude_candidate_ids:seenCandidateIds,
+    p_limit:3
+  });
+  if(error){
+    status("questStatus","Refresh error: "+error.message);
+    return;
+  }
+  await loadRecommendations();
+  status("questStatus","Three fresh ideas ready.");
   $("recommendationsCard").scrollIntoView({behavior:"smooth"});
 };
 
