@@ -708,6 +708,7 @@ async function loadExistingActiveDemoAdventure(){
   show("completeCard",false);
   show("adventureCard",true);
   if($("adventureStatus")) $("adventureStatus").style.display="none";
+  { const progress=document.querySelector(".progress"); if(progress) progress.style.display="none"; }
   $("completeStepBtn").disabled=firstStepCompleted;
   $("completeStepBtn").textContent=firstStepCompleted ? "Step Completed ✓" : "Complete Step";
   status("adventureStatus",firstStepCompleted ? "This step is already complete." : "Your adventure is already in progress.");
@@ -1051,6 +1052,7 @@ async function loadSharedDemoState(){
       show("completeCard",false);
       show("adventureCard",true);
       if($("adventureStatus")) $("adventureStatus").style.display="none";
+      { const progress=document.querySelector(".progress"); if(progress) progress.style.display="none"; }
       $("completeStepBtn").disabled=firstStepCompleted;
       $("completeStepBtn").textContent=firstStepCompleted ? "Step Completed ✓" : "Complete Step";
       status("adventureStatus",firstStepCompleted ? "This step was completed on the partner's phone." : "Ready to demonstrate the experience.");
