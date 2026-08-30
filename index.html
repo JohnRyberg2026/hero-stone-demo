@@ -72,6 +72,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .home-secondary button{margin:0}
 @media(max-width:430px){.home-secondary{grid-template-columns:1fr}.home-title{font-size:27px}}
 
+
+.home-topbar{display:flex;justify-content:flex-end;margin-bottom:8px}
+.home-topbar button{width:auto;margin:0;padding:8px 12px;font-size:13px}
+.profile-collapsed{display:none!important}
+
 </style>
 </head>
 <body>
@@ -147,6 +152,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   
   <section class="card hidden" id="homeCard">
+    <div class="home-topbar">
+      <button class="secondary" id="homeProfileBtn">Profile & Settings</button>
+    </div>
     <div class="home-hero">
       <div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div>
       <div class="home-heart">❤️</div>
@@ -343,6 +351,12 @@ function setAdventureFocus(on=true){
   if(on) show("recommendationsCard",false);
 }
 
+
+function setAccountCardCollapsed(collapsed){
+  const card=$("accountCard");
+  if(card) card.classList.toggle("profile-collapsed",collapsed);
+}
+
 async function loadHeartStoneHome(){
   if(!heartStoneId) return;
   try{
@@ -355,6 +369,7 @@ async function loadHeartStoneHome(){
     const names=[mine?.first_name,partner?.first_name].filter(Boolean);
     if(names.length) $("homeCoupleNames").textContent=names.join(" & ");
   }catch(e){}
+  setAccountCardCollapsed(true);
   show("homeCard",true);
   show("questCard",false);
 
@@ -1042,6 +1057,10 @@ function startAutomaticPartnerSync(){
 }
 
 
+$("homeProfileBtn").onclick=()=>{
+  setAccountCardCollapsed(false);
+  $("accountCard")?.scrollIntoView({behavior:"smooth",block:"start"});
+};
 $("homeCreateBtn").onclick=()=>{
   show("homeCard",false);
   show("questCard",true);
