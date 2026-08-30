@@ -97,7 +97,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button id="createInviteBtn">Create Invitation</button>
     <textarea id="inviteToken" rows="3" placeholder="Invitation token"></textarea>
     <button class="gold" id="acceptInviteBtn">Accept Invitation</button>
-    <div class="status" id="inviteStatus">Waiting for invitation step.</div>
+    <div class="status" id="connectionInviteStatus">Waiting for invitation step.</div>
   </section>
 
   <section class="card" id="questCard">
@@ -305,7 +305,7 @@ async function loadExistingHeartStone(){
     .order("joined_at",{ascending:false})
     .limit(1);
   if(error) {
-    status("inviteStatus","Could not load existing HEART STONE: "+error.message);
+    status("connectionInviteStatus","Could not load existing HEART STONE: "+error.message);
     return null;
   }
   const id=data?.[0]?.heart_stone_id||null;
@@ -342,27 +342,27 @@ $("signOutBtn").onclick = signOutUser;
 $("connectedSignOutBtn").onclick = signOutUser;
 
 $("createInviteBtn").onclick = async()=>{
-  status("inviteStatus","Creating invitation...");
+  status("connectionInviteStatus","Creating invitation...");
   const {data,error}=await sb.rpc("create_heart_stone_invitation",{
     p_partner_email:$("partnerEmail").value.trim(),
     p_partner_first_name:$("partnerName").value.trim(),
     p_expires_hours:24
   });
-  if(error) return status("inviteStatus","Invitation error: "+error.message);
+  if(error) return status("connectionInviteStatus","Invitation error: "+error.message);
   const row=Array.isArray(data)?data[0]:data;
   heartStoneId=row?.heart_stone_id || heartStoneId;
   if(heartStoneId){ localStorage.setItem("hs_heart_stone_id",heartStoneId); startAutomaticPartnerSync(); }
   $("inviteToken").value=row?.invitation_token||"";
-  status("inviteStatus","Invitation created.\nHEART STONE ID: "+heartStoneId+"\nCopy the token to Phone 2.");
+  status("connectionInviteStatus","Invitation created.\nHEART STONE ID: "+heartStoneId+"\nCopy the token to Phone 2.");
 };
 
 $("acceptInviteBtn").onclick = async()=>{
-  status("inviteStatus","Accepting invitation...");
+  status("connectionInviteStatus","Accepting invitation...");
   const {data,error}=await sb.rpc("accept_heart_stone_invitation",{p_token:$("inviteToken").value.trim()});
-  if(error) return status("inviteStatus","Accept error: "+error.message);
+  if(error) return status("connectionInviteStatus","Accept error: "+error.message);
   heartStoneId=data;
   localStorage.setItem("hs_heart_stone_id",heartStoneId);
-  status("inviteStatus","Connected. HEART STONE ID: "+heartStoneId);
+  status("connectionInviteStatus","Connected. HEART STONE ID: "+heartStoneId);
   step(3);
   startAutomaticPartnerSync();
 };
