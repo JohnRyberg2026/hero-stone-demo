@@ -256,6 +256,12 @@ let dismissedCompletedAdventureId = localStorage.getItem("hs_dismissed_completed
 
 const $ = id => document.getElementById(id);
 function status(id,msg){ $(id).textContent=msg; }
+async function ensureFreshAuth(){
+  let {data:{session}}=await sb.auth.getSession();
+  if(!session) return null;
+  const r=await sb.auth.refreshSession();
+  return r?.data?.session || session;
+}
 function step(n){ for(let i=1;i<=6;i++) $("p"+i).classList.toggle("on",i<=n); }
 function show(id,on=true){ $(id).classList.toggle("hidden",!on); }
 function setAdventureFocus(on=true){
@@ -819,6 +825,9 @@ $("acceptDateBtn").onclick=async()=>{
 };
 
 $("revealAdventureBtn").onclick=async()=>{
+  const freshSession=await ensureFreshAuth();
+  if(!freshSession) return status("inviteStatus","Session expired. Please sign in again.");
+
   if(!adventureId)return;
   status("inviteStatus","Revealing your adventure...");
   const {error}=await sb.rpc("reveal_demo_adventure",{p_adventure_id:adventureId});
