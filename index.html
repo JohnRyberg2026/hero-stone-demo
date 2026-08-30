@@ -54,8 +54,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .invite-stage{text-align:center;padding:18px 8px}
 .envelope{width:min(320px,88%);height:205px;margin:18px auto;position:relative;border-radius:12px;background:linear-gradient(145deg,#f3e4bd,#d8b96f);box-shadow:0 18px 45px rgba(0,0,0,.35);overflow:hidden;border:1px solid rgba(255,255,255,.35)}
 .envelope:before{content:"";position:absolute;inset:0;background:linear-gradient(32deg,transparent 49%,rgba(100,66,20,.18) 50%,transparent 51%),linear-gradient(-32deg,transparent 49%,rgba(100,66,20,.18) 50%,transparent 51%)}
-.envelope-flap{position:absolute;left:0;top:0;width:100%;height:56%;background:linear-gradient(160deg,#ead69f,#cda956);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .7s ease;z-index:3}
-.envelope.open .envelope-flap{transform:rotateX(180deg)}
+.envelope-flap{position:absolute;left:0;top:0;width:100%;height:56%;background:linear-gradient(160deg,#ead69f,#cda956);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;z-index:3}
+.envelope.open .envelope-flap{transform:none}
 .wax{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:#8f1730;color:white;font-size:30px;z-index:4;box-shadow:0 5px 14px rgba(0,0,0,.3);border:3px double rgba(255,255,255,.5)}
 .invitation-paper{margin:12px auto;padding:22px;max-width:390px;border-radius:14px;background:rgba(255,250,237,.97);color:#372916;box-shadow:0 14px 36px rgba(0,0,0,.3)}
 .style-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}.style-grid button{margin:0}.style-grid button.selected{outline:3px solid rgba(255,215,120,.8)}
@@ -1032,7 +1032,6 @@ $("openInvitationBtn").onclick=async()=>{
     await new Promise(resolve=>setTimeout(resolve,25));
   }
 
-  $("envelope").classList.add("open");
   status("inviteStatus","Opening your invitation... ❤️");
 
   const {error}=await sb.rpc("open_demo_date_invitation",{p_adventure_id:adventureId});
