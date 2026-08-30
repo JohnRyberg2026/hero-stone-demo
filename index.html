@@ -1017,6 +1017,8 @@ $("sendInvitationBtn").onclick=async()=>{
 };
 $("openInvitationBtn").onclick=async()=>{
   if(!adventureId)return;
+  // Suppress polling from the instant the recipient taps the envelope.
+  suppressSharedRenderUntil=Date.now()+2200;
   $("envelope").classList.add("open");
   $("openInvitationBtn").disabled=true;
   status("inviteStatus","Opening your invitation... ❤️");
@@ -1029,7 +1031,7 @@ $("openInvitationBtn").onclick=async()=>{
 
   // The recipient owns this visual transition locally so polling cannot
   // momentarily redraw another lifecycle screen over it.
-  suppressSharedRenderUntil=Date.now()+1500;
+  suppressSharedRenderUntil=Math.max(suppressSharedRenderUntil,Date.now()+1200);
   show("sealedEnvelopePanel",false);
   show("openedInvitationPanel",true);
 
