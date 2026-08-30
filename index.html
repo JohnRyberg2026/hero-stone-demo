@@ -353,7 +353,7 @@ function setAdventureFocus(on=true){
 
 
 function setAccountCardCollapsed(collapsed){
-  const card=$("accountCard");
+  const card=$("authCard");
   if(card) card.classList.toggle("profile-collapsed",collapsed);
 }
 
@@ -1059,7 +1059,7 @@ function startAutomaticPartnerSync(){
 
 $("homeProfileBtn").onclick=()=>{
   setAccountCardCollapsed(false);
-  $("accountCard")?.scrollIntoView({behavior:"smooth",block:"start"});
+  $("authCard")?.scrollIntoView({behavior:"smooth",block:"start"});
 };
 $("homeCreateBtn").onclick=()=>{
   show("homeCard",false);
