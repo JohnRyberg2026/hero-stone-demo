@@ -685,13 +685,13 @@ async function getSharedDemoFingerprint(){
   if(!adv) return "";
 
   const {data:steps}=await sb.from("adventure_steps")
-    .select("id,status,updated_at")
+    .select("id,status")
     .eq("adventure_id",adv.id)
     .order("created_at",{ascending:true});
 
   return JSON.stringify({
     adventure:adv,
-    steps:(steps||[]).map(x=>({id:x.id,status:x.status,updated_at:x.updated_at}))
+    steps:(steps||[]).map(x=>({id:x.id,status:x.status}))
   });
 }
 
