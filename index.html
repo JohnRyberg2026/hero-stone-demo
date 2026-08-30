@@ -603,9 +603,25 @@ async function loadSharedDemoState(){
 
       if(advs[0].status==="proposed"){
         adventureId=advs[0].id;
-        show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
         const {data:{user}}=await sb.auth.getUser();
         const inviter=(advs[0].created_by_user_id===user?.id);
+
+        // Build 40 privacy boundary:
+        // A recommendation may create a proposed adventure privately, but the
+        // partner must not see any invitation UI until Send My Invitation sets
+        // invitation_style. Keep the recipient on Ask HEART STONE meanwhile.
+        if(!inviter && !advs[0].invitation_style){
+          adventureId=null;
+          show("dateInvitationCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("questCard",true);
+          step(3);
+          return;
+        }
+
+        show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
         show("acceptedPanel",false);
         if(inviter){
           show("sealedEnvelopePanel",false); show("openedInvitationPanel",false);
