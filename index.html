@@ -173,6 +173,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </section>
 
 <section class="card" id="questCard">
+    <div style="margin-bottom:10px">
+      <button class="secondary" id="backHomeBtn" style="width:auto;margin:0;padding:8px 12px">← Back to Our HEART STONE</button>
+    </div>
     <h2>3. Ask HEART STONE</h2>
     <div class="hero">What should we do together?</div>
 
@@ -1060,6 +1063,13 @@ function startAutomaticPartnerSync(){
 $("homeProfileBtn").onclick=()=>{
   setAccountCardCollapsed(false);
   $("authCard")?.scrollIntoView({behavior:"smooth",block:"start"});
+};
+$("backHomeBtn").onclick=()=>{
+  show("questCard",false);
+  show("recommendationsCard",false);
+  show("homeCard",true);
+  status("homeStatus","Your HEART STONE is ready.");
+  $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
 };
 $("homeCreateBtn").onclick=()=>{
   show("homeCard",false);
