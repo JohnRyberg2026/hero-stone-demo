@@ -231,6 +231,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button id="saveFeedbackBtn">Save Demo Feedback</button>
     <button class="secondary" id="showHistoryBtn">Show Demo History</button>
     <div class="status" id="completeStatus">Ready for feedback.</div>
+    <div id="historyBox" class="status" style="display:none;text-align:left;margin-top:12px;"></div>
   </section>
 
   <div class="footer">HEART STONE™ Alpha • Simulated demonstration activity is clearly marked as Demo Mode.</div>
@@ -853,15 +854,15 @@ $("saveFeedbackBtn").onclick = async()=>{
 };
 
 $("showHistoryBtn").onclick = async()=>{
+  if(!heartStoneId) return status("completeStatus","No HEART STONE ID.");
   const {data,error}=await sb.rpc("get_demo_adventure_history",{p_heart_stone_id:heartStoneId,p_limit:20});
   if(error)return status("completeStatus","History error: "+error.message);
   const rows=Array.isArray(data)?data:[];
-  const esc=(v)=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\\\"":"&quot;","'":"&#039;"}[m]));
   const cards=rows.map(x=>{
     const d=x.completed_at?new Date(x.completed_at).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"Demo adventure";
     return `<div style="padding:14px 0;border-bottom:1px solid #eadfd5">
-      <div style="font-weight:800;font-size:16px">${esc(x.title||"HEART STONE Adventure")}</div>
-      <div style="font-size:12px;opacity:.68;margin-top:4px">${esc(d)} · Demo Mode</div>
+      <div style="font-weight:800;font-size:16px">${escapeHtml(x.title||"HEART STONE Adventure")}</div>
+      <div style="font-size:12px;opacity:.68;margin-top:4px">${escapeHtml(d)} · Demo Mode</div>
     </div>`;
   }).join("");
   $("historyBox").innerHTML=`<div style="font-weight:900;font-size:20px;margin-bottom:4px">❤️ Our Demo Adventures</div>
