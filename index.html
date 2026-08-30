@@ -351,6 +351,7 @@ let suppressSharedRenderUntil = 0;
 let autoSyncBusy = false;
 let dismissedCompletedAdventureId = localStorage.getItem("hs_dismissed_completed_demo_id") || "";
 let dismissedDraftAdventureId = localStorage.getItem("hs_dismissed_draft_demo_id") || "";
+let homeRestingMode = localStorage.getItem("hs_home_resting_mode") === "1";
 
 const $ = id => document.getElementById(id);
 function status(id,msg){ $(id).textContent=msg; }
@@ -375,6 +376,8 @@ function setAccountCardCollapsed(collapsed){
 
 async function loadHeartStoneHome(){
   if(!heartStoneId) return;
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
   try{
     const {data,error}=await sb.rpc("get_heart_stone_partner_personalization",{
       p_heart_stone_id:heartStoneId
@@ -787,6 +790,23 @@ async function loadSharedDemoState(){
     step(4); return;
   }
 
+  // Build 42 exclusive Home rule:
+  // Passive polling may still deliver a real sent invitation above this point.
+  // But while Home is the chosen resting state, do not resurrect private/
+  // unsent creation drafts or old recommendation flows underneath it.
+  if(homeRestingMode){
+    [
+      "questCard","recommendationsCard","dateInvitationCard",
+      "sealedEnvelopePanel","openedInvitationPanel","acceptedPanel",
+      "adventureCard","completeCard","feedbackCard"
+    ].forEach(id=>{
+      const el=$(id);
+      if(el) show(id,false);
+    });
+    show("homeCard",true);
+    return;
+  }
+
   const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
     .select("id,created_at,created_by_user_id")
     .eq("heart_stone_id",heartStoneId)
@@ -1098,6 +1118,8 @@ $("homeProfileBtn").onclick=()=>{
   $("authCard")?.scrollIntoView({behavior:"smooth",block:"start"});
 };
 async function returnInvitationDraftHome(){
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
   if(adventureId){
     try{
       const {data:draft}=await sb.from("adventures")
@@ -1126,6 +1148,8 @@ async function returnInvitationDraftHome(){
 $("invitationBackHomeBtn").onclick=returnInvitationDraftHome;
 
 $("backHomeBtn").onclick=async()=>{
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
   // If the sender has reached "Make it an invitation" but has not sent it,
   // remember that proposal as a tucked-away draft on this device.
   if(adventureId && $("senderStylePanel") && !$("senderStylePanel").classList.contains("hidden")){
@@ -1160,11 +1184,15 @@ $("backHomeBtn").onclick=async()=>{
   $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
 };
 $("homeCreateBtn").onclick=()=>{
+  homeRestingMode=false;
+  localStorage.removeItem("hs_home_resting_mode");
   show("homeCard",false);
   show("questCard",true);
   $("questCard").scrollIntoView({behavior:"smooth",block:"start"});
 };
 $("homeContinueBtn").onclick=async()=>{
+  homeRestingMode=false;
+  localStorage.removeItem("hs_home_resting_mode");
   dismissedDraftAdventureId="";
   localStorage.removeItem("hs_dismissed_draft_demo_id");
   status("homeStatus","Checking your shared HEART STONE...");
