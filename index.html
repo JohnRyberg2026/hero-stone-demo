@@ -609,10 +609,9 @@ async function partnerAcceptedHeading(){
 }
 
 async function loadSharedDemoState(){
-  // Clear stale invitation visuals before deciding current shared state.
-  show("sealedEnvelopePanel",false);
-  show("openedInvitationPanel",false);
-  show("acceptedPanel",false);
+  // Do not blank the current invitation UI while asynchronous shared-state
+  // queries are running. Each resolved lifecycle branch renders its next
+  // state atomically; blanking first caused the visible invitation flash.
   if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
   status("questStatus","Checking the shared HEART STONE...");
 
@@ -766,6 +765,8 @@ async function loadSharedDemoState(){
         }else{
           show("senderStylePanel",false);
           if(!advs[0].invitation_opened_at){
+            $("envelope").classList.remove("open");
+            $("openInvitationBtn").disabled=false;
             show("sealedEnvelopePanel",true); show("openedInvitationPanel",false);
             status("inviteStatus","A little something is waiting for you. ❤️");
           }else{
