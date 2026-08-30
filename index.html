@@ -886,10 +886,38 @@ $("sendInvitationBtn").onclick=async()=>{
 };
 $("openInvitationBtn").onclick=async()=>{
   if(!adventureId)return;
-  $("envelope").classList.add("open"); $("openInvitationBtn").disabled=true;
+  $("envelope").classList.add("open");
+  $("openInvitationBtn").disabled=true;
+  status("inviteStatus","Opening your invitation... ❤️");
+
   const {error}=await sb.rpc("open_demo_date_invitation",{p_adventure_id:adventureId});
-  if(error){$("openInvitationBtn").disabled=false;return status("inviteStatus","Invitation error: "+error.message);}
-  setTimeout(async()=>{show("sealedEnvelopePanel",false);show("openedInvitationPanel",true);await loadSharedDemoState();},650);
+  if(error){
+    $("openInvitationBtn").disabled=false;
+    return status("inviteStatus","Invitation error: "+error.message);
+  }
+
+  // Immediate local transition: do not wait on polling/recovery to redraw.
+  show("sealedEnvelopePanel",false);
+  show("openedInvitationPanel",true);
+
+  // Populate the invitation message from the current adventure state.
+  const {data:advRows}=await sb.from("adventures")
+    .select("invitation_style")
+    .eq("id",adventureId)
+    .limit(1);
+  const style=advRows?.[0]?.invitation_style || "surprise";
+  const messages={
+    romantic:"Someone special is asking for a little time together. ❤️",
+    playful:"Psst... someone has plans for the two of you. 😏",
+    mysterious:"A little mystery is waiting for the two of you. ✨",
+    adventurous:"Your next adventure is calling. 🧭",
+    surprise:"Someone special has a surprise waiting for you. 💎"
+  };
+  if($("invitationMessage")) $("invitationMessage").textContent=messages[style]||messages.surprise;
+  status("inviteStatus","The adventure stays a surprise until you say yes.");
+
+  // Then reconcile with shared state in the background.
+  setTimeout(()=>{ loadSharedDemoState(); },250);
 };
 $("acceptDateBtn").onclick=async()=>{
   if(!adventureId) return;
