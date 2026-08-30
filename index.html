@@ -490,6 +490,36 @@ async function loadSharedDemoState(){
   if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
   status("questStatus","Checking the shared HEART STONE...");
 
+  // Resolve the latest sent invitation directly so recommendation refreshes cannot confuse device roles.
+  const {data:invited,error:invitedErr}=await sb.from("adventures")
+    .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at")
+    .eq("heart_stone_id",heartStoneId).eq("is_demo",true)
+    .not("invitation_style","is",null).in("status",["proposed","active"])
+    .order("created_at",{ascending:false}).limit(1);
+  if(invitedErr) return status("questStatus","Invitation sync error: "+invitedErr.message);
+  if(invited?.[0] && invited[0].status==="proposed"){
+    const adv=invited[0]; adventureId=adv.id;
+    show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true); show("acceptedPanel",false);
+    const {data:{user:currentUser}}=await sb.auth.getUser();
+    const inviter=(adv.created_by_user_id===currentUser?.id);
+    if(inviter){
+      show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false);
+      status("inviteStatus","Invitation sent ❤️ Waiting for your partner to open it.");
+    }else{
+      show("senderStylePanel",false);
+      if(!adv.invitation_opened_at){
+        show("sealedEnvelopePanel",true); show("openedInvitationPanel",false);
+        status("inviteStatus","A HEART STONE invitation is waiting... ❤️");
+      }else{
+        show("sealedEnvelopePanel",false); show("openedInvitationPanel",true);
+        const messages={romantic:"Someone special is asking for a little time together. ❤️",playful:"Psst... someone has plans for the two of you. 😏",mysterious:"A little mystery is waiting for the two of you. ✨",adventurous:"Your next adventure is calling. 🧭",surprise:"Someone special has a surprise waiting for you. 💎"};
+        $("invitationMessage").textContent=messages[adv.invitation_style]||messages.surprise;
+        status("inviteStatus","The adventure stays a surprise until you say yes.");
+      }
+    }
+    step(4); return;
+  }
+
   const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
     .select("id,created_at,created_by_user_id")
     .eq("heart_stone_id",heartStoneId)
