@@ -1072,6 +1072,18 @@ async function checkForPartnerUpdates(){
     const adv=shared?.adventure;
     const invitationVisible=!$("dateInvitationCard").classList.contains("hidden");
 
+    // Build 42 completion synchronization:
+    // If this phone is visibly inside the active adventure and the shared
+    // adventure has become completed on the partner's device, completion must
+    // win immediately—even if this browser happened to establish its polling
+    // fingerprint baseline after the status transition.
+    const adventureVisible=!$("adventureCard").classList.contains("hidden");
+    if(adv?.status==="completed" && adventureVisible){
+      lastSharedFingerprint=fp;
+      await loadSharedDemoState();
+      return;
+    }
+
     // Shared "Start Another Adventure" must win even when this device
     // established its polling baseline after demo_ready_at was already set.
     if(adv?.status==="completed" && adv?.demo_ready_at){
