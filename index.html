@@ -1022,10 +1022,17 @@ $("sendInvitationBtn").onclick=async()=>{
 };
 $("openInvitationBtn").onclick=async()=>{
   if(!adventureId)return;
-  // Suppress polling from the instant the recipient taps the envelope.
-  suppressSharedRenderUntil=Date.now()+2200;
-  $("envelope").classList.add("open");
+
+  // Freeze partner polling for this tiny visual transition. If a poll was
+  // already in flight, let it finish BEFORE changing the envelope DOM.
+  if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; }
+  suppressSharedRenderUntil=Date.now()+3000;
   $("openInvitationBtn").disabled=true;
+  while(autoSyncBusy){
+    await new Promise(resolve=>setTimeout(resolve,25));
+  }
+
+  $("envelope").classList.add("open");
   status("inviteStatus","Opening your invitation... ❤️");
 
   const {error}=await sb.rpc("open_demo_date_invitation",{p_adventure_id:adventureId});
@@ -1054,6 +1061,12 @@ $("openInvitationBtn").onclick=async()=>{
   };
   if($("invitationMessage")) $("invitationMessage").textContent=messages[style]||messages.surprise;
   status("inviteStatus","The adventure stays a surprise until you say yes.");
+
+  // Resume partner synchronization after the transition has fully settled.
+  setTimeout(()=>{
+    suppressSharedRenderUntil=0;
+    startAutomaticPartnerSync();
+  },700);
 };
 $("acceptDateBtn").onclick=async()=>{
   if(!adventureId) return;
