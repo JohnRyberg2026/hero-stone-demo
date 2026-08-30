@@ -338,6 +338,7 @@ let lastSharedFingerprint = "";
 let suppressSharedRenderUntil = 0;
 let autoSyncBusy = false;
 let dismissedCompletedAdventureId = localStorage.getItem("hs_dismissed_completed_demo_id") || "";
+let dismissedDraftAdventureId = localStorage.getItem("hs_dismissed_draft_demo_id") || "";
 
 const $ = id => document.getElementById(id);
 function status(id,msg){ $(id).textContent=msg; }
@@ -821,6 +822,23 @@ async function loadSharedDemoState(){
 
       if(advs[0].status==="proposed"){
         adventureId=advs[0].id;
+
+        // Build 42 Home draft rule: an unsent invitation draft may be tucked
+        // away locally. Polling must not redraw it underneath Home. If it is
+        // later sent, invitation_style becomes non-null and normal sync resumes.
+        const homeIsResting = $("homeCard") && !$("homeCard").classList.contains("hidden");
+        if(
+          homeIsResting &&
+          !advs[0].invitation_style &&
+          advs[0].id===dismissedDraftAdventureId
+        ){
+          show("dateInvitationCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          return;
+        }
+
         const {data:{user}}=await sb.auth.getUser();
         const inviter=(advs[0].created_by_user_id===user?.id);
 
@@ -1064,10 +1082,22 @@ $("homeProfileBtn").onclick=()=>{
   setAccountCardCollapsed(false);
   $("authCard")?.scrollIntoView({behavior:"smooth",block:"start"});
 };
-$("backHomeBtn").onclick=()=>{
-  // Return to a clean Home surface. This only changes local presentation;
-  // any invitation already written to the database remains intact and can
-  // be recovered by Continue Our Adventure / shared-state sync.
+$("backHomeBtn").onclick=async()=>{
+  // If the sender has reached "Make it an invitation" but has not sent it,
+  // remember that proposal as a tucked-away draft on this device.
+  if(adventureId && $("senderStylePanel") && !$("senderStylePanel").classList.contains("hidden")){
+    try{
+      const {data:draft}=await sb.from("adventures")
+        .select("id,status,invitation_style")
+        .eq("id",adventureId)
+        .maybeSingle();
+      if(draft && draft.status==="proposed" && !draft.invitation_style){
+        dismissedDraftAdventureId=draft.id;
+        localStorage.setItem("hs_dismissed_draft_demo_id",draft.id);
+      }
+    }catch(e){}
+  }
+
   [
     "questCard",
     "recommendationsCard",
@@ -1092,6 +1122,8 @@ $("homeCreateBtn").onclick=()=>{
   $("questCard").scrollIntoView({behavior:"smooth",block:"start"});
 };
 $("homeContinueBtn").onclick=async()=>{
+  dismissedDraftAdventureId="";
+  localStorage.removeItem("hs_dismissed_draft_demo_id");
   status("homeStatus","Checking your shared HEART STONE...");
   await loadSharedDemoState();
 };
