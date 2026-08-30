@@ -749,6 +749,15 @@ async function checkForPartnerUpdates(){
     // baseline was established after the reveal happened.
     const adv=shared?.adventure;
     const invitationVisible=!$("dateInvitationCard").classList.contains("hidden");
+
+    // Shared "Start Another Adventure" must win even when this device
+    // established its polling baseline after demo_ready_at was already set.
+    if(adv?.status==="completed" && adv?.demo_ready_at){
+      lastSharedFingerprint=fp;
+      await loadSharedDemoState();
+      return;
+    }
+
     if(adv?.status==="active" && adv?.adventure_revealed_at && invitationVisible){
       lastSharedFingerprint=fp;
       await loadSharedDemoState();
