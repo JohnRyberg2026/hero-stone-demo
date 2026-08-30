@@ -539,7 +539,7 @@ async function loadExistingActiveDemoAdventure(){
     const {data:{user}}=await sb.auth.getUser();
   if($("signedInEmail")) $("signedInEmail").textContent = user?.email ? ("Signed in as: " + user.email) : "";
     const inviter=(adv.created_by_user_id===user?.id);
-    $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading(user?.id) : "❤️ IT'S A DATE";
+    $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
     $("acceptedMessage").textContent=inviter?"Your partner accepted. Your adventure is ready.":"Your invitation is accepted. Your adventure is waiting...";
     status("inviteStatus","Either of you can reveal your adventure.");
     step(4); $("dateInvitationCard").scrollIntoView({behavior:"smooth"});
@@ -583,21 +583,14 @@ async function loadExistingActiveDemoAdventure(){
   return true;
 }
 
-async function partnerAcceptedHeading(inviterUserId){
+async function partnerAcceptedHeading(){
   try{
     if(!heartStoneId) return "❤️ THEY SAID YES!";
-    const {data:members}=await sb.from("heart_stone_memberships")
-      .select("user_id")
-      .eq("heart_stone_id",heartStoneId)
-      .neq("user_id",inviterUserId)
-      .limit(1);
-    const partnerId=members?.[0]?.user_id;
-    if(!partnerId) return "❤️ THEY SAID YES!";
-
-    const {data:p}=await sb.from("profiles")
-      .select("first_name,pronouns")
-      .eq("id",partnerId)
-      .maybeSingle();
+    const {data,error}=await sb.rpc("get_heart_stone_partner_personalization",{
+      p_heart_stone_id:heartStoneId
+    });
+    if(error) return "❤️ THEY SAID YES!";
+    const p=Array.isArray(data) ? data[0] : data;
     if(!p) return "❤️ THEY SAID YES!";
 
     if(p.pronouns==="she_her") return "❤️ SHE SAID YES!";
@@ -638,7 +631,7 @@ async function loadSharedDemoState(){
     show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
     const {data:{user:currentUser}}=await sb.auth.getUser();
     const inviter=(adv.created_by_user_id===currentUser?.id);
-    $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading(currentUser?.id) : "❤️ IT'S A DATE";
+    $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
     $("acceptedText").textContent=inviter ? "Your partner accepted. Your adventure is ready." : "Your adventure is waiting...";
     status("inviteStatus",inviter ? "Your invitation was accepted. ❤️" : "It's a date. ❤️");
     step(4); return;
@@ -824,7 +817,7 @@ async function loadSharedDemoState(){
         show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
         const {data:{user}}=await sb.auth.getUser();
         const inviter=(advs[0].created_by_user_id===user?.id);
-        $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading(user?.id) : "❤️ IT'S A DATE";
+        $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
         $("acceptedMessage").textContent=inviter?"Your partner accepted. Your adventure is ready.":"Your invitation is accepted. Your adventure is waiting...";
         status("inviteStatus","Either of you can reveal your adventure.");
         step(4); return;
@@ -909,9 +902,13 @@ async function checkForPartnerUpdates(){
     if(fp!==lastSharedFingerprint){
       const hadPrevious=!!lastSharedFingerprint;
       lastSharedFingerprint=fp;
-      if(hadPrevious){
+
+      // A newly-sent invitation may be the first shared fingerprint this
+      // browser has ever seen. Treat that first non-empty state as a real
+      // partner update so the recipient gets the envelope without refreshing.
+      if(hadPrevious || adv?.invitation_style){
         await loadSharedDemoState();
-        status("questStatus","Partner update received automatically — both phones are synchronized.");
+        if(hadPrevious) status("questStatus","Partner update received automatically — both phones are synchronized.");
       }
     }
   } finally {
