@@ -506,6 +506,10 @@ async function loadExistingActiveDemoAdventure(){
 }
 
 async function loadSharedDemoState(){
+  // Clear stale invitation visuals before deciding current shared state.
+  show("sealedEnvelopePanel",false);
+  show("openedInvitationPanel",false);
+  show("acceptedPanel",false);
   if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
   status("questStatus","Checking the shared HEART STONE...");
 
@@ -535,9 +539,16 @@ async function loadSharedDemoState(){
   }
   if(invited?.[0] && invited[0].status==="proposed"){
     const adv=invited[0]; adventureId=adv.id;
-    show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true); show("acceptedPanel",false);
     const {data:{user:currentUser}}=await sb.auth.getUser();
     const inviter=(adv.created_by_user_id===currentUser?.id);
+    if(!inviter && !adv.invitation_style){
+      adventureId=null;
+      show("dateInvitationCard",false); show("recommendationsCard",false);
+      show("adventureCard",false); show("completeCard",false); show("questCard",true);
+      step(3);
+      return;
+    }
+    show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true); show("acceptedPanel",false);
     if(inviter){
       show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false);
       status("inviteStatus","Invitation sent ❤️ Waiting for your partner to open it.");
