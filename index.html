@@ -498,6 +498,12 @@ async function loadSharedDemoState(){
     .not("invitation_style","is",null).in("status",["proposed","active"])
     .order("created_at",{ascending:false}).limit(1);
   if(invitedErr) return status("questStatus","Invitation sync error: "+invitedErr.message);
+  if(invited?.[0] && invited[0].status==="active" && invited[0].invitation_accepted_at && invited[0].adventure_revealed_at){
+    const adv=invited[0]; adventureId=adv.id;
+    show("dateInvitationCard",false);
+    await loadExistingActiveDemoAdventure();
+    return;
+  }
   if(invited?.[0] && invited[0].status==="active" && invited[0].invitation_accepted_at && !invited[0].adventure_revealed_at){
     const adv=invited[0]; adventureId=adv.id;
     show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
@@ -814,7 +820,7 @@ $("revealAdventureBtn").onclick=async()=>{
   const {error}=await sb.rpc("reveal_demo_adventure",{p_adventure_id:adventureId});
   if(error)return status("inviteStatus","Reveal error: "+error.message);
   show("dateInvitationCard",false);
-  await loadSharedDemoState();
+  await loadExistingActiveDemoAdventure();
 };
 
 $("declineDateBtn").onclick=async()=>{
