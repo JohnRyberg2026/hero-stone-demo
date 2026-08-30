@@ -245,6 +245,8 @@ let requestId = null;
 let adventureId = null;
 let stepId = null;
 let privateRequestId = null;
+let recommendationPool = [];
+let recommendationOffset = 0;
 let autoSyncTimer = null;
 let lastSharedFingerprint = "";
 let autoSyncBusy = false;
@@ -380,7 +382,7 @@ $("questBtn").onclick = async()=>{
     p_mood:moods,
     p_max_distance_minutes:Number($("distance").value),
     p_optional_request:$("requestNote").value.trim()||null,
-    p_limit:3
+    p_limit:9
   });
   if(error){
     if((error.message||"").includes("ACTIVE_ADVENTURE_ALREADY_EXISTS")){
@@ -402,18 +404,39 @@ async function loadRecommendations(){
     show("recommendationsCard",false);
     return;
   }
-  const {data,error}=await sb.from("recommendations").select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at").eq("request_id",requestId).order("created_at");
+
+  const {data,error}=await sb.from("recommendations")
+    .select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at")
+    .eq("request_id",requestId)
+    .order("created_at");
+
   if(error) return status("questStatus","Recommendation load error: "+error.message);
-  const box=$("recommendations"); box.innerHTML="";
-  (data||[]).forEach(r=>{
-    const div=document.createElement("div"); div.className="recommendation";
+
+  recommendationPool = data || [];
+  recommendationOffset = 0;
+  renderRecommendationBatch();
+}
+
+function renderRecommendationBatch(){
+  const box=$("recommendations");
+  box.innerHTML="";
+
+  const batch=recommendationPool.slice(recommendationOffset,recommendationOffset+3);
+
+  batch.forEach(r=>{
+    const div=document.createElement("div");
+    div.className="recommendation";
     div.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="small">${escapeHtml(r.recommendation_class||"")}</div><p>${escapeHtml(r.summary||"")}</p><button>Choose This</button>`;
     div.querySelector("button").onclick=()=>chooseRecommendation(r);
     box.appendChild(div);
   });
+
+  const moreBtn=$("moreRecommendationsBtn");
+  moreBtn.disabled = recommendationOffset + 3 >= recommendationPool.length;
+  moreBtn.textContent = moreBtn.disabled ? "No More New Ideas Yet" : "Show Me 3 More ↻";
+
   show("recommendationsCard",true);
 }
-
 
 async function loadExistingActiveDemoAdventure(){
   if(!heartStoneId) return false;
@@ -679,9 +702,11 @@ function startAutomaticPartnerSync(){
 $("syncPartnerBtn").onclick=loadSharedDemoState;
 $("refreshPartnerBtn").onclick=loadSharedDemoState;
 $("moreRecommendationsBtn").onclick=()=>{
-  show("recommendationsCard",false);
-  status("questStatus","Finding three fresh ideas just for you...");
-  $("questBtn").click();
+  if(recommendationOffset + 3 >= recommendationPool.length) return;
+  recommendationOffset += 3;
+  status("questStatus","Here are three different ideas.");
+  renderRecommendationBatch();
+  $("recommendationsCard").scrollIntoView({behavior:"smooth"});
 };
 
 async function chooseRecommendation(r){
