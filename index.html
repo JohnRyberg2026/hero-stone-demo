@@ -357,6 +357,22 @@ async function loadHeartStoneHome(){
   }catch(e){}
   show("homeCard",true);
   show("questCard",false);
+
+  // Build 42 Home is the clean resting state. Preserve all data, but do not
+  // leave any prior lifecycle panel visible underneath the Home card.
+  [
+    "recommendationsCard",
+    "sealedEnvelopePanel",
+    "openedInvitationPanel",
+    "acceptedPanel",
+    "adventureCard",
+    "completeCard",
+    "feedbackCard",
+    "historyCard"
+  ].forEach(id => {
+    const el=$(id);
+    if(el) show(id,false);
+  });
 }
 
 function setConnectedUI(connected){
