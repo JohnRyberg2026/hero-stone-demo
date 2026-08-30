@@ -1442,15 +1442,61 @@ $("cancelAdventureBtn").onclick = async()=>{
 };
 
 $("saveFeedbackBtn").onclick = async()=>{
-  if(!adventureId) return status("completeStatus","No adventure selected.");
+  // Build 42: feedback submission must feel complete, not inert.
+  // If local state lost the completed adventure id, recover the newest completed
+  // demo adventure for this HEART STONE before saving.
+  let feedbackAdventureId=adventureId;
+
+  if(!feedbackAdventureId && heartStoneId){
+    const {data:latestCompleted,error:lookupErr}=await sb.from("adventures")
+      .select("id")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .eq("status","completed")
+      .order("completed_at",{ascending:false})
+      .limit(1);
+    if(lookupErr) return status("completeStatus","Feedback lookup error: "+lookupErr.message);
+    feedbackAdventureId=latestCompleted?.[0]?.id||null;
+  }
+
+  if(!feedbackAdventureId) return status("completeStatus","No completed adventure found for feedback.");
+
+  $("saveFeedbackBtn").disabled=true;
   status("completeStatus","Saving your private demo feedback...");
+
   const {error}=await sb.rpc("save_demo_adventure_feedback",{
-    p_adventure_id:adventureId,
+    p_adventure_id:feedbackAdventureId,
     p_rating:$("rating").value,
     p_comment:$("feedback").value.trim()
   });
-  if(error) return status("completeStatus","Feedback error: "+error.message);
-  status("completeStatus","Your demo feedback was saved privately.\nReal learning profile remains protected from Demo Mode.");
+
+  if(error){
+    $("saveFeedbackBtn").disabled=false;
+    return status("completeStatus","Feedback error: "+error.message);
+  }
+
+  // This partner is finished with the completed adventure locally. Preserve the
+  // completed adventure in history, but return this device to the clean Home.
+  dismissedCompletedAdventureId=feedbackAdventureId;
+  localStorage.setItem("hs_dismissed_completed_demo_id",feedbackAdventureId);
+
+  adventureId=null;
+  stepId=null;
+  requestId=null;
+  privateRequestId=null;
+  seenCandidateIds=[];
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+
+  show("completeCard",false);
+  show("adventureCard",false);
+  show("dateInvitationCard",false);
+  show("recommendationsCard",false);
+  show("questCard",false);
+  show("homeCard",true);
+  status("homeStatus","Your private feedback was saved. ❤️");
+  step(3);
+  $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
 };
 
 $("startAnotherBtn").onclick = async()=>{
