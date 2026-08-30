@@ -609,6 +609,7 @@ async function partnerAcceptedHeading(){
 }
 
 async function loadSharedDemoState(){
+  if(Date.now()<suppressSharedRenderUntil) return;
   // Do not blank the current invitation UI while asynchronous shared-state
   // queries are running. Each resolved lifecycle branch renders its next
   // state atomically; blanking first caused the visible invitation flash.
@@ -636,6 +637,9 @@ async function loadSharedDemoState(){
     // pre-acceptance "waiting for your partner" message behind.
     status("inviteStatus","");
     const {data:{user:currentUser}}=await sb.auth.getUser();
+    // A shared-state request may have started before the recipient tapped Open.
+    // If the local open transition now owns the screen, discard this stale render.
+    if(Date.now()<suppressSharedRenderUntil) return;
     const inviter=(adv.created_by_user_id===currentUser?.id);
     $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
     if($("acceptedText")) $("acceptedText").textContent=inviter ? "Your partner accepted. Your adventure is ready." : "Your adventure is waiting...";
