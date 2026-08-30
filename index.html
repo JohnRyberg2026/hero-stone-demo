@@ -1032,25 +1032,16 @@ $("openInvitationBtn").onclick=async()=>{
     await new Promise(resolve=>setTimeout(resolve,25));
   }
 
-  status("inviteStatus","Opening your invitation... ❤️");
-
+  // Keep the sealed screen visually untouched while the database records
+  // the open. Changing status/height before the swap can make mobile browsers
+  // visibly re-anchor the page.
   const {error}=await sb.rpc("open_demo_date_invitation",{p_adventure_id:adventureId});
   if(error){
     $("openInvitationBtn").disabled=false;
     return status("inviteStatus","Invitation error: "+error.message);
   }
 
-  // The recipient owns this visual transition locally so polling cannot
-  // momentarily redraw another lifecycle screen over it.
-  suppressSharedRenderUntil=Math.max(suppressSharedRenderUntil,Date.now()+1200);
-  show("sealedEnvelopePanel",false);
-  show("openedInvitationPanel",true);
-
-  const {data:advRows}=await sb.from("adventures")
-    .select("invitation_style")
-    .eq("id",adventureId)
-    .limit(1);
-  const style=advRows?.[0]?.invitation_style || "surprise";
+  const style=selectedInvitationStyle || "surprise";
   const messages={
     romantic:"Someone special is asking for a little time together. ❤️",
     playful:"Psst... someone has plans for the two of you. 😏",
@@ -1059,7 +1050,13 @@ $("openInvitationBtn").onclick=async()=>{
     surprise:"Someone special has a surprise waiting for you. 💎"
   };
   if($("invitationMessage")) $("invitationMessage").textContent=messages[style]||messages.surprise;
+
+  // One atomic visual swap: populate first, then replace the sealed panel.
+  const y=window.scrollY;
+  show("openedInvitationPanel",true);
+  show("sealedEnvelopePanel",false);
   status("inviteStatus","The adventure stays a surprise until you say yes.");
+  window.scrollTo(0,y);
 
   // Resume partner synchronization after the transition has fully settled.
   setTimeout(()=>{
