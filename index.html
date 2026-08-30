@@ -541,7 +541,7 @@ async function loadExistingActiveDemoAdventure(){
     const inviter=(adv.created_by_user_id===user?.id);
     $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
     $("acceptedMessage").textContent=inviter?"Your partner accepted. Your adventure is ready.":"Your invitation is accepted. Your adventure is waiting...";
-    status("inviteStatus","Either of you can reveal your adventure.");
+    status("inviteStatus",inviter ? "Your invitation was accepted. ❤️" : "It's a date. ❤️");
     step(4); $("dateInvitationCard").scrollIntoView({behavior:"smooth"});
     return true;
   }
@@ -638,6 +638,16 @@ async function loadSharedDemoState(){
   }
   if(invited?.[0] && invited[0].status==="proposed"){
     const adv=invited[0]; adventureId=adv.id;
+
+    // Guard against an older async proposed render finishing after acceptance.
+    const {data:freshAdv}=await sb.from("adventures")
+      .select("status,invitation_accepted_at,adventure_revealed_at")
+      .eq("id",adv.id)
+      .maybeSingle();
+    if(freshAdv && (freshAdv.status!=="proposed" || freshAdv.invitation_accepted_at)){
+      return loadSharedDemoState();
+    }
+
     const {data:{user:currentUser}}=await sb.auth.getUser();
     const inviter=(adv.created_by_user_id===currentUser?.id);
     if(!inviter && !adv.invitation_style){
