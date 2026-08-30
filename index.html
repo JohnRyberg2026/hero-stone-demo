@@ -1065,8 +1065,23 @@ $("homeProfileBtn").onclick=()=>{
   $("authCard")?.scrollIntoView({behavior:"smooth",block:"start"});
 };
 $("backHomeBtn").onclick=()=>{
-  show("questCard",false);
-  show("recommendationsCard",false);
+  // Return to a clean Home surface. This only changes local presentation;
+  // any invitation already written to the database remains intact and can
+  // be recovered by Continue Our Adventure / shared-state sync.
+  [
+    "questCard",
+    "recommendationsCard",
+    "dateInvitationCard",
+    "sealedEnvelopePanel",
+    "openedInvitationPanel",
+    "acceptedPanel",
+    "adventureCard",
+    "completeCard",
+    "feedbackCard"
+  ].forEach(id=>{
+    const el=$(id);
+    if(el) show(id,false);
+  });
   show("homeCard",true);
   status("homeStatus","Your HEART STONE is ready.");
   $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
