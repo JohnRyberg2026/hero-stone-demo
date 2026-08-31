@@ -1010,9 +1010,10 @@ async function loadSharedDemoState(){
           show("adventureCard",false);
           show("completeCard",false);
           show("historyBox",false);
-          show("questCard",true);
-          status("questStatus","Ready for your next HEART STONE adventure. ❤️");
-          step(3);
+          show("questCard",false);
+          homeRestingMode=true;
+          localStorage.setItem("hs_home_resting_mode","1");
+          await loadHeartStoneHome();
           return;
         }
         if(advs[0].id===dismissedCompletedAdventureId){
@@ -1023,8 +1024,10 @@ async function loadSharedDemoState(){
           show("adventureCard",false);
           show("completeCard",false);
           show("historyBox",false);
-          show("questCard",true);
-          step(3);
+          show("questCard",false);
+          homeRestingMode=true;
+          localStorage.setItem("hs_home_resting_mode","1");
+          await loadHeartStoneHome();
           return;
         }
         homeRestingMode=false;
@@ -1592,10 +1595,11 @@ $("startAnotherBtn").onclick = async()=>{
   show("dateInvitationCard",false);
   show("recommendationsCard",false);
   show("adventureCard",false);
-  show("questCard",true);
-  status("questStatus","Ready for your next HEART STONE adventure. ❤️");
-  step(3);
-  $("questCard").scrollIntoView({behavior:"smooth"});
+  show("questCard",false);
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  await loadHeartStoneHome();
+  $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
 };
 
 $("showHistoryBtn").onclick = async()=>{
