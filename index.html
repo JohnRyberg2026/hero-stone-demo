@@ -43,6 +43,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
    inline recovery/navigation code from accidentally restoring it. */
 body:has(#adventureCard:not(.hidden)) .progress,
 body:has(#completeCard:not(.hidden)) .progress{display:none!important}
+/* The real adventure owns the screen. Hide setup/home chrome while it is visible. */
+body:has(#adventureCard:not(.hidden)) #homeCard,
+body:has(#adventureCard:not(.hidden)) #authCard,
+body:has(#adventureCard:not(.hidden)) #questCard,
+body:has(#adventureCard:not(.hidden)) #recommendationsCard,
+body:has(#adventureCard:not(.hidden)) #invitationDraftCard,
+body:has(#adventureCard:not(.hidden)) #sealedEnvelopePanel,
+body:has(#adventureCard:not(.hidden)) #openedInvitationPanel,
+body:has(#adventureCard:not(.hidden)) #acceptedPanel{display:none!important}
 .dot{height:6px;flex:1;border-radius:5px;background:#e5d9ce}
 .dot.on{background:var(--accent)}
 .hero{font-size:26px;font-weight:800;line-height:1.1;margin:4px 0 8px}
@@ -711,6 +720,7 @@ async function loadExistingActiveDemoAdventure(){
 
   setAdventureFocus(true);
   show("completeCard",false);
+  show("homeCard",false);
   show("adventureCard",true);
   if($("adventureStatus")) $("adventureStatus").style.display="none";
   { const progress=document.querySelector(".progress"); if(progress) progress.style.display="none"; }
@@ -1055,6 +1065,7 @@ async function loadSharedDemoState(){
       show("homeCard",false);
       setAdventureFocus(true);
       show("completeCard",false);
+      show("homeCard",false);
       show("adventureCard",true);
       if($("adventureStatus")) $("adventureStatus").style.display="none";
       { const progress=document.querySelector(".progress"); if(progress) progress.style.display="none"; }
