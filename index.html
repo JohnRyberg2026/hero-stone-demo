@@ -56,11 +56,11 @@ body:has(#adventureCard:not(.hidden)) #acceptedPanel{display:none!important}
 /* Acceptance is also a focused emotional moment.
    Keep sender (HE/SHE/THEY SAID YES) and recipient (IT'S A DATE) visually identical:
    no setup progress strip and no Home/account card stacked above it. */
-body:has(#acceptedPanel:not(.hidden)) .progress,
-body:has(#acceptedPanel:not(.hidden)) #homeCard,
-body:has(#acceptedPanel:not(.hidden)) #authCard,
-body:has(#acceptedPanel:not(.hidden)) #questCard,
-body:has(#acceptedPanel:not(.hidden)) #recommendationsCard{display:none!important}
+body:has(#dateInvitationCard:not(.hidden) #acceptedPanel:not(.hidden)) .progress,
+body:has(#dateInvitationCard:not(.hidden) #acceptedPanel:not(.hidden)) #homeCard,
+body:has(#dateInvitationCard:not(.hidden) #acceptedPanel:not(.hidden)) #authCard,
+body:has(#dateInvitationCard:not(.hidden) #acceptedPanel:not(.hidden)) #questCard,
+body:has(#dateInvitationCard:not(.hidden) #acceptedPanel:not(.hidden)) #recommendationsCard{display:none!important}
 .dot{height:6px;flex:1;border-radius:5px;background:#e5d9ce}
 .dot.on{background:var(--accent)}
 .hero{font-size:26px;font-weight:800;line-height:1.1;margin:4px 0 8px}
