@@ -140,6 +140,32 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .player-ready{color:#78dda8;font-size:11px;font-weight:900;letter-spacing:.05em}
 .lobby-share{padding:12px;border:1px dashed rgba(242,201,118,.55);border-radius:14px;text-align:center;color:#d8cfd2;font-size:12px;margin-bottom:10px}
 .lobby-share strong{display:block;color:#f4ca73;font-size:20px;letter-spacing:.16em;margin-top:4px}
+.world-launch{text-align:center;overflow:hidden;position:relative}
+.launch-kicker{color:#f4ca73;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+.launch-title{font-family:Georgia,serif;color:#fff;font-size:29px;font-weight:900;margin:7px 0 4px}
+.launch-copy{max-width:430px;margin:0 auto 14px;color:#d8cfd2;font-size:13px}
+.team-ready-row{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin:12px 0 18px}
+.ready-chip{padding:6px 10px;border-radius:999px;background:rgba(87,211,152,.16);border:1px solid rgba(87,211,152,.38);color:#aee8c7;font-size:11px;font-weight:850}
+.launch-countdown{height:78px;display:grid;place-items:center;color:#f4ca73;font-family:Georgia,serif;font-size:64px;font-weight:900;text-shadow:0 0 24px rgba(244,202,115,.45)}
+.world-envelope-wrap{display:grid;place-items:center;min-height:245px}
+.world-envelope{width:min(330px,88%);height:205px;position:relative;border-radius:12px;background:linear-gradient(145deg,#f2dda5,#bd8a35);box-shadow:0 20px 50px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.35);cursor:pointer;overflow:hidden;transition:transform .6s ease,opacity .45s ease}
+.world-envelope:hover{transform:translateY(-4px)}
+.world-envelope:before{content:"";position:absolute;inset:0;background:linear-gradient(32deg,transparent 49.5%,rgba(79,43,9,.22) 50%,transparent 50.5%),linear-gradient(-32deg,transparent 49.5%,rgba(79,43,9,.22) 50%,transparent 50.5%)}
+.world-envelope-flap{position:absolute;z-index:2;inset:0 0 auto;height:58%;background:linear-gradient(160deg,#eed899,#bd892e);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .75s ease}
+.world-envelope.open .world-envelope-flap{transform:rotateX(180deg)}
+.world-wax{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,#e84c61,#86152d 57%,#480818);border:4px double rgba(255,219,147,.75);box-shadow:0 7px 18px rgba(0,0,0,.42);font-size:30px;transition:transform .4s ease,opacity .35s ease}
+.world-envelope.open .world-wax{transform:translate(-50%,-50%) scale(1.7);opacity:0}
+.break-seal{color:#f4ca73;font-size:12px;font-weight:900;letter-spacing:.11em;margin-top:10px;animation:sealGlow 1.4s ease-in-out infinite alternate}
+@keyframes sealGlow{to{opacity:.5}}
+.challenge-reveal{animation:challengeRise .7s ease both;text-align:left}
+@keyframes challengeRise{from{opacity:0;transform:translateY(25px) scale(.97)}to{opacity:1;transform:none}}
+.challenge-type{display:inline-block;padding:5px 10px;border-radius:999px;background:#f4ca73;color:#170c08;font-size:11px;font-weight:950;letter-spacing:.12em}
+.challenge-title{font-family:Georgia,serif;color:#fff;font-size:27px;line-height:1.12;margin:13px 0 7px}
+.challenge-command{font-size:18px;color:#f4ca73;font-weight:900;line-height:1.35}
+.challenge-rules{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}
+.challenge-rule{padding:11px;border-radius:13px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.11);color:#d8cfd2;font-size:12px}
+.challenge-rule strong{display:block;color:#fff;font-size:14px;margin-bottom:2px}
+.launch-heartstone{color:#bcaeb3;font-size:11px;letter-spacing:.06em;text-align:center;margin:10px 0}
 @media(max-width:700px){.combined-logo{max-height:190px}.quest-choices{grid-template-columns:1fr}.quest-choice-logo,.world-choice-logo,.world-mark{width:138px;height:138px}.world-mark{font-size:62px}.choice-copy{min-height:0}}
 </style>
 </head>
@@ -229,6 +255,39 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <div class="lobby-share">Invite more players with code<strong id="lobbyShareCode">QUEST123</strong></div>
         <button id="worldStartQuestBtn">START THE QUEST</button>
         <button class="secondary" id="worldLeaveLobbyBtn">← LEAVE TEAM LOBBY</button>
+      </div>
+
+      <div class="world-panel world-launch hidden" id="worldLaunchStage">
+        <div id="worldCountdownView">
+          <div class="launch-kicker">HEART STONE HAS CONNECTED YOUR TEAM</div>
+          <div class="launch-title">The Adventure Is About to Begin</div>
+          <p class="launch-copy">Everyone receives the same sealed envelope. Stay together. When the signal appears, break the seal.</p>
+          <div class="team-ready-row" id="launchReadyPlayers"></div>
+          <div class="launch-countdown" id="worldCountdownNumber">3</div>
+          <div class="world-envelope-wrap">
+            <div>
+              <div class="world-envelope" id="worldSealedEnvelope" role="button" tabindex="0" aria-label="Sealed WORLD QUEST envelope">
+                <div class="world-envelope-flap"></div>
+                <div class="world-wax">🌎</div>
+              </div>
+              <div class="break-seal hidden" id="breakSealPrompt">BREAK THE SEAL</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="challenge-reveal hidden" id="worldFirstChallenge">
+          <div class="launch-kicker">ENVELOPE ONE · THE ADVENTURE BEGINS</div>
+          <span class="challenge-type">FIND</span>
+          <div class="challenge-title">Find the Heart of Your City</div>
+          <div class="challenge-command">Find a public landmark that represents your city—and capture your whole team with it.</div>
+          <div class="challenge-rules">
+            <div class="challenge-rule"><strong>20 MINUTES</strong>Complete before time expires.</div>
+            <div class="challenge-rule"><strong>100 POINTS</strong>Photo evidence required.</div>
+          </div>
+          <p>Every team receives the same type of challenge, wherever they are in the world. HEART STONE will verify the evidence and keep the competition moving.</p>
+          <div class="launch-heartstone">YOUR CITY IS THE GAME BOARD · HEART STONE IS THE REFEREE</div>
+          <button id="worldEnterChallengeBtn">BEGIN THIS CHALLENGE</button>
+        </div>
       </div>
 
       <button class="secondary" id="worldQuestBackBtn">← CHOOSE ANOTHER EXPERIENCE</button>
@@ -1679,10 +1738,11 @@ $("worldQuestBackBtn").onclick=()=>{
   resetWorldQuestEntry();
 };
 
-const worldPanels=["worldIndividualPanel","worldCreatePanel","worldJoinPanel","worldTeamLobby"];
+const worldPanels=["worldIndividualPanel","worldCreatePanel","worldJoinPanel","worldTeamLobby","worldLaunchStage"];
 let worldLobbyMode="captain";
 let worldLobbyCode="";
 let worldLobbyTeam="";
+let worldCountdownTimer=null;
 function resetWorldQuestEntry(){
   worldPanels.forEach(id=>show(id,false));
   show("worldQuestPaths",true);
@@ -1693,6 +1753,13 @@ function resetWorldQuestEntry(){
   $("worldCreateTeamBtn").disabled=false;
   $("worldJoinTeamBtn").textContent="JOIN TEAM";
   $("worldJoinTeamBtn").disabled=false;
+  if(worldCountdownTimer) clearInterval(worldCountdownTimer);
+  worldCountdownTimer=null;
+  show("worldCountdownView",true);
+  show("worldFirstChallenge",false);
+  show("breakSealPrompt",false);
+  $("worldSealedEnvelope").classList.remove("open");
+  $("worldSealedEnvelope").dataset.ready="false";
 }
 function openWorldPath(path){
   show("worldQuestPaths",false);
@@ -1785,10 +1852,52 @@ function openWorldLobby(){
 $("worldOpenCreatedLobbyBtn").onclick=openWorldLobby;
 $("worldOpenJoinedLobbyBtn").onclick=openWorldLobby;
 $("worldLeaveLobbyBtn").onclick=resetWorldQuestEntry;
-$("worldStartQuestBtn").onclick=()=>{
-  $("worldStartQuestBtn").textContent="QUEST LAUNCH READY — NEXT BUILD";
-  $("worldStartQuestBtn").disabled=true;
-  $("lobbyWaitingText").textContent="Your team is assembled. HEART STONE is preparing the first challenge.";
+function launchWorldQuest(){
+  worldPanels.forEach(id=>show(id,false));
+  show("worldQuestPaths",false);
+  show("worldLaunchStage",true);
+  show("worldCountdownView",true);
+  show("worldFirstChallenge",false);
+  show("breakSealPrompt",false);
+  const playerName=$("worldPlayerName").value.trim()||"You";
+  const launchPlayers=worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
+  $("launchReadyPlayers").innerHTML=launchPlayers.map(name=>`<span class="ready-chip">${escapeHtml(name)} · READY ✓</span>`).join("");
+  $("worldSealedEnvelope").classList.remove("open");
+  $("worldSealedEnvelope").dataset.ready="false";
+  let count=3;
+  $("worldCountdownNumber").textContent=count;
+  if(worldCountdownTimer) clearInterval(worldCountdownTimer);
+  worldCountdownTimer=setInterval(()=>{
+    count-=1;
+    if(count>0){ $("worldCountdownNumber").textContent=count; return; }
+    clearInterval(worldCountdownTimer);
+    worldCountdownTimer=null;
+    $("worldCountdownNumber").textContent="NOW";
+    $("worldSealedEnvelope").dataset.ready="true";
+    show("breakSealPrompt",true);
+    $("worldSealedEnvelope").focus();
+  },1000);
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function breakWorldSeal(){
+  const envelope=$("worldSealedEnvelope");
+  if(envelope.dataset.ready!=="true"||envelope.classList.contains("open")) return;
+  envelope.classList.add("open");
+  show("breakSealPrompt",false);
+  setTimeout(()=>{
+    show("worldCountdownView",false);
+    show("worldFirstChallenge",true);
+    window.scrollTo({top:0,behavior:"smooth"});
+  },720);
+}
+$("worldStartQuestBtn").onclick=launchWorldQuest;
+$("worldSealedEnvelope").onclick=breakWorldSeal;
+$("worldSealedEnvelope").onkeydown=event=>{
+  if(event.key==="Enter"||event.key===" "){event.preventDefault();breakWorldSeal();}
+};
+$("worldEnterChallengeBtn").onclick=()=>{
+  $("worldEnterChallengeBtn").textContent="CHALLENGE ACTIVE — NEXT BUILD";
+  $("worldEnterChallengeBtn").disabled=true;
 };
 
 (async()=>{
