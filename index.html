@@ -189,6 +189,50 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .result-title{font-family:Georgia,serif;color:#f4ca73;font-size:28px;font-weight:900}
 .result-points{font-size:42px;font-weight:950;color:#78dda8;margin:8px 0}
 .result-summary{color:#d8cfd2;max-width:430px;margin:0 auto 15px}
+.review-card{text-align:left}
+.review-photo{width:100%;max-height:300px;object-fit:cover;border-radius:16px;border:1px solid rgba(255,255,255,.18);margin:10px 0 14px}
+.review-checks{display:grid;gap:8px;margin:13px 0}
+.review-check{display:grid;grid-template-columns:24px 1fr;gap:9px;align-items:start;padding:11px;border-radius:13px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1);cursor:pointer;color:#e7dfe2;font-size:13px}
+.review-check input{width:18px;height:18px;margin:0;accent-color:#1f7a55}
+.review-privacy{padding:10px 12px;border-radius:12px;background:rgba(214,168,77,.1);border:1px solid rgba(214,168,77,.26);color:#dacdb6;font-size:11px;margin:11px 0}
+.vote-panel{text-align:left}
+.vote-meter{height:12px;background:rgba(255,255,255,.09);border-radius:999px;overflow:hidden;margin:13px 0 7px}
+.vote-meter-fill{height:100%;width:0;background:linear-gradient(90deg,#c99457,#f4ca73);transition:width .5s ease}
+.vote-count{text-align:center;color:#d8cfd2;font-size:12px;margin-bottom:13px}
+.vote-list{display:grid;gap:8px;margin:12px 0 15px}
+.vote-row{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:13px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1)}
+.vote-avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(214,168,77,.2);border:1px solid rgba(214,168,77,.4);color:#f4ca73;font-weight:900}
+.vote-state{font-size:11px;font-weight:900;color:#bcaeb3}
+.vote-state.yes{color:#f4ca73}
+.verification-stage{text-align:center}
+.verification-ring{width:86px;height:86px;border-radius:50%;margin:14px auto;display:grid;place-items:center;border:5px solid rgba(244,202,115,.2);border-top-color:#f4ca73;animation:verifySpin 1s linear infinite;font-size:31px}
+@keyframes verifySpin{to{transform:rotate(360deg)}}
+.verification-ring.done{animation:none;border-color:#57d398;color:#57d398}
+.verification-details{display:grid;gap:7px;margin:14px 0;text-align:left}
+.verification-line{display:flex;justify-content:space-between;gap:12px;padding:9px 11px;border-radius:11px;background:rgba(255,255,255,.055);color:#d8cfd2;font-size:12px}
+.verification-line strong{color:#78dda8}
+.quest-hud{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin:0 0 14px}
+.quest-track{height:8px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}
+.quest-track-fill{height:100%;width:20%;background:linear-gradient(90deg,#c99457,#f4ca73);transition:width .45s ease}
+.quest-stat{padding:6px 9px;border-radius:10px;background:rgba(255,255,255,.06);color:#d8cfd2;font-size:10px;font-weight:850;white-space:nowrap}
+.quest-stat strong{color:#fff;font-size:13px}
+.next-envelope-card{text-align:center}
+.mini-envelope{width:210px;height:132px;margin:17px auto;position:relative;border-radius:10px;background:linear-gradient(145deg,#f2dda5,#bd8a35);box-shadow:0 15px 34px rgba(0,0,0,.42);overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.35)}
+.mini-envelope:before{content:"";position:absolute;inset:0;background:linear-gradient(32deg,transparent 49%,rgba(79,43,9,.2) 50%,transparent 51%),linear-gradient(-32deg,transparent 49%,rgba(79,43,9,.2) 50%,transparent 51%)}
+.mini-flap{position:absolute;inset:0 0 auto;height:58%;background:linear-gradient(160deg,#eed899,#bd892e);clip-path:polygon(0 0,100% 0,50% 100%)}
+.mini-seal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#8f1730;border:3px double #f1cd83;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.ceremony{text-align:center;position:relative;overflow:hidden}
+.ceremony-glow{font-size:68px;filter:drop-shadow(0 0 22px rgba(244,202,115,.5));margin:2px 0 7px}
+.ceremony-title{font-family:Georgia,serif;color:#f4ca73;font-size:31px;font-weight:900;line-height:1.1}
+.final-score{font-size:52px;color:#78dda8;font-weight:950;margin:10px 0 0}
+.final-score-label{font-size:11px;color:#bcaeb3;letter-spacing:.15em;font-weight:900}
+.ceremony-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:17px 0}
+.ceremony-stat{padding:12px 6px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);color:#bcaeb3;font-size:10px}
+.ceremony-stat strong{display:block;color:#fff;font-size:21px;margin-bottom:2px}
+.standing-list{display:grid;gap:8px;margin:15px 0;text-align:left}
+.standing-row{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:11px;border-radius:13px;background:rgba(214,168,77,.09);border:1px solid rgba(214,168,77,.24)}
+.standing-icon{font-size:25px;text-align:center}.standing-label{color:#fff;font-weight:850}.standing-sub{color:#bcaeb3;font-size:10px}.standing-rank{color:#f4ca73;font-size:18px;font-weight:950}
+.ceremony-motto{padding:14px;border-top:1px solid rgba(244,202,115,.24);border-bottom:1px solid rgba(244,202,115,.24);color:#f4ca73;font-size:11px;font-weight:900;letter-spacing:.11em;line-height:1.7;margin:15px 0}
 @media(max-width:430px){.challenge-actions,.active-top{grid-template-columns:1fr}.active-timer{justify-self:start}.challenge-rules{grid-template-columns:1fr}}
 @media(max-width:700px){.combined-logo{max-height:190px}.quest-choices{grid-template-columns:1fr}.quest-choice-logo,.world-choice-logo,.world-mark{width:138px;height:138px}.world-mark{font-size:62px}.choice-copy{min-height:0}}
 </style>
@@ -300,13 +344,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
         </div>
 
         <div class="challenge-reveal hidden" id="worldFirstChallenge">
-          <div class="launch-kicker">ENVELOPE ONE · THE ADVENTURE BEGINS</div>
-          <span class="challenge-type">FIND</span>
-          <div class="challenge-title">Find the Heart of Your City</div>
-          <div class="challenge-command">Find a public landmark that represents your city—and capture your whole team with it.</div>
+          <div class="launch-kicker" id="worldRevealKicker">ENVELOPE ONE · THE ADVENTURE BEGINS</div>
+          <span class="challenge-type" id="worldRevealType">FIND</span>
+          <div class="challenge-title" id="worldRevealTitle">Find the Heart of Your City</div>
+          <div class="challenge-command" id="worldRevealCommand">Find a public landmark that represents your city—and capture your whole team with it.</div>
           <div class="challenge-rules">
-            <div class="challenge-rule"><strong>20 MINUTES</strong>Complete before time expires.</div>
-            <div class="challenge-rule"><strong>100 POINTS</strong>Photo evidence required.</div>
+            <div class="challenge-rule"><strong id="worldRevealTime">20 MINUTES</strong>Complete before time expires.</div>
+            <div class="challenge-rule"><strong id="worldRevealPoints">100 POINTS</strong>Photo evidence required.</div>
           </div>
           <p>Every team receives the same type of challenge, wherever they are in the world. HEART STONE will verify the evidence and keep the competition moving.</p>
           <div class="launch-heartstone">YOUR CITY IS THE GAME BOARD · HEART STONE IS THE REFEREE</div>
@@ -314,17 +358,22 @@ button:disabled{opacity:.45;cursor:not-allowed}
         </div>
 
         <div class="active-challenge hidden" id="worldActiveChallenge">
+          <div class="quest-hud">
+            <div class="quest-track"><div class="quest-track-fill" id="worldQuestTrackFill"></div></div>
+            <div class="quest-stat">SCORE <strong id="worldQuestScore">0</strong></div>
+            <div class="quest-stat">SKIPS <strong id="worldQuestSkips">0/3</strong></div>
+          </div>
           <div class="active-top">
             <div>
-              <div class="active-progress">CHALLENGE 1 OF 5 · FIND</div>
-              <div class="challenge-title">Find the Heart of Your City</div>
+              <div class="active-progress" id="worldActiveProgress">CHALLENGE 1 OF 5 · FIND</div>
+              <div class="challenge-title" id="worldActiveTitle">Find the Heart of Your City</div>
             </div>
             <div class="active-timer" id="worldChallengeTimer" aria-live="polite">20:00</div>
           </div>
-          <div class="active-command">Find a public landmark that represents your city—and capture your whole team with it.</div>
+          <div class="active-command" id="worldActiveCommand">Find a public landmark that represents your city—and capture your whole team with it.</div>
           <div class="challenge-rules">
-            <div class="challenge-rule"><strong>TEAM PHOTO</strong>Every present teammate must be visible.</div>
-            <div class="challenge-rule"><strong>PUBLIC LANDMARK</strong>The location must be recognizable and publicly accessible.</div>
+            <div class="challenge-rule" id="worldActiveRuleOne"><strong>TEAM PHOTO</strong>Every present teammate must be visible.</div>
+            <div class="challenge-rule" id="worldActiveRuleTwo"><strong>PUBLIC LANDMARK</strong>The location must be recognizable and publicly accessible.</div>
           </div>
 
           <div class="evidence-box">
@@ -350,13 +399,78 @@ button:disabled{opacity:.45;cursor:not-allowed}
           </div>
         </div>
 
+        <div class="review-card hidden" id="worldEvidenceReview">
+          <div class="launch-kicker">REVIEW BEFORE SUBMITTING</div>
+          <div class="challenge-title">Your Team’s Evidence</div>
+          <p>HEART STONE will not submit or publish this photo until your team confirms it.</p>
+          <img class="review-photo" id="worldReviewPhoto" alt="Challenge evidence selected for review"/>
+          <div class="review-checks">
+            <label class="review-check"><input class="worldReviewCheck" type="checkbox"/><span><strong>Our team is visible.</strong><br/>Everyone who participated in this challenge appears in the photo.</span></label>
+            <label class="review-check"><input class="worldReviewCheck" type="checkbox"/><span><strong>The landmark is visible.</strong><br/>The public landmark can be recognized from the submitted image.</span></label>
+            <label class="review-check"><input class="worldReviewCheck" type="checkbox"/><span><strong>We approve this submission.</strong><br/>Our team reviewed the photo and chooses to submit it for challenge verification.</span></label>
+          </div>
+          <div class="review-privacy">Playing is not permission to publish your life. This submission is used for challenge verification only and is not automatically added to social media or a public Storybook.</div>
+          <div class="world-panel-actions"><button class="secondary" id="worldBackToChallengeBtn">BACK</button><button class="good" id="worldSubmitEvidenceBtn" disabled>SUBMIT TO HEART STONE</button></div>
+        </div>
+
+        <div class="vote-panel hidden" id="worldSkipVotePanel">
+          <div class="launch-kicker">TEAM DECISION</div>
+          <div class="challenge-title">Vote to Skip This Challenge</div>
+          <p>WORLD QUEST keeps the team together. The challenge is skipped only when the team reaches a majority decision.</p>
+          <div class="vote-meter"><div class="vote-meter-fill" id="worldVoteMeterFill"></div></div>
+          <div class="vote-count" id="worldVoteCount">0 of 1 votes to skip</div>
+          <div class="vote-list" id="worldVoteList"></div>
+          <div class="world-panel-actions"><button class="secondary" id="worldCancelVoteBtn">RETURN TO CHALLENGE</button><button id="worldCastSkipVoteBtn">VOTE TO SKIP</button></div>
+          <div class="status hidden" id="worldVoteStatus"></div>
+        </div>
+
+        <div class="verification-stage hidden" id="worldVerificationStage">
+          <div class="launch-kicker">HEART STONE VERIFICATION</div>
+          <div class="challenge-title">Reviewing Your Evidence</div>
+          <div class="verification-ring" id="worldVerificationRing">🌎</div>
+          <p id="worldVerificationMessage">Checking the challenge requirements and preparing your result…</p>
+          <div class="verification-details hidden" id="worldVerificationDetails">
+            <div class="verification-line"><span>Photo evidence</span><strong>RECEIVED ✓</strong></div>
+            <div class="verification-line"><span>Team confirmation</span><strong>RECEIVED ✓</strong></div>
+            <div class="verification-line"><span>Challenge match</span><strong>APPROVED ✓</strong></div>
+          </div>
+        </div>
+
         <div class="challenge-result hidden" id="worldChallengeResult">
           <div class="result-icon" id="worldResultIcon">🏆</div>
-          <div class="launch-kicker">CHALLENGE 1 COMPLETE</div>
+          <div class="launch-kicker" id="worldResultKicker">CHALLENGE 1 COMPLETE</div>
           <div class="result-title" id="worldResultTitle">Evidence Captured</div>
           <div class="result-points" id="worldResultPoints">+100</div>
           <p class="result-summary" id="worldResultSummary">HEART STONE has received your team’s photo for verification. Your adventure continues.</p>
           <button id="worldNextChallengeBtn">OPEN THE NEXT ENVELOPE</button>
+        </div>
+
+        <div class="next-envelope-card hidden" id="worldNextEnvelope">
+          <div class="launch-kicker" id="worldNextEnvelopeNumber">ENVELOPE TWO IS WAITING</div>
+          <div class="mini-envelope" id="worldMiniEnvelope"><div class="mini-flap"></div><div class="mini-seal">🌎</div></div>
+          <div class="challenge-title">Your Next Challenge Is Sealed</div>
+          <p>The score is locked. Take a breath, keep your team together, and break the next seal when everyone is ready.</p>
+          <button id="worldBreakNextSealBtn">BREAK THE NEXT SEAL</button>
+        </div>
+
+        <div class="ceremony hidden" id="worldQuestCeremony">
+          <div class="ceremony-glow">🌎</div>
+          <div class="launch-kicker">WORLD QUEST COMPLETE</div>
+          <div class="ceremony-title">Your Team Finished the World</div>
+          <div class="final-score" id="worldFinalScore">0</div>
+          <div class="final-score-label">TOTAL QUEST POINTS</div>
+          <div class="ceremony-stats">
+            <div class="ceremony-stat"><strong id="worldFinalCompleted">0</strong>Completed</div>
+            <div class="ceremony-stat"><strong id="worldFinalSkipped">0</strong>Skipped</div>
+            <div class="ceremony-stat"><strong id="worldFinalTime">0m</strong>Quest Time</div>
+          </div>
+          <div class="standing-list">
+            <div class="standing-row"><div class="standing-icon">🏙️</div><div><div class="standing-label">City Standing</div><div class="standing-sub">Local teams today</div></div><div class="standing-rank">#12</div></div>
+            <div class="standing-row"><div class="standing-icon">🏳️</div><div><div class="standing-label">Country Standing</div><div class="standing-sub">National teams today</div></div><div class="standing-rank">#148</div></div>
+            <div class="standing-row"><div class="standing-icon">🌎</div><div><div class="standing-label">World Standing</div><div class="standing-sub">Global teams today</div></div><div class="standing-rank">#1,204</div></div>
+          </div>
+          <div class="ceremony-motto">FIVE ENVELOPES · ONE TEAM · ONE WORLD</div>
+          <button id="worldRestartQuestBtn">PLAY WORLD QUEST AGAIN</button>
         </div>
       </div>
 
@@ -1816,6 +1930,56 @@ let worldCountdownTimer=null;
 let worldChallengeTimer=null;
 let worldChallengeSeconds=1200;
 let worldEvidenceUrl="";
+let worldSkipVotes=[];
+const worldChallenges=[
+  {type:"FIND",title:"Find the Heart of Your City",command:"Find a public landmark that represents your city—and capture your whole team with it.",seconds:1200,points:100,ruleOne:"<strong>TEAM PHOTO</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC LANDMARK</strong>The location must be recognizable and publicly accessible."},
+  {type:"GO",title:"Go Where Your Community Gathers",command:"Reach a public place where people in your community naturally come together—and capture your team at the entrance.",seconds:900,points:80,ruleOne:"<strong>TEAM AT THE LOCATION</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC ACCESS</strong>The gathering place must be safe and publicly accessible."},
+  {type:"DO",title:"Bring Public Art to Life",command:"Find a public statue, mural, or sculpture and recreate one pose or shape from it as a team.",seconds:900,points:120,ruleOne:"<strong>ART + RECREATION</strong>The artwork and your team’s recreation must both be visible.",ruleTwo:"<strong>PLAY IT SAFE</strong>Stay on public ground and do not climb the artwork."},
+  {type:"SOLVE",title:"Decode the Past",command:"Find a dated public plaque or historical marker and capture the year together with your team.",seconds:720,points:100,ruleOne:"<strong>YEAR IS READABLE</strong>The date on the marker must be visible in the photo.",ruleTwo:"<strong>PUBLIC MARKER</strong>The plaque or marker must be permanently displayed in public."},
+  {type:"COMPLETE",title:"Complete the World Connection",command:"Find something in your city shaped like a heart, circle, or star and capture your team pointing to it.",seconds:900,points:150,ruleOne:"<strong>SHAPE IS VISIBLE</strong>The heart, circle, or star must be clear in the photo.",ruleTwo:"<strong>TEAM CONNECTION</strong>Every present teammate must be visible and pointing to it."}
+];
+const worldEnvelopeWords=["ONE","TWO","THREE","FOUR","FIVE"];
+let worldChallengeIndex=0;
+let worldQuestScore=0;
+let worldQuestSkips=0;
+let worldQuestCompleted=0;
+let worldQuestStartedAt=0;
+function currentWorldChallenge(){ return worldChallenges[worldChallengeIndex]; }
+function renderWorldQuestHud(){
+  $("worldQuestScore").textContent=worldQuestScore;
+  $("worldQuestSkips").textContent=worldQuestSkips+"/3";
+  $("worldQuestTrackFill").style.width=((worldChallengeIndex/worldChallenges.length)*100)+"%";
+}
+function renderWorldChallengeData(){
+  const challenge=currentWorldChallenge();
+  const number=worldChallengeIndex+1;
+  $("worldRevealKicker").textContent="ENVELOPE "+worldEnvelopeWords[worldChallengeIndex]+(number===1?" · THE ADVENTURE BEGINS":" · CHALLENGE "+number);
+  $("worldRevealType").textContent=challenge.type;
+  $("worldRevealTitle").textContent=challenge.title;
+  $("worldRevealCommand").textContent=challenge.command;
+  $("worldRevealTime").textContent=Math.ceil(challenge.seconds/60)+" MINUTES";
+  $("worldRevealPoints").textContent=challenge.points+" POINTS";
+  $("worldActiveProgress").textContent="CHALLENGE "+number+" OF "+worldChallenges.length+" · "+challenge.type;
+  $("worldActiveTitle").textContent=challenge.title;
+  $("worldActiveCommand").textContent=challenge.command;
+  $("worldActiveRuleOne").innerHTML=challenge.ruleOne;
+  $("worldActiveRuleTwo").innerHTML=challenge.ruleTwo;
+  $("worldResultKicker").textContent="CHALLENGE "+number+" COMPLETE";
+  $("worldSkipConfirm").querySelector("p").textContent="Skip this challenge for your team? This demo will record no points for Challenge "+number+".";
+  $("worldSkipChallengeBtn").disabled=worldQuestSkips>=3;
+  $("worldSkipChallengeBtn").textContent=worldQuestSkips>=3?"3 SKIPS USED":"SKIP THIS CHALLENGE";
+  renderWorldQuestHud();
+}
+function resetWorldEvidence(){
+  if(worldEvidenceUrl) URL.revokeObjectURL(worldEvidenceUrl);
+  worldEvidenceUrl="";
+  $("worldEvidenceInput").value="";
+  show("worldEvidencePreview",false); show("worldEvidenceName",false);
+  $("worldCompleteChallengeBtn").disabled=true;
+  document.querySelectorAll(".worldReviewCheck").forEach(box=>box.checked=false);
+  $("worldSubmitEvidenceBtn").disabled=true;
+  $("worldChallengeStatus").textContent="Challenge active. Complete the mission, capture your team, and return here before time expires.";
+}
 function resetWorldQuestEntry(){
   worldPanels.forEach(id=>show(id,false));
   show("worldQuestPaths",true);
@@ -1831,17 +1995,29 @@ function resetWorldQuestEntry(){
   if(worldChallengeTimer) clearInterval(worldChallengeTimer);
   worldChallengeTimer=null;
   worldChallengeSeconds=1200;
+  worldChallengeIndex=0;
+  worldQuestScore=0;
+  worldQuestSkips=0;
+  worldQuestCompleted=0;
+  worldQuestStartedAt=0;
   if(worldEvidenceUrl) URL.revokeObjectURL(worldEvidenceUrl);
   worldEvidenceUrl="";
   show("worldCountdownView",true);
   show("worldFirstChallenge",false);
   show("worldActiveChallenge",false);
   show("worldChallengeResult",false);
+  show("worldNextEnvelope",false);
+  show("worldQuestCeremony",false);
+  show("worldEvidenceReview",false);
+  show("worldSkipVotePanel",false);
+  show("worldVerificationStage",false);
   show("worldSkipConfirm",false);
   show("worldEvidencePreview",false);
   show("worldEvidenceName",false);
   $("worldEvidenceInput").value="";
   $("worldCompleteChallengeBtn").disabled=true;
+  document.querySelectorAll(".worldReviewCheck").forEach(box=>box.checked=false);
+  $("worldSubmitEvidenceBtn").disabled=true;
   $("worldEnterChallengeBtn").textContent="BEGIN THIS CHALLENGE";
   $("worldEnterChallengeBtn").disabled=false;
   show("breakSealPrompt",false);
@@ -1940,6 +2116,13 @@ $("worldOpenCreatedLobbyBtn").onclick=openWorldLobby;
 $("worldOpenJoinedLobbyBtn").onclick=openWorldLobby;
 $("worldLeaveLobbyBtn").onclick=resetWorldQuestEntry;
 function launchWorldQuest(){
+  worldChallengeIndex=0;
+  worldQuestScore=0;
+  worldQuestSkips=0;
+  worldQuestCompleted=0;
+  worldQuestStartedAt=Date.now();
+  resetWorldEvidence();
+  renderWorldChallengeData();
   worldPanels.forEach(id=>show(id,false));
   show("worldQuestPaths",false);
   show("worldLaunchStage",true);
@@ -1993,7 +2176,9 @@ function beginWorldChallenge(){
   show("worldFirstChallenge",false);
   show("worldChallengeResult",false);
   show("worldActiveChallenge",true);
-  worldChallengeSeconds=1200;
+  resetWorldEvidence();
+  renderWorldChallengeData();
+  worldChallengeSeconds=currentWorldChallenge().seconds;
   renderWorldChallengeTimer();
   if(worldChallengeTimer) clearInterval(worldChallengeTimer);
   worldChallengeTimer=setInterval(()=>{
@@ -2025,23 +2210,139 @@ $("worldEvidenceInput").onchange=event=>{
 function showWorldChallengeResult(skipped=false){
   if(worldChallengeTimer) clearInterval(worldChallengeTimer);
   worldChallengeTimer=null;
+  const challenge=currentWorldChallenge();
+  if(skipped) worldQuestSkips+=1;
+  else { worldQuestScore+=challenge.points; worldQuestCompleted+=1; }
+  renderWorldQuestHud();
+  $("worldQuestTrackFill").style.width=(((worldChallengeIndex+1)/worldChallenges.length)*100)+"%";
   show("worldActiveChallenge",false);
   show("worldChallengeResult",true);
   $("worldResultIcon").textContent=skipped?"🧭":"🏆";
   $("worldResultTitle").textContent=skipped?"Challenge Skipped":"Evidence Captured";
-  $("worldResultPoints").textContent=skipped?"+0":"+100";
+  $("worldResultPoints").textContent=skipped?"+0":"+"+challenge.points;
   $("worldResultSummary").textContent=skipped
     ? "HEART STONE recorded the skip and preserved your team’s momentum. The next envelope is waiting."
     : "HEART STONE has received your team’s photo for verification. Your adventure continues.";
+  $("worldNextChallengeBtn").textContent=worldChallengeIndex===worldChallenges.length-1?"VIEW QUEST RESULTS":"OPEN THE NEXT ENVELOPE";
   window.scrollTo({top:0,behavior:"smooth"});
 }
-$("worldCompleteChallengeBtn").onclick=()=>showWorldChallengeResult(false);
+function openEvidenceReview(){
+  if(!worldEvidenceUrl) return;
+  show("worldActiveChallenge",false);
+  show("worldEvidenceReview",true);
+  $("worldReviewPhoto").src=worldEvidenceUrl;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function updateEvidenceApproval(){
+  const checks=[...document.querySelectorAll(".worldReviewCheck")];
+  $("worldSubmitEvidenceBtn").disabled=!checks.every(box=>box.checked);
+}
+document.querySelectorAll(".worldReviewCheck").forEach(box=>box.onchange=updateEvidenceApproval);
+$("worldCompleteChallengeBtn").onclick=openEvidenceReview;
+$("worldBackToChallengeBtn").onclick=()=>{
+  show("worldEvidenceReview",false);
+  show("worldActiveChallenge",true);
+};
+$("worldSubmitEvidenceBtn").onclick=()=>{
+  show("worldEvidenceReview",false);
+  show("worldVerificationStage",true);
+  show("worldVerificationDetails",false);
+  $("worldVerificationRing").classList.remove("done");
+  $("worldVerificationRing").textContent="🌎";
+  $("worldVerificationMessage").textContent="Checking the challenge requirements and preparing your result…";
+  setTimeout(()=>{
+    $("worldVerificationRing").classList.add("done");
+    $("worldVerificationRing").textContent="✓";
+    $("worldVerificationMessage").textContent="Challenge evidence approved for this playable demo.";
+    show("worldVerificationDetails",true);
+    setTimeout(()=>{show("worldVerificationStage",false);showWorldChallengeResult(false);},1100);
+  },1400);
+};
+
+function worldVotePlayers(){
+  const playerName=$("worldPlayerName").value.trim()||"You";
+  return worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
+}
+function renderWorldSkipVote(){
+  const players=worldVotePlayers();
+  const needed=Math.floor(players.length/2)+1;
+  const yesCount=worldSkipVotes.length;
+  $("worldVoteCount").textContent=yesCount+" of "+needed+" votes needed to skip";
+  $("worldVoteMeterFill").style.width=Math.min(100,(yesCount/needed)*100)+"%";
+  $("worldVoteList").innerHTML=players.map(name=>{
+    const voted=worldSkipVotes.includes(name);
+    return `<div class="vote-row"><div class="vote-avatar">${escapeHtml(playerInitials(name))}</div><div><div class="player-name">${escapeHtml(name)}</div><div class="player-role">Team Member</div></div><div class="vote-state ${voted?"yes":""}">${voted?"SKIP ✓":"WAITING"}</div></div>`;
+  }).join("");
+  const current=players[players.length-1];
+  $("worldCastSkipVoteBtn").disabled=worldSkipVotes.includes(current);
+  if(yesCount>=needed){
+    show("worldVoteStatus",true);
+    $("worldVoteStatus").textContent="Majority reached. HEART STONE is moving your team to the next challenge.";
+    setTimeout(()=>{show("worldSkipVotePanel",false);showWorldChallengeResult(true);},900);
+  }
+}
+function openWorldSkipVote(){
+  if(worldQuestSkips>=3){
+    $("worldChallengeStatus").textContent="Your team has used all 3 skips. Complete this challenge to continue.";
+    show("worldSkipConfirm",false);
+    return;
+  }
+  worldSkipVotes=[];
+  show("worldSkipConfirm",false);
+  show("worldActiveChallenge",false);
+  show("worldSkipVotePanel",true);
+  show("worldVoteStatus",false);
+  renderWorldSkipVote();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
 $("worldSkipChallengeBtn").onclick=()=>show("worldSkipConfirm",true);
 $("worldKeepPlayingBtn").onclick=()=>show("worldSkipConfirm",false);
-$("worldConfirmSkipBtn").onclick=()=>showWorldChallengeResult(true);
+$("worldConfirmSkipBtn").onclick=openWorldSkipVote;
+$("worldCancelVoteBtn").onclick=()=>{show("worldSkipVotePanel",false);show("worldActiveChallenge",true);};
+$("worldCastSkipVoteBtn").onclick=()=>{
+  const players=worldVotePlayers();
+  const current=players[players.length-1];
+  if(!worldSkipVotes.includes(current)) worldSkipVotes.push(current);
+  renderWorldSkipVote();
+  const needed=Math.floor(players.length/2)+1;
+  if(worldSkipVotes.length<needed&&players.length>1){
+    $("worldVoteStatus").textContent="Your vote is recorded. Waiting for the rest of your team…";
+    show("worldVoteStatus",true);
+    setTimeout(()=>{
+      const teammate=players.find(name=>!worldSkipVotes.includes(name));
+      if(teammate) worldSkipVotes.push(teammate);
+      renderWorldSkipVote();
+    },1100);
+  }
+};
 $("worldNextChallengeBtn").onclick=()=>{
-  $("worldNextChallengeBtn").textContent="NEXT ENVELOPE — NEXT BUILD";
-  $("worldNextChallengeBtn").disabled=true;
+  show("worldChallengeResult",false);
+  if(worldChallengeIndex>=worldChallenges.length-1){
+    const elapsed=Math.max(1,Math.ceil((Date.now()-worldQuestStartedAt)/60000));
+    $("worldFinalScore").textContent=worldQuestScore;
+    $("worldFinalCompleted").textContent=worldQuestCompleted;
+    $("worldFinalSkipped").textContent=worldQuestSkips;
+    $("worldFinalTime").textContent=elapsed+"m";
+    show("worldQuestCeremony",true);
+    window.scrollTo({top:0,behavior:"smooth"});
+    return;
+  }
+  $("worldNextEnvelopeNumber").textContent="ENVELOPE "+worldEnvelopeWords[worldChallengeIndex+1]+" IS WAITING";
+  show("worldNextEnvelope",true);
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+$("worldBreakNextSealBtn").onclick=()=>{
+  show("worldNextEnvelope",false);
+  worldChallengeIndex+=1;
+  resetWorldEvidence();
+  renderWorldChallengeData();
+  show("worldFirstChallenge",true);
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+$("worldRestartQuestBtn").onclick=()=>{
+  show("worldLaunchStage",false);
+  resetWorldQuestEntry();
+  window.scrollTo({top:0,behavior:"smooth"});
 };
 
 (async()=>{
