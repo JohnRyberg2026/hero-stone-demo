@@ -1945,6 +1945,15 @@ let worldQuestSkips=0;
 let worldQuestCompleted=0;
 let worldQuestStartedAt=0;
 function currentWorldChallenge(){ return worldChallenges[worldChallengeIndex]; }
+function worldAudienceText(text){
+  if(worldLobbyMode!=="individual") return text;
+  return String(text)
+    .replaceAll("your whole team","yourself")
+    .replaceAll("your team’s","your")
+    .replaceAll("your team","yourself")
+    .replaceAll("Every present teammate must be visible and pointing to it.","You must be visible and pointing to it.")
+    .replaceAll("Every present teammate must be visible.","You must be visible in the photo.");
+}
 function renderWorldQuestHud(){
   $("worldQuestScore").textContent=worldQuestScore;
   $("worldQuestSkips").textContent=worldQuestSkips+"/3";
@@ -1956,14 +1965,14 @@ function renderWorldChallengeData(){
   $("worldRevealKicker").textContent="ENVELOPE "+worldEnvelopeWords[worldChallengeIndex]+(number===1?" · THE ADVENTURE BEGINS":" · CHALLENGE "+number);
   $("worldRevealType").textContent=challenge.type;
   $("worldRevealTitle").textContent=challenge.title;
-  $("worldRevealCommand").textContent=challenge.command;
+  $("worldRevealCommand").textContent=worldAudienceText(challenge.command);
   $("worldRevealTime").textContent=Math.ceil(challenge.seconds/60)+" MINUTES";
   $("worldRevealPoints").textContent=challenge.points+" POINTS";
   $("worldActiveProgress").textContent="CHALLENGE "+number+" OF "+worldChallenges.length+" · "+challenge.type;
   $("worldActiveTitle").textContent=challenge.title;
-  $("worldActiveCommand").textContent=challenge.command;
-  $("worldActiveRuleOne").innerHTML=challenge.ruleOne;
-  $("worldActiveRuleTwo").innerHTML=challenge.ruleTwo;
+  $("worldActiveCommand").textContent=worldAudienceText(challenge.command);
+  $("worldActiveRuleOne").innerHTML=worldAudienceText(challenge.ruleOne);
+  $("worldActiveRuleTwo").innerHTML=worldAudienceText(challenge.ruleTwo);
   $("worldResultKicker").textContent="CHALLENGE "+number+" COMPLETE";
   $("worldSkipConfirm").querySelector("p").textContent="Skip this challenge for your team? This demo will record no points for Challenge "+number+".";
   $("worldSkipChallengeBtn").disabled=worldQuestSkips>=3;
@@ -2042,9 +2051,10 @@ document.querySelectorAll(".worldCancelBtn").forEach(button=>{
 $("worldIndividualContinueBtn").onclick=()=>{
   const name=$("worldPlayerName").value.trim();
   if(!name){ $("worldPlayerName").focus(); return; }
-  const button=$("worldIndividualContinueBtn");
-  button.textContent="INDIVIDUAL QUEST READY — NEXT BUILD";
-  button.disabled=true;
+  worldLobbyMode="individual";
+  worldLobbyTeam=name.toUpperCase()+" · SOLO EXPLORER";
+  worldLobbyCode="SOLO";
+  launchWorldQuest();
 };
 
 $("worldCreateTeamBtn").onclick=()=>{
@@ -2130,7 +2140,7 @@ function launchWorldQuest(){
   show("worldFirstChallenge",false);
   show("breakSealPrompt",false);
   const playerName=$("worldPlayerName").value.trim()||"You";
-  const launchPlayers=worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
+  const launchPlayers=worldLobbyMode==="individual"?[playerName]:worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
   $("launchReadyPlayers").innerHTML=launchPlayers.map(name=>`<span class="ready-chip">${escapeHtml(name)} · READY ✓</span>`).join("");
   $("worldSealedEnvelope").classList.remove("open");
   $("worldSealedEnvelope").dataset.ready="false";
@@ -2261,7 +2271,7 @@ $("worldSubmitEvidenceBtn").onclick=()=>{
 
 function worldVotePlayers(){
   const playerName=$("worldPlayerName").value.trim()||"You";
-  return worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
+  return worldLobbyMode==="individual"?[playerName]:worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
 }
 function renderWorldSkipVote(){
   const players=worldVotePlayers();
@@ -2297,7 +2307,14 @@ function openWorldSkipVote(){
 }
 $("worldSkipChallengeBtn").onclick=()=>show("worldSkipConfirm",true);
 $("worldKeepPlayingBtn").onclick=()=>show("worldSkipConfirm",false);
-$("worldConfirmSkipBtn").onclick=openWorldSkipVote;
+$("worldConfirmSkipBtn").onclick=()=>{
+  if(worldLobbyMode==="individual"){
+    show("worldSkipConfirm",false);
+    showWorldChallengeResult(true);
+    return;
+  }
+  openWorldSkipVote();
+};
 $("worldCancelVoteBtn").onclick=()=>{show("worldSkipVotePanel",false);show("worldActiveChallenge",true);};
 $("worldCastSkipVoteBtn").onclick=()=>{
   const players=worldVotePlayers();
