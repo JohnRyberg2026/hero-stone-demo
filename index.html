@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta name="heart-stone-build" content="12f-authoritative-stages">
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>HEART STONE™ Kickstarter Demo</title>
@@ -1988,18 +1989,18 @@ let worldChallengeSeconds=1200;
 let worldEvidenceUrl="";
 let worldSkipVotes=[];
 const worldChallenges=[
-  {type:"FIND",title:"Find the Heart of Your City",command:"Find a public landmark that represents your city—and capture your whole team with it.",seconds:1200,points:100,ruleOne:"<strong>TEAM PHOTO</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC LANDMARK</strong>The location must be recognizable and publicly accessible."},
-  {type:"GO",title:"Go Where Your Community Gathers",command:"Reach a public place where people in your community naturally come together—and capture your team at the entrance.",seconds:900,points:80,ruleOne:"<strong>TEAM AT THE LOCATION</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC ACCESS</strong>The gathering place must be safe and publicly accessible."},
-  {type:"DO",title:"Bring Public Art to Life",command:"Find a public statue, mural, or sculpture and recreate one pose or shape from it as a team.",seconds:900,points:120,ruleOne:"<strong>ART + RECREATION</strong>The artwork and your team’s recreation must both be visible.",ruleTwo:"<strong>PLAY IT SAFE</strong>Stay on public ground and do not climb the artwork."},
-  {type:"SOLVE",title:"Decode the Past",command:"Find a dated public plaque or historical marker and capture the year together with your team.",seconds:720,points:100,ruleOne:"<strong>YEAR IS READABLE</strong>The date on the marker must be visible in the photo.",ruleTwo:"<strong>PUBLIC MARKER</strong>The plaque or marker must be permanently displayed in public."},
-  {type:"COMPLETE",title:"Complete the World Connection",command:"Find something in your city shaped like a heart, circle, or star and capture your team pointing to it.",seconds:900,points:150,ruleOne:"<strong>SHAPE IS VISIBLE</strong>The heart, circle, or star must be clear in the photo.",ruleTwo:"<strong>TEAM CONNECTION</strong>Every present teammate must be visible and pointing to it."}
+  {type:"FIND",title:"Find the Heart of Your City",command:"Find a public landmark that represents your city—and capture your whole team with it.",seconds:1200,points:1,ruleOne:"<strong>TEAM PHOTO</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC LANDMARK</strong>The location must be recognizable and publicly accessible."},
+  {type:"GO",title:"Go Where Your Community Gathers",command:"Reach a public place where people in your community naturally come together—and capture your team at the entrance.",seconds:900,points:1,ruleOne:"<strong>TEAM AT THE LOCATION</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC ACCESS</strong>The gathering place must be safe and publicly accessible."},
+  {type:"DO",title:"Bring Public Art to Life",command:"Find a public statue, mural, or sculpture and recreate one pose or shape from it as a team.",seconds:900,points:1,ruleOne:"<strong>ART + RECREATION</strong>The artwork and your team’s recreation must both be visible.",ruleTwo:"<strong>PLAY IT SAFE</strong>Stay on public ground and do not climb the artwork."},
+  {type:"SOLVE",title:"Decode the Past",command:"Find a dated public plaque or historical marker and capture the year together with your team.",seconds:720,points:1,ruleOne:"<strong>YEAR IS READABLE</strong>The date on the marker must be visible in the photo.",ruleTwo:"<strong>PUBLIC MARKER</strong>The plaque or marker must be permanently displayed in public."},
+  {type:"COMPLETE",title:"Complete the World Connection",command:"Find something in your city shaped like a heart, circle, or star and capture your team pointing to it.",seconds:900,points:1,ruleOne:"<strong>SHAPE IS VISIBLE</strong>The heart, circle, or star must be clear in the photo.",ruleTwo:"<strong>TEAM CONNECTION</strong>Every present teammate must be visible and pointing to it."}
 ];
 const worldTeamChallenges=[
-  {type:"FIND",title:"Find Your City’s Symbol",command:"Find a public symbol, emblem, or landmark connected to your city—and capture your entire team recreating its shape or pose.",seconds:1200,points:120,ruleOne:"<strong>FULL TEAM PHOTO</strong>Every present teammate and the city symbol must be visible.",ruleTwo:"<strong>ONE SHARED POSE</strong>The team must clearly recreate a shape or pose from the symbol."},
-  {type:"GO",title:"Reach the Community Crossroads",command:"Go to a safe public place where several paths, streets, or walkways meet and form one connected team line there.",seconds:900,points:100,ruleOne:"<strong>CONNECTED LINE</strong>Every present teammate must be visible in one unbroken line.",ruleTwo:"<strong>PUBLIC CROSSROADS</strong>At least three visible routes must meet at the location."},
-  {type:"DO",title:"Spell the World Together",command:"Use your team’s bodies or safe handheld objects to form the letters WQ in one photo.",seconds:900,points:140,ruleOne:"<strong>WQ IS READABLE</strong>Both letters must be recognizable in the submitted photo.",ruleTwo:"<strong>EVERYONE CONTRIBUTES</strong>Every present teammate must help form or frame the letters."},
-  {type:"SOLVE",title:"Build the Number Code",command:"Find three different numbers displayed in one safe public location and arrange your team from smallest number to largest.",seconds:720,points:120,ruleOne:"<strong>THREE NUMBERS</strong>All three numbers must be readable in the evidence.",ruleTwo:"<strong>CORRECT ORDER</strong>Your team must visibly point from the smallest number to the largest."},
-  {type:"COMPLETE",title:"Create the World Connection",command:"Find a public circle, heart, or star and create a second matching shape with your whole team beside it.",seconds:900,points:170,ruleOne:"<strong>TWO MATCHING SHAPES</strong>The public shape and the team-created shape must both be visible.",ruleTwo:"<strong>WHOLE TEAM FINISH</strong>Every present teammate must be part of the final shape."}
+  {type:"FIND",title:"Find Your City’s Symbol",command:"Find a public symbol, emblem, or landmark connected to your city—and capture your entire team recreating its shape or pose.",seconds:1200,points:1,ruleOne:"<strong>FULL TEAM PHOTO</strong>Every present teammate and the city symbol must be visible.",ruleTwo:"<strong>ONE SHARED POSE</strong>The team must clearly recreate a shape or pose from the symbol."},
+  {type:"GO",title:"Reach the Community Crossroads",command:"Go to a safe public place where several paths, streets, or walkways meet and form one connected team line there.",seconds:900,points:1,ruleOne:"<strong>CONNECTED LINE</strong>Every present teammate must be visible in one unbroken line.",ruleTwo:"<strong>PUBLIC CROSSROADS</strong>At least three visible routes must meet at the location."},
+  {type:"DO",title:"Spell the World Together",command:"Use your team’s bodies or safe handheld objects to form the letters WQ in one photo.",seconds:900,points:1,ruleOne:"<strong>WQ IS READABLE</strong>Both letters must be recognizable in the submitted photo.",ruleTwo:"<strong>EVERYONE CONTRIBUTES</strong>Every present teammate must help form or frame the letters."},
+  {type:"SOLVE",title:"Build the Number Code",command:"Find three different numbers displayed in one safe public location and arrange your team from smallest number to largest.",seconds:720,points:1,ruleOne:"<strong>THREE NUMBERS</strong>All three numbers must be readable in the evidence.",ruleTwo:"<strong>CORRECT ORDER</strong>Your team must visibly point from the smallest number to the largest."},
+  {type:"COMPLETE",title:"Create the World Connection",command:"Find a public circle, heart, or star and create a second matching shape with your whole team beside it.",seconds:900,points:1,ruleOne:"<strong>TWO MATCHING SHAPES</strong>The public shape and the team-created shape must both be visible.",ruleTwo:"<strong>WHOLE TEAM FINISH</strong>Every present teammate must be part of the final shape."}
 ];
 const worldEnvelopeWords=["ONE","TWO","THREE","FOUR","FIVE"];
 let worldChallengeIndex=0;
@@ -2178,8 +2179,11 @@ $("worldResumeQuestBtn").onclick=async()=>{
   if(savedResult){
     worldRemoteResultShown=worldChallengeIndex;
     showWorldChallengeResult(Boolean(savedResult.skipped),true);
-  }else if(worldRemoteState.challenge_started_at){
+  }else if(worldRemoteState.quest_stage==="active"&&worldRemoteState.challenge_started_at){
     beginWorldChallenge(true,worldRemoteState.challenge_started_at);
+  }else if(worldRemoteState.quest_stage==="sealed"&&worldChallengeIndex>0){
+    $("worldNextEnvelopeNumber").textContent="ENVELOPE "+worldEnvelopeWords[worldChallengeIndex]+" IS WAITING";
+    show("worldNextEnvelope",true);
   }else{
     show("worldFirstChallenge",true);
   }
@@ -2294,12 +2298,8 @@ async function refreshWorldRemoteState(){
   worldSkipVotes=(data.skip_votes||[]).filter(v=>v.challenge_index===worldChallengeIndex).map(v=>memberNames.get(v.user_id)).filter(Boolean);
   renderWorldLobby();
   const remoteResult=(data.results||[]).find(r=>r.challenge_index===worldChallengeIndex);
-  if(!remoteResult&&data.challenge_revealed_at&&!$("worldLaunchStage").classList.contains("hidden")&&
-     (!$('worldCountdownView').classList.contains('hidden')||!$('worldNextEnvelope').classList.contains('hidden'))){
-    showWorldChallengeReveal();
-  }
   const challengeKey=data.challenge_started_at?worldChallengeIndex+":"+data.challenge_started_at:"";
-  if(!remoteResult&&challengeKey&&challengeKey!==worldRemoteChallengeStartedKey&&!$("worldLaunchStage").classList.contains("hidden")){
+  if(!remoteResult&&data.quest_stage==="active"&&challengeKey&&challengeKey!==worldRemoteChallengeStartedKey&&!$("worldLaunchStage").classList.contains("hidden")){
     beginWorldChallenge(true,data.challenge_started_at);
   }
   if(!remoteResult&&worldSkipVotes.length>0&&!$("worldLaunchStage").classList.contains("hidden")){
@@ -2321,6 +2321,9 @@ async function refreshWorldRemoteState(){
     show("worldChallengeResult",false);
     $("worldNextEnvelopeNumber").textContent="ENVELOPE "+worldEnvelopeWords[worldChallengeIndex]+" IS WAITING";
     show("worldNextEnvelope",true);
+  }
+  if(!remoteResult&&data.quest_stage==="revealed"&&!$("worldLaunchStage").classList.contains("hidden")){
+    showWorldChallengeReveal();
   }
   if(data.status==="complete"&&worldLobbyMode==="member"&&!$("worldLaunchStage").classList.contains("hidden")){
     const elapsed=Math.max(1,Math.ceil((Date.now()-new Date(data.started_at||Date.now()).getTime())/60000));
