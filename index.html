@@ -2297,7 +2297,10 @@ function launchWorldQuest(){
   show("breakSealPrompt",false);
   const playerName=$("worldPlayerName").value.trim()||"You";
   const couplePlayers=[$("worldCoupleNameOne").value.trim(),$("worldCoupleNameTwo").value.trim()].filter(Boolean);
-  const launchPlayers=worldLobbyMode==="couple"?couplePlayers:worldLobbyMode==="individual"?[playerName]:worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
+  const connectedTeamPlayers=(worldRemoteState?.members||[]).map(member=>member.display_name).filter(Boolean);
+  const launchPlayers=connectedTeamPlayers.length
+    ? connectedTeamPlayers
+    : worldLobbyMode==="couple"?couplePlayers:worldLobbyMode==="individual"?[playerName]:worldLobbyMode==="captain"?[$("worldTeamPlayerName").value.trim()||playerName]:["Team Captain",$("worldJoinPlayerName").value.trim()||playerName];
   $("launchReadyPlayers").innerHTML=launchPlayers.map(name=>`<span class="ready-chip">${escapeHtml(name)} · READY ✓</span>`).join("");
   $("worldSealedEnvelope").classList.remove("open");
   $("worldSealedEnvelope").dataset.ready="false";
