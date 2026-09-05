@@ -294,6 +294,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
           <span class="world-path-icon">🤝</span><span><strong>JOIN A TEAM</strong><small>Use the invitation code sent by your team captain.</small></span>
         </button>
       </div>
+      <button class="good hidden" id="worldResumeQuestBtn">RESUME TEAM QUEST</button>
+      <div class="status hidden" id="worldResumeQuestStatus"></div>
 
       <div class="world-panel hidden" id="worldIndividualPanel">
         <h3>Individual Player</h3>
@@ -1933,9 +1935,10 @@ $("enterDateQuestBtn").onclick=()=>{
   window.scrollTo({top:0,behavior:"smooth"});
 };
 
-$("enterWorldQuestBtn").onclick=()=>{
+$("enterWorldQuestBtn").onclick=async()=>{
   show("platformGateway",false);
   show("worldQuestStart",true);
+  await checkWorldQuestResume();
   window.scrollTo({top:0,behavior:"smooth"});
 };
 
@@ -1955,6 +1958,29 @@ let worldRemoteState=null;
 let worldRemoteChannel=null;
 let worldRemotePoll=null;
 let worldRemoteResultShown=-1;
+async function checkWorldQuestResume(){
+  show("worldResumeQuestBtn",false);
+  show("worldResumeQuestStatus",false);
+  const user=await currentUser();
+  if(!user) return;
+  const {data,error}=await sb.rpc("resume_world_quest_team");
+  if(error||!data) return;
+  worldRemoteState=data;
+  worldRemoteTeamId=data.team_id;
+  worldLobbyCode=data.invite_code;
+  worldLobbyTeam=data.team_name;
+  worldLobbyMode=data.captain_user_id===user.id?"captain":"member";
+  worldChallengeIndex=Math.min(4,data.challenge_index||0);
+  worldQuestScore=data.score||0;
+  worldQuestSkips=data.skips||0;
+  worldQuestCompleted=(data.results||[]).filter(result=>!result.skipped).length;
+  $("worldResumeQuestBtn").textContent=data.status==="lobby"?"RESUME TEAM LOBBY":"RESUME ACTIVE TEAM QUEST";
+  $("worldResumeQuestStatus").textContent=data.status==="lobby"
+    ? data.team_name+" is still waiting in the lobby."
+    : data.team_name+" is saved at Challenge "+(worldChallengeIndex+1)+" with "+worldQuestScore+" points.";
+  show("worldResumeQuestBtn",true);
+  show("worldResumeQuestStatus",true);
+}
 let worldCountdownTimer=null;
 let worldChallengeTimer=null;
 let worldChallengeSeconds=1200;
@@ -2128,6 +2154,32 @@ $("worldTeamAuthBtn").onclick=async()=>{
   const next=worldPendingPath||"create";
   worldPendingPath="";
   openWorldPath(next);
+};
+
+$("worldResumeQuestBtn").onclick=async()=>{
+  if(!worldRemoteState||!worldRemoteTeamId) return checkWorldQuestResume();
+  if(worldRemoteState.status==="lobby"){
+    await openWorldLobby();
+    return;
+  }
+  worldPanels.forEach(id=>show(id,false));
+  show("worldQuestPaths",false);
+  show("worldResumeQuestBtn",false);
+  show("worldResumeQuestStatus",false);
+  show("worldLaunchStage",true);
+  ["worldCountdownView","worldFirstChallenge","worldActiveChallenge","worldChallengeResult","worldNextEnvelope","worldQuestCeremony","worldEvidenceReview","worldSkipVotePanel","worldVerificationStage"].forEach(id=>show(id,false));
+  worldQuestStartedAt=new Date(worldRemoteState.started_at||Date.now()).getTime();
+  resetWorldEvidence();
+  renderWorldChallengeData();
+  subscribeWorldTeam();
+  const savedResult=(worldRemoteState.results||[]).find(result=>result.challenge_index===worldChallengeIndex);
+  if(savedResult){
+    worldRemoteResultShown=worldChallengeIndex;
+    showWorldChallengeResult(Boolean(savedResult.skipped),true);
+  }else{
+    show("worldFirstChallenge",true);
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
 };
 
 $("worldIndividualContinueBtn").onclick=()=>{
