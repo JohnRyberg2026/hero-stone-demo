@@ -274,6 +274,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <button class="world-path" data-world-path="individual">
           <span class="world-path-icon">🧭</span><span><strong>PLAY AS AN INDIVIDUAL</strong><small>Enter the adventure on your own and connect with the worldwide community.</small></span>
         </button>
+        <button class="world-path" data-world-path="couple">
+          <span class="world-path-icon">❤️</span><span><strong>PLAY AS A COUPLE</strong><small>Take on one shared quest, one score, and every challenge side by side.</small></span>
+        </button>
         <button class="world-path" data-world-path="create">
           <span class="world-path-icon">🛡️</span><span><strong>CREATE A TEAM</strong><small>Become the team captain and invite others to join your quest.</small></span>
         </button>
@@ -287,6 +290,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <p>Choose the name HEART STONE will show during WORLD QUEST.</p>
         <input id="worldPlayerName" maxlength="30" placeholder="Your player name" autocomplete="name"/>
         <div class="world-panel-actions"><button class="secondary worldCancelBtn">BACK</button><button id="worldIndividualContinueBtn">CONTINUE</button></div>
+      </div>
+
+      <div class="world-panel hidden" id="worldCouplePanel">
+        <h3>Couple Quest</h3>
+        <p>Enter both names. HEART STONE will keep your challenges, skips, and score together.</p>
+        <input id="worldCoupleNameOne" maxlength="30" placeholder="First player name" autocomplete="name"/>
+        <input id="worldCoupleNameTwo" maxlength="30" placeholder="Second player name" autocomplete="name"/>
+        <div class="world-panel-actions"><button class="secondary worldCancelBtn">BACK</button><button id="worldCoupleContinueBtn">BEGIN AS A COUPLE</button></div>
       </div>
 
       <div class="world-panel hidden" id="worldCreatePanel">
@@ -405,7 +416,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
           <p>HEART STONE will not submit or publish this photo until your team confirms it.</p>
           <img class="review-photo" id="worldReviewPhoto" alt="Challenge evidence selected for review"/>
           <div class="review-checks">
-            <label class="review-check"><input class="worldReviewCheck" type="checkbox"/><span><strong>Our team is visible.</strong><br/>Everyone who participated in this challenge appears in the photo.</span></label>
+            <label class="review-check"><input class="worldReviewCheck" type="checkbox"/><span><strong id="worldReviewPeopleTitle">Our team is visible.</strong><br/><span id="worldReviewPeopleCopy">Everyone who participated in this challenge appears in the photo.</span></span></label>
             <label class="review-check"><input class="worldReviewCheck" type="checkbox"/><span><strong>The landmark is visible.</strong><br/>The public landmark can be recognized from the submitted image.</span></label>
             <label class="review-check"><input class="worldReviewCheck" type="checkbox"/><span><strong>We approve this submission.</strong><br/>Our team reviewed the photo and chooses to submit it for challenge verification.</span></label>
           </div>
@@ -1922,7 +1933,7 @@ $("worldQuestBackBtn").onclick=()=>{
   resetWorldQuestEntry();
 };
 
-const worldPanels=["worldIndividualPanel","worldCreatePanel","worldJoinPanel","worldTeamLobby","worldLaunchStage"];
+const worldPanels=["worldIndividualPanel","worldCouplePanel","worldCreatePanel","worldJoinPanel","worldTeamLobby","worldLaunchStage"];
 let worldLobbyMode="captain";
 let worldLobbyCode="";
 let worldLobbyTeam="";
@@ -1946,6 +1957,14 @@ let worldQuestCompleted=0;
 let worldQuestStartedAt=0;
 function currentWorldChallenge(){ return worldChallenges[worldChallengeIndex]; }
 function worldAudienceText(text){
+  if(worldLobbyMode==="couple"){
+    return String(text)
+      .replaceAll("your whole team","both of you")
+      .replaceAll("your team’s","your couple’s")
+      .replaceAll("your team","both of you")
+      .replaceAll("Every present teammate must be visible and pointing to it.","Both of you must be visible and pointing to it.")
+      .replaceAll("Every present teammate must be visible.","Both of you must be visible in the photo.");
+  }
   if(worldLobbyMode!=="individual") return text;
   return String(text)
     .replaceAll("your whole team","yourself")
@@ -1973,8 +1992,11 @@ function renderWorldChallengeData(){
   $("worldActiveCommand").textContent=worldAudienceText(challenge.command);
   $("worldActiveRuleOne").innerHTML=worldAudienceText(challenge.ruleOne);
   $("worldActiveRuleTwo").innerHTML=worldAudienceText(challenge.ruleTwo);
+  $("worldReviewPeopleTitle").textContent=worldLobbyMode==="individual"?"I am visible.":worldLobbyMode==="couple"?"We are both visible.":"Our team is visible.";
+  $("worldReviewPeopleCopy").textContent=worldLobbyMode==="individual"?"I appear in the photo.":worldLobbyMode==="couple"?"Both of us appear in the photo.":"Everyone who participated in this challenge appears in the photo.";
   $("worldResultKicker").textContent="CHALLENGE "+number+" COMPLETE";
-  $("worldSkipConfirm").querySelector("p").textContent="Skip this challenge for your team? This demo will record no points for Challenge "+number+".";
+  const skipOwner=worldLobbyMode==="individual"?"your quest":worldLobbyMode==="couple"?"your couple":"your team";
+  $("worldSkipConfirm").querySelector("p").textContent="Skip this challenge for "+skipOwner+"? This demo will record no points for Challenge "+number+".";
   $("worldSkipChallengeBtn").disabled=worldQuestSkips>=3;
   $("worldSkipChallengeBtn").textContent=worldQuestSkips>=3?"3 SKIPS USED":"SKIP THIS CHALLENGE";
   renderWorldQuestHud();
@@ -2036,9 +2058,9 @@ function resetWorldQuestEntry(){
 function openWorldPath(path){
   show("worldQuestPaths",false);
   worldPanels.forEach(id=>show(id,false));
-  const panelId={individual:"worldIndividualPanel",create:"worldCreatePanel",join:"worldJoinPanel"}[path];
+  const panelId={individual:"worldIndividualPanel",couple:"worldCouplePanel",create:"worldCreatePanel",join:"worldJoinPanel"}[path];
   if(panelId) show(panelId,true);
-  const focusId={individual:"worldPlayerName",create:"worldTeamName",join:"worldInviteCode"}[path];
+  const focusId={individual:"worldPlayerName",couple:"worldCoupleNameOne",create:"worldTeamName",join:"worldInviteCode"}[path];
   setTimeout(()=>$(focusId)?.focus(),50);
 }
 document.querySelectorAll("[data-world-path]").forEach(button=>{
@@ -2054,6 +2076,17 @@ $("worldIndividualContinueBtn").onclick=()=>{
   worldLobbyMode="individual";
   worldLobbyTeam=name.toUpperCase()+" · SOLO EXPLORER";
   worldLobbyCode="SOLO";
+  launchWorldQuest();
+};
+
+$("worldCoupleContinueBtn").onclick=()=>{
+  const first=$("worldCoupleNameOne").value.trim();
+  const second=$("worldCoupleNameTwo").value.trim();
+  if(!first){ $("worldCoupleNameOne").focus(); return; }
+  if(!second){ $("worldCoupleNameTwo").focus(); return; }
+  worldLobbyMode="couple";
+  worldLobbyTeam=(first+" & "+second).toUpperCase();
+  worldLobbyCode="COUPLE";
   launchWorldQuest();
 };
 
@@ -2140,7 +2173,8 @@ function launchWorldQuest(){
   show("worldFirstChallenge",false);
   show("breakSealPrompt",false);
   const playerName=$("worldPlayerName").value.trim()||"You";
-  const launchPlayers=worldLobbyMode==="individual"?[playerName]:worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
+  const couplePlayers=[$("worldCoupleNameOne").value.trim(),$("worldCoupleNameTwo").value.trim()].filter(Boolean);
+  const launchPlayers=worldLobbyMode==="couple"?couplePlayers:worldLobbyMode==="individual"?[playerName]:worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
   $("launchReadyPlayers").innerHTML=launchPlayers.map(name=>`<span class="ready-chip">${escapeHtml(name)} · READY ✓</span>`).join("");
   $("worldSealedEnvelope").classList.remove("open");
   $("worldSealedEnvelope").dataset.ready="false";
@@ -2231,8 +2265,8 @@ function showWorldChallengeResult(skipped=false){
   $("worldResultTitle").textContent=skipped?"Challenge Skipped":"Evidence Captured";
   $("worldResultPoints").textContent=skipped?"+0":"+"+challenge.points;
   $("worldResultSummary").textContent=skipped
-    ? "HEART STONE recorded the skip and preserved your team’s momentum. The next envelope is waiting."
-    : "HEART STONE has received your team’s photo for verification. Your adventure continues.";
+    ? worldLobbyMode==="individual"?"HEART STONE recorded your skip and preserved your momentum. The next envelope is waiting.":worldLobbyMode==="couple"?"HEART STONE recorded your shared skip and preserved your momentum together. The next envelope is waiting.":"HEART STONE recorded the skip and preserved your team’s momentum. The next envelope is waiting."
+    : worldLobbyMode==="individual"?"HEART STONE has received your photo for verification. Your adventure continues.":worldLobbyMode==="couple"?"HEART STONE has received your couple’s photo for verification. Your adventure continues together.":"HEART STONE has received your team’s photo for verification. Your adventure continues.";
   $("worldNextChallengeBtn").textContent=worldChallengeIndex===worldChallenges.length-1?"VIEW QUEST RESULTS":"OPEN THE NEXT ENVELOPE";
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -2271,6 +2305,7 @@ $("worldSubmitEvidenceBtn").onclick=()=>{
 
 function worldVotePlayers(){
   const playerName=$("worldPlayerName").value.trim()||"You";
+  if(worldLobbyMode==="couple") return [$("worldCoupleNameOne").value.trim(),$("worldCoupleNameTwo").value.trim()].filter(Boolean);
   return worldLobbyMode==="individual"?[playerName]:worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
 }
 function renderWorldSkipVote(){
