@@ -1958,6 +1958,7 @@ let worldRemoteState=null;
 let worldRemoteChannel=null;
 let worldRemotePoll=null;
 let worldRemoteResultShown=-1;
+let worldRemoteChallengeStartedKey="";
 async function checkWorldQuestResume(){
   show("worldResumeQuestBtn",false);
   show("worldResumeQuestStatus",false);
@@ -2073,6 +2074,7 @@ function resetWorldQuestEntry(){
   worldRemoteState=null;
   worldRemoteTeamId="";
   worldRemoteResultShown=-1;
+  worldRemoteChallengeStartedKey="";
   worldPanels.forEach(id=>show(id,false));
   show("worldQuestPaths",true);
   show("worldCreatedCodeBox",false);
@@ -2176,6 +2178,8 @@ $("worldResumeQuestBtn").onclick=async()=>{
   if(savedResult){
     worldRemoteResultShown=worldChallengeIndex;
     showWorldChallengeResult(Boolean(savedResult.skipped),true);
+  }else if(worldRemoteState.challenge_started_at){
+    beginWorldChallenge(true,worldRemoteState.challenge_started_at);
   }else{
     show("worldFirstChallenge",true);
   }
@@ -2289,8 +2293,20 @@ async function refreshWorldRemoteState(){
   const memberNames=new Map((data.members||[]).map(m=>[m.user_id,m.display_name]));
   worldSkipVotes=(data.skip_votes||[]).filter(v=>v.challenge_index===worldChallengeIndex).map(v=>memberNames.get(v.user_id)).filter(Boolean);
   renderWorldLobby();
-  if(!$("worldSkipVotePanel").classList.contains("hidden")) renderWorldSkipVote();
   const remoteResult=(data.results||[]).find(r=>r.challenge_index===worldChallengeIndex);
+  const challengeKey=data.challenge_started_at?worldChallengeIndex+":"+data.challenge_started_at:"";
+  if(!remoteResult&&challengeKey&&challengeKey!==worldRemoteChallengeStartedKey&&!$("worldLaunchStage").classList.contains("hidden")){
+    beginWorldChallenge(true,data.challenge_started_at);
+  }
+  if(!remoteResult&&worldSkipVotes.length>0&&!$("worldLaunchStage").classList.contains("hidden")){
+    show("worldFirstChallenge",false);
+    show("worldActiveChallenge",false);
+    show("worldSkipConfirm",false);
+    show("worldSkipVotePanel",true);
+    show("worldVoteStatus",true);
+    $("worldVoteStatus").textContent="A teammate requested a skip. Vote below or return to the challenge.";
+  }
+  if(!$("worldSkipVotePanel").classList.contains("hidden")) renderWorldSkipVote();
   if(remoteResult&&worldRemoteResultShown!==worldChallengeIndex&&!$("worldLaunchStage").classList.contains("hidden")){
     worldRemoteResultShown=worldChallengeIndex;
     show("worldSkipVotePanel",false);
@@ -2402,13 +2418,25 @@ function renderWorldChallengeTimer(){
   timer.textContent=String(minutes).padStart(2,"0")+":"+String(seconds).padStart(2,"0");
   timer.classList.toggle("warning",worldChallengeSeconds<=300);
 }
-function beginWorldChallenge(){
+async function beginWorldChallenge(fromRemote=false,startedAt=null){
+  if(worldRemoteTeamId&&!fromRemote){
+    $("worldEnterChallengeBtn").disabled=true;
+    $("worldEnterChallengeBtn").textContent="SYNCHRONIZING TEAM…";
+    const {data,error}=await sb.rpc("begin_world_quest_challenge",{p_team_id:worldRemoteTeamId,p_challenge_index:worldChallengeIndex});
+    $("worldEnterChallengeBtn").disabled=false;
+    $("worldEnterChallengeBtn").textContent="BEGIN THIS CHALLENGE";
+    if(error) return window.alert("Challenge start error: "+error.message+"\n\nRun the v12d Supabase setup file first.");
+    startedAt=(typeof data==="string"?data:data?.challenge_started_at)||new Date().toISOString();
+  }
+  if(startedAt) worldRemoteChallengeStartedKey=worldChallengeIndex+":"+startedAt;
   show("worldFirstChallenge",false);
   show("worldChallengeResult",false);
+  show("worldSkipVotePanel",false);
   show("worldActiveChallenge",true);
   resetWorldEvidence();
   renderWorldChallengeData();
-  worldChallengeSeconds=currentWorldChallenge().seconds;
+  const elapsed=startedAt?Math.max(0,Math.floor((Date.now()-new Date(startedAt).getTime())/1000)):0;
+  worldChallengeSeconds=Math.max(0,currentWorldChallenge().seconds-elapsed);
   renderWorldChallengeTimer();
   if(worldChallengeTimer) clearInterval(worldChallengeTimer);
   worldChallengeTimer=setInterval(()=>{
@@ -2422,7 +2450,7 @@ function beginWorldChallenge(){
   },1000);
   window.scrollTo({top:0,behavior:"smooth"});
 }
-$("worldEnterChallengeBtn").onclick=beginWorldChallenge;
+$("worldEnterChallengeBtn").onclick=()=>beginWorldChallenge(false);
 
 $("worldEvidenceInput").onchange=event=>{
   const file=event.target.files?.[0];
@@ -2537,7 +2565,7 @@ function openWorldSkipVote(){
     show("worldSkipConfirm",false);
     return;
   }
-  worldSkipVotes=[];
+  if(!worldRemoteTeamId) worldSkipVotes=[];
   show("worldSkipConfirm",false);
   show("worldActiveChallenge",false);
   show("worldSkipVotePanel",true);
@@ -2596,6 +2624,7 @@ $("worldNextChallengeBtn").onclick=async()=>{
     }else{
       worldChallengeIndex=data.challenge_index;
       worldRemoteResultShown=-1;
+      worldRemoteChallengeStartedKey="";
     }
   }
   if((worldRemoteTeamId&&remoteFinished)||(!worldRemoteTeamId&&worldChallengeIndex>=currentWorldChallengeCount()-1)){
