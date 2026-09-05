@@ -270,6 +270,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <h2>ENTER WORLD QUEST™</h2>
       <p class="world-entry-intro">Your city is the game board. The world is the community. HEART STONE™ is the referee.</p>
 
+      <div class="world-panel hidden" id="worldTeamAuthPanel">
+        <h3>Connect This Player</h3>
+        <p>Team play synchronizes across phones. Sign in so HEART STONE can securely connect you to your team.</p>
+        <input id="worldTeamAuthEmail" type="email" placeholder="Email" autocomplete="email"/>
+        <input id="worldTeamAuthPassword" type="password" placeholder="Password" autocomplete="current-password"/>
+        <button id="worldTeamAuthBtn">SIGN IN &amp; CONTINUE</button>
+        <div class="status" id="worldTeamAuthStatus">Your individual and couple demos remain available without team synchronization.</div>
+        <button class="secondary worldCancelBtn">BACK</button>
+      </div>
+
       <div class="world-paths" id="worldQuestPaths">
         <button class="world-path" data-world-path="individual">
           <span class="world-path-icon">🧭</span><span><strong>PLAY AS AN INDIVIDUAL</strong><small>Enter the adventure on your own and connect with the worldwide community.</small></span>
@@ -303,6 +313,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="world-panel hidden" id="worldCreatePanel">
         <h3>Create Your Team</h3>
         <p>Name your team. HEART STONE will create a code you can send to the people you invite.</p>
+        <input id="worldTeamPlayerName" maxlength="30" placeholder="Your player name" autocomplete="name"/>
         <input id="worldTeamName" maxlength="35" placeholder="Team name"/>
         <button id="worldCreateTeamBtn">CREATE TEAM &amp; INVITATION CODE</button>
         <div class="hidden" id="worldCreatedCodeBox">
@@ -316,6 +327,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="world-panel hidden" id="worldJoinPanel">
         <h3>Join a Team</h3>
         <p>Enter the invitation code your team captain sent you.</p>
+        <input id="worldJoinPlayerName" maxlength="30" placeholder="Your player name" autocomplete="name"/>
         <input class="code-entry" id="worldInviteCode" maxlength="8" placeholder="QUEST123" autocapitalize="characters"/>
         <div class="world-panel-actions"><button class="secondary worldCancelBtn">BACK</button><button id="worldJoinTeamBtn">JOIN TEAM</button></div>
         <div class="status hidden" id="worldJoinStatus"></div>
@@ -1933,10 +1945,16 @@ $("worldQuestBackBtn").onclick=()=>{
   resetWorldQuestEntry();
 };
 
-const worldPanels=["worldIndividualPanel","worldCouplePanel","worldCreatePanel","worldJoinPanel","worldTeamLobby","worldLaunchStage"];
+const worldPanels=["worldTeamAuthPanel","worldIndividualPanel","worldCouplePanel","worldCreatePanel","worldJoinPanel","worldTeamLobby","worldLaunchStage"];
 let worldLobbyMode="captain";
 let worldLobbyCode="";
 let worldLobbyTeam="";
+let worldPendingPath="";
+let worldRemoteTeamId="";
+let worldRemoteState=null;
+let worldRemoteChannel=null;
+let worldRemotePoll=null;
+let worldRemoteResultShown=-1;
 let worldCountdownTimer=null;
 let worldChallengeTimer=null;
 let worldChallengeSeconds=1200;
@@ -1949,13 +1967,24 @@ const worldChallenges=[
   {type:"SOLVE",title:"Decode the Past",command:"Find a dated public plaque or historical marker and capture the year together with your team.",seconds:720,points:100,ruleOne:"<strong>YEAR IS READABLE</strong>The date on the marker must be visible in the photo.",ruleTwo:"<strong>PUBLIC MARKER</strong>The plaque or marker must be permanently displayed in public."},
   {type:"COMPLETE",title:"Complete the World Connection",command:"Find something in your city shaped like a heart, circle, or star and capture your team pointing to it.",seconds:900,points:150,ruleOne:"<strong>SHAPE IS VISIBLE</strong>The heart, circle, or star must be clear in the photo.",ruleTwo:"<strong>TEAM CONNECTION</strong>Every present teammate must be visible and pointing to it."}
 ];
+const worldTeamChallenges=[
+  {type:"FIND",title:"Find Your City’s Symbol",command:"Find a public symbol, emblem, or landmark connected to your city—and capture your entire team recreating its shape or pose.",seconds:1200,points:120,ruleOne:"<strong>FULL TEAM PHOTO</strong>Every present teammate and the city symbol must be visible.",ruleTwo:"<strong>ONE SHARED POSE</strong>The team must clearly recreate a shape or pose from the symbol."},
+  {type:"GO",title:"Reach the Community Crossroads",command:"Go to a safe public place where several paths, streets, or walkways meet and form one connected team line there.",seconds:900,points:100,ruleOne:"<strong>CONNECTED LINE</strong>Every present teammate must be visible in one unbroken line.",ruleTwo:"<strong>PUBLIC CROSSROADS</strong>At least three visible routes must meet at the location."},
+  {type:"DO",title:"Spell the World Together",command:"Use your team’s bodies or safe handheld objects to form the letters WQ in one photo.",seconds:900,points:140,ruleOne:"<strong>WQ IS READABLE</strong>Both letters must be recognizable in the submitted photo.",ruleTwo:"<strong>EVERYONE CONTRIBUTES</strong>Every present teammate must help form or frame the letters."},
+  {type:"SOLVE",title:"Build the Number Code",command:"Find three different numbers displayed in one safe public location and arrange your team from smallest number to largest.",seconds:720,points:120,ruleOne:"<strong>THREE NUMBERS</strong>All three numbers must be readable in the evidence.",ruleTwo:"<strong>CORRECT ORDER</strong>Your team must visibly point from the smallest number to the largest."},
+  {type:"COMPLETE",title:"Create the World Connection",command:"Find a public circle, heart, or star and create a second matching shape with your whole team beside it.",seconds:900,points:170,ruleOne:"<strong>TWO MATCHING SHAPES</strong>The public shape and the team-created shape must both be visible.",ruleTwo:"<strong>WHOLE TEAM FINISH</strong>Every present teammate must be part of the final shape."}
+];
 const worldEnvelopeWords=["ONE","TWO","THREE","FOUR","FIVE"];
 let worldChallengeIndex=0;
 let worldQuestScore=0;
 let worldQuestSkips=0;
 let worldQuestCompleted=0;
 let worldQuestStartedAt=0;
-function currentWorldChallenge(){ return worldChallenges[worldChallengeIndex]; }
+function currentWorldChallenges(){
+  return (worldLobbyMode==="captain"||worldLobbyMode==="member")?worldTeamChallenges:worldChallenges;
+}
+function currentWorldChallenge(){ return currentWorldChallenges()[worldChallengeIndex]; }
+function currentWorldChallengeCount(){ return currentWorldChallenges().length; }
 function worldAudienceText(text){
   if(worldLobbyMode==="couple"){
     return String(text)
@@ -1976,7 +2005,7 @@ function worldAudienceText(text){
 function renderWorldQuestHud(){
   $("worldQuestScore").textContent=worldQuestScore;
   $("worldQuestSkips").textContent=worldQuestSkips+"/3";
-  $("worldQuestTrackFill").style.width=((worldChallengeIndex/worldChallenges.length)*100)+"%";
+  $("worldQuestTrackFill").style.width=((worldChallengeIndex/currentWorldChallengeCount())*100)+"%";
 }
 function renderWorldChallengeData(){
   const challenge=currentWorldChallenge();
@@ -1987,7 +2016,7 @@ function renderWorldChallengeData(){
   $("worldRevealCommand").textContent=worldAudienceText(challenge.command);
   $("worldRevealTime").textContent=Math.ceil(challenge.seconds/60)+" MINUTES";
   $("worldRevealPoints").textContent=challenge.points+" POINTS";
-  $("worldActiveProgress").textContent="CHALLENGE "+number+" OF "+worldChallenges.length+" · "+challenge.type;
+  $("worldActiveProgress").textContent="CHALLENGE "+number+" OF "+currentWorldChallengeCount()+" · "+challenge.type;
   $("worldActiveTitle").textContent=challenge.title;
   $("worldActiveCommand").textContent=worldAudienceText(challenge.command);
   $("worldActiveRuleOne").innerHTML=worldAudienceText(challenge.ruleOne);
@@ -2012,6 +2041,12 @@ function resetWorldEvidence(){
   $("worldChallengeStatus").textContent="Challenge active. Complete the mission, capture your team, and return here before time expires.";
 }
 function resetWorldQuestEntry(){
+  if(worldRemotePoll) clearInterval(worldRemotePoll);
+  worldRemotePoll=null;
+  if(worldRemoteChannel){ sb.removeChannel(worldRemoteChannel); worldRemoteChannel=null; }
+  worldRemoteState=null;
+  worldRemoteTeamId="";
+  worldRemoteResultShown=-1;
   worldPanels.forEach(id=>show(id,false));
   show("worldQuestPaths",true);
   show("worldCreatedCodeBox",false);
@@ -2055,7 +2090,18 @@ function resetWorldQuestEntry(){
   $("worldSealedEnvelope").classList.remove("open");
   $("worldSealedEnvelope").dataset.ready="false";
 }
-function openWorldPath(path){
+async function openWorldPath(path){
+  if(path==="create"||path==="join"){
+    const user=await currentUser();
+    if(!user){
+      worldPendingPath=path;
+      show("worldQuestPaths",false);
+      worldPanels.forEach(id=>show(id,false));
+      show("worldTeamAuthPanel",true);
+      setTimeout(()=>$("worldTeamAuthEmail").focus(),50);
+      return;
+    }
+  }
   show("worldQuestPaths",false);
   worldPanels.forEach(id=>show(id,false));
   const panelId={individual:"worldIndividualPanel",couple:"worldCouplePanel",create:"worldCreatePanel",join:"worldJoinPanel"}[path];
@@ -2069,6 +2115,20 @@ document.querySelectorAll("[data-world-path]").forEach(button=>{
 document.querySelectorAll(".worldCancelBtn").forEach(button=>{
   button.onclick=resetWorldQuestEntry;
 });
+
+$("worldTeamAuthBtn").onclick=async()=>{
+  const email=$("worldTeamAuthEmail").value.trim();
+  const password=$("worldTeamAuthPassword").value;
+  if(!email||!password) return status("worldTeamAuthStatus","Enter your email and password to continue.");
+  $("worldTeamAuthBtn").disabled=true;
+  status("worldTeamAuthStatus","Connecting this player…");
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  $("worldTeamAuthBtn").disabled=false;
+  if(error) return status("worldTeamAuthStatus","Sign-in error: "+error.message);
+  const next=worldPendingPath||"create";
+  worldPendingPath="";
+  openWorldPath(next);
+};
 
 $("worldIndividualContinueBtn").onclick=()=>{
   const name=$("worldPlayerName").value.trim();
@@ -2090,36 +2150,50 @@ $("worldCoupleContinueBtn").onclick=()=>{
   launchWorldQuest();
 };
 
-$("worldCreateTeamBtn").onclick=()=>{
+$("worldCreateTeamBtn").onclick=async()=>{
   const teamName=$("worldTeamName").value.trim();
+  const playerName=$("worldTeamPlayerName").value.trim();
+  if(!playerName){ $("worldTeamPlayerName").focus(); return; }
   if(!teamName){ $("worldTeamName").focus(); return; }
-  const seed=teamName.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,4).padEnd(4,"Q");
-  const suffix=Math.random().toString(36).slice(2,6).toUpperCase();
-  worldLobbyCode=(seed+suffix).slice(0,8);
-  worldLobbyTeam=teamName;
+  $("worldCreateTeamBtn").disabled=true;
+  $("worldCreateTeamBtn").textContent="CREATING SECURE TEAM…";
+  const {data,error}=await sb.rpc("create_world_quest_team",{p_name:teamName,p_display_name:playerName});
+  if(error){
+    $("worldCreateTeamBtn").disabled=false;
+    $("worldCreateTeamBtn").textContent="CREATE TEAM & INVITATION CODE";
+    return window.alert("Team creation error: "+error.message+"\n\nRun the v12 Supabase setup file first.");
+  }
+  worldRemoteTeamId=data.team_id;
+  worldLobbyCode=data.invite_code;
+  worldLobbyTeam=data.team_name;
   worldLobbyMode="captain";
   $("worldCreatedCode").textContent=worldLobbyCode;
   show("worldCreatedCodeBox",true);
-  $("worldCreateTeamBtn").textContent="TEAM CREATED";
-  $("worldCreateTeamBtn").disabled=true;
+  $("worldCreateTeamBtn").textContent="TEAM CREATED & CONNECTED";
 };
 
 $("worldInviteCode").addEventListener("input",event=>{
   event.target.value=event.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"");
 });
-$("worldJoinTeamBtn").onclick=()=>{
+$("worldJoinTeamBtn").onclick=async()=>{
   const code=$("worldInviteCode").value.trim();
+  const playerName=$("worldJoinPlayerName").value.trim();
   const statusBox=$("worldJoinStatus");
   show("worldJoinStatus",true);
-  if(code.length<6){
+  if(!playerName){ statusBox.textContent="Enter your player name."; $("worldJoinPlayerName").focus(); return; }
+  if(code.length!==8){
     statusBox.textContent="Enter the full invitation code to join your team.";
     return;
   }
-  statusBox.textContent="Invitation code accepted. Team connection is ready for the next build.";
-  $("worldJoinTeamBtn").textContent="TEAM FOUND";
+  statusBox.textContent="Connecting to your team…";
   $("worldJoinTeamBtn").disabled=true;
-  worldLobbyCode=code;
-  worldLobbyTeam="WORLD QUEST TEAM";
+  const {data,error}=await sb.rpc("join_world_quest_team",{p_code:code,p_display_name:playerName});
+  if(error){ $("worldJoinTeamBtn").disabled=false; statusBox.textContent="Join error: "+error.message; return; }
+  statusBox.textContent="Connected. Your team can see you in the lobby.";
+  $("worldJoinTeamBtn").textContent="TEAM FOUND";
+  worldRemoteTeamId=data.team_id;
+  worldLobbyCode=data.invite_code;
+  worldLobbyTeam=data.team_name;
   worldLobbyMode="member";
   show("worldOpenJoinedLobbyBtn",true);
 };
@@ -2128,14 +2202,15 @@ function playerInitials(name){
   return String(name||"Player").trim().split(/\s+/).slice(0,2).map(part=>part[0]).join("").toUpperCase();
 }
 function renderWorldLobby(){
-  const playerName=$("worldPlayerName").value.trim()||"You";
   const isCaptain=worldLobbyMode==="captain";
   $("lobbyTeamName").textContent=worldLobbyTeam||"WORLD QUEST TEAM";
   $("lobbyInviteCode").textContent=worldLobbyCode;
   $("lobbyShareCode").textContent=worldLobbyCode;
-  const players=isCaptain
-    ? [{name:playerName==="You"?"You":playerName,role:"Team Captain",ready:true}]
-    : [{name:"Team Captain",role:"Captain",ready:true},{name:playerName,role:"Team Member",ready:true}];
+  const players=worldRemoteState?.members?.map(member=>({
+    name:member.display_name,
+    role:member.user_id===worldRemoteState.captain_user_id?"Team Captain":"Team Member",
+    ready:member.ready
+  }))||[];
   $("lobbyPlayerCount").textContent=players.length;
   $("lobbyWaitingText").textContent=isCaptain
     ? "Lobby open — waiting for teammates to join."
@@ -2143,15 +2218,63 @@ function renderWorldLobby(){
   $("lobbyPlayerList").innerHTML=players.map(player=>`<div class="player-row">
     <div class="player-avatar">${escapeHtml(playerInitials(player.name))}</div>
     <div><div class="player-name">${escapeHtml(player.name)}</div><div class="player-role">${escapeHtml(player.role)}</div></div>
-    <div class="player-ready">READY ✓</div>
+    <div class="player-ready">${player.ready?"READY ✓":"WAITING"}</div>
   </div>`).join("");
   $("worldStartQuestBtn").textContent=isCaptain?"START THE QUEST":"WAITING FOR CAPTAIN";
   $("worldStartQuestBtn").disabled=!isCaptain;
 }
-function openWorldLobby(){
+async function refreshWorldRemoteState(){
+  if(!worldRemoteTeamId) return;
+  const previousIndex=worldChallengeIndex;
+  const {data,error}=await sb.rpc("get_world_quest_state",{p_team_id:worldRemoteTeamId});
+  if(error) return;
+  worldRemoteState=data;
+  worldLobbyTeam=data.team_name;
+  worldLobbyCode=data.invite_code;
+  worldQuestScore=data.score||0;
+  worldQuestSkips=data.skips||0;
+  if(data.status==="active"&&Number.isInteger(data.challenge_index)) worldChallengeIndex=Math.min(4,data.challenge_index);
+  const memberNames=new Map((data.members||[]).map(m=>[m.user_id,m.display_name]));
+  worldSkipVotes=(data.skip_votes||[]).filter(v=>v.challenge_index===worldChallengeIndex).map(v=>memberNames.get(v.user_id)).filter(Boolean);
+  renderWorldLobby();
+  if(!$("worldSkipVotePanel").classList.contains("hidden")) renderWorldSkipVote();
+  const remoteResult=(data.results||[]).find(r=>r.challenge_index===worldChallengeIndex);
+  if(remoteResult&&worldRemoteResultShown!==worldChallengeIndex&&!$("worldLaunchStage").classList.contains("hidden")){
+    worldRemoteResultShown=worldChallengeIndex;
+    show("worldSkipVotePanel",false);
+    showWorldChallengeResult(Boolean(remoteResult.skipped),true);
+  }
+  if(data.status==="active"&&worldChallengeIndex>previousIndex&&!$("worldLaunchStage").classList.contains("hidden")){
+    worldRemoteResultShown=-1;
+    show("worldChallengeResult",false);
+    $("worldNextEnvelopeNumber").textContent="ENVELOPE "+worldEnvelopeWords[worldChallengeIndex]+" IS WAITING";
+    show("worldNextEnvelope",true);
+  }
+  if(data.status==="complete"&&worldLobbyMode==="member"&&!$("worldLaunchStage").classList.contains("hidden")){
+    const elapsed=Math.max(1,Math.ceil((Date.now()-new Date(data.started_at||Date.now()).getTime())/60000));
+    $("worldFinalScore").textContent=data.score||0;
+    $("worldFinalCompleted").textContent=(data.results||[]).filter(r=>!r.skipped).length;
+    $("worldFinalSkipped").textContent=data.skips||0;
+    $("worldFinalTime").textContent=elapsed+"m";
+    ["worldActiveChallenge","worldChallengeResult","worldNextEnvelope","worldSkipVotePanel"].forEach(id=>show(id,false));
+    show("worldQuestCeremony",true);
+  }
+  if(data.status==="active"&&worldLobbyMode==="member"&&!$("worldTeamLobby").classList.contains("hidden")) launchWorldQuest();
+}
+function subscribeWorldTeam(){
+  if(worldRemoteChannel) sb.removeChannel(worldRemoteChannel);
+  worldRemoteChannel=sb.channel("world-team-"+worldRemoteTeamId)
+    .on("postgres_changes",{event:"*",schema:"public",table:"world_quest_teams",filter:"id=eq."+worldRemoteTeamId},refreshWorldRemoteState)
+    .on("postgres_changes",{event:"*",schema:"public",table:"world_quest_members",filter:"team_id=eq."+worldRemoteTeamId},refreshWorldRemoteState)
+    .subscribe();
+  if(worldRemotePoll) clearInterval(worldRemotePoll);
+  worldRemotePoll=setInterval(refreshWorldRemoteState,2500);
+}
+async function openWorldLobby(){
   worldPanels.forEach(id=>show(id,false));
   show("worldQuestPaths",false);
-  renderWorldLobby();
+  await refreshWorldRemoteState();
+  subscribeWorldTeam();
   show("worldTeamLobby",true);
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -2204,7 +2327,15 @@ function breakWorldSeal(){
     window.scrollTo({top:0,behavior:"smooth"});
   },720);
 }
-$("worldStartQuestBtn").onclick=launchWorldQuest;
+$("worldStartQuestBtn").onclick=async()=>{
+  if(worldRemoteTeamId){
+    $("worldStartQuestBtn").disabled=true;
+    $("worldStartQuestBtn").textContent="SYNCHRONIZING TEAM…";
+    const {error}=await sb.rpc("start_world_quest",{p_team_id:worldRemoteTeamId});
+    if(error){ $("worldStartQuestBtn").disabled=false; $("worldStartQuestBtn").textContent="START THE QUEST"; return window.alert("Start error: "+error.message); }
+  }
+  launchWorldQuest();
+};
 $("worldSealedEnvelope").onclick=breakWorldSeal;
 $("worldSealedEnvelope").onkeydown=event=>{
   if(event.key==="Enter"||event.key===" "){event.preventDefault();breakWorldSeal();}
@@ -2251,14 +2382,26 @@ $("worldEvidenceInput").onchange=event=>{
   $("worldChallengeStatus").textContent="Photo selected. Review it above, then complete the challenge when your team is satisfied.";
 };
 
-function showWorldChallengeResult(skipped=false){
+function showWorldChallengeResult(skipped=false,fromRemote=false){
   if(worldChallengeTimer) clearInterval(worldChallengeTimer);
   worldChallengeTimer=null;
   const challenge=currentWorldChallenge();
-  if(skipped) worldQuestSkips+=1;
-  else { worldQuestScore+=challenge.points; worldQuestCompleted+=1; }
+  if(!fromRemote){
+    if(skipped) worldQuestSkips+=1;
+    else { worldQuestScore+=challenge.points; worldQuestCompleted+=1; }
+    if(worldRemoteTeamId){
+      worldRemoteResultShown=worldChallengeIndex;
+      sb.rpc("record_world_quest_result",{
+        p_team_id:worldRemoteTeamId,p_challenge_index:worldChallengeIndex,p_skipped:skipped,p_points:challenge.points
+      }).then(({data,error})=>{
+        if(!error&&data){ worldQuestScore=data.score; worldQuestSkips=data.skips; renderWorldQuestHud(); }
+      });
+    }
+  }else{
+    worldQuestCompleted=(worldRemoteState?.results||[]).filter(r=>!r.skipped).length;
+  }
   renderWorldQuestHud();
-  $("worldQuestTrackFill").style.width=(((worldChallengeIndex+1)/worldChallenges.length)*100)+"%";
+  $("worldQuestTrackFill").style.width=(((worldChallengeIndex+1)/currentWorldChallengeCount())*100)+"%";
   show("worldActiveChallenge",false);
   show("worldChallengeResult",true);
   $("worldResultIcon").textContent=skipped?"🧭":"🏆";
@@ -2267,7 +2410,13 @@ function showWorldChallengeResult(skipped=false){
   $("worldResultSummary").textContent=skipped
     ? worldLobbyMode==="individual"?"HEART STONE recorded your skip and preserved your momentum. The next envelope is waiting.":worldLobbyMode==="couple"?"HEART STONE recorded your shared skip and preserved your momentum together. The next envelope is waiting.":"HEART STONE recorded the skip and preserved your team’s momentum. The next envelope is waiting."
     : worldLobbyMode==="individual"?"HEART STONE has received your photo for verification. Your adventure continues.":worldLobbyMode==="couple"?"HEART STONE has received your couple’s photo for verification. Your adventure continues together.":"HEART STONE has received your team’s photo for verification. Your adventure continues.";
-  $("worldNextChallengeBtn").textContent=worldChallengeIndex===worldChallenges.length-1?"VIEW QUEST RESULTS":"OPEN THE NEXT ENVELOPE";
+  $("worldNextChallengeBtn").textContent=worldChallengeIndex===currentWorldChallengeCount()-1?"VIEW QUEST RESULTS":"OPEN THE NEXT ENVELOPE";
+  if(worldRemoteTeamId&&worldLobbyMode==="member"){
+    $("worldNextChallengeBtn").textContent="WAITING FOR TEAM CAPTAIN";
+    $("worldNextChallengeBtn").disabled=true;
+  }else{
+    $("worldNextChallengeBtn").disabled=false;
+  }
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function openEvidenceReview(){
@@ -2306,6 +2455,7 @@ $("worldSubmitEvidenceBtn").onclick=()=>{
 function worldVotePlayers(){
   const playerName=$("worldPlayerName").value.trim()||"You";
   if(worldLobbyMode==="couple") return [$("worldCoupleNameOne").value.trim(),$("worldCoupleNameTwo").value.trim()].filter(Boolean);
+  if(worldRemoteState?.members?.length) return worldRemoteState.members.map(member=>member.display_name);
   return worldLobbyMode==="individual"?[playerName]:worldLobbyMode==="captain"?[playerName]:["Team Captain",playerName];
 }
 function renderWorldSkipVote(){
@@ -2318,7 +2468,7 @@ function renderWorldSkipVote(){
     const voted=worldSkipVotes.includes(name);
     return `<div class="vote-row"><div class="vote-avatar">${escapeHtml(playerInitials(name))}</div><div><div class="player-name">${escapeHtml(name)}</div><div class="player-role">Team Member</div></div><div class="vote-state ${voted?"yes":""}">${voted?"SKIP ✓":"WAITING"}</div></div>`;
   }).join("");
-  const current=players[players.length-1];
+  const current=worldLobbyMode==="captain"?$("worldTeamPlayerName").value.trim():worldLobbyMode==="member"?$("worldJoinPlayerName").value.trim():players[players.length-1];
   $("worldCastSkipVoteBtn").disabled=worldSkipVotes.includes(current);
   if(yesCount>=needed){
     show("worldVoteStatus",true);
@@ -2338,6 +2488,7 @@ function openWorldSkipVote(){
   show("worldSkipVotePanel",true);
   show("worldVoteStatus",false);
   renderWorldSkipVote();
+  if(worldRemoteTeamId) refreshWorldRemoteState();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 $("worldSkipChallengeBtn").onclick=()=>show("worldSkipConfirm",true);
@@ -2351,7 +2502,16 @@ $("worldConfirmSkipBtn").onclick=()=>{
   openWorldSkipVote();
 };
 $("worldCancelVoteBtn").onclick=()=>{show("worldSkipVotePanel",false);show("worldActiveChallenge",true);};
-$("worldCastSkipVoteBtn").onclick=()=>{
+$("worldCastSkipVoteBtn").onclick=async()=>{
+  if(worldRemoteTeamId){
+    $("worldCastSkipVoteBtn").disabled=true;
+    const {data,error}=await sb.rpc("cast_world_skip_vote",{p_team_id:worldRemoteTeamId,p_challenge_index:worldChallengeIndex});
+    if(error){ $("worldCastSkipVoteBtn").disabled=false; return status("worldVoteStatus","Vote error: "+error.message); }
+    show("worldVoteStatus",true);
+    $("worldVoteStatus").textContent=data.approved?"Majority reached. HEART STONE approved the skip.":"Your vote is recorded on every connected phone.";
+    await refreshWorldRemoteState();
+    return;
+  }
   const players=worldVotePlayers();
   const current=players[players.length-1];
   if(!worldSkipVotes.includes(current)) worldSkipVotes.push(current);
@@ -2367,9 +2527,23 @@ $("worldCastSkipVoteBtn").onclick=()=>{
     },1100);
   }
 };
-$("worldNextChallengeBtn").onclick=()=>{
+$("worldNextChallengeBtn").onclick=async()=>{
   show("worldChallengeResult",false);
-  if(worldChallengeIndex>=worldChallenges.length-1){
+  let remoteFinished=false;
+  if(worldRemoteTeamId){
+    const {data,error}=await sb.rpc("advance_world_quest",{p_team_id:worldRemoteTeamId});
+    if(error){ show("worldChallengeResult",true); return window.alert("Advance error: "+error.message); }
+    worldQuestScore=data.score;
+    worldQuestSkips=data.skips;
+    if(data.status==="complete"){
+      remoteFinished=true;
+      worldChallengeIndex=currentWorldChallengeCount()-1;
+    }else{
+      worldChallengeIndex=data.challenge_index;
+      worldRemoteResultShown=-1;
+    }
+  }
+  if((worldRemoteTeamId&&remoteFinished)||(!worldRemoteTeamId&&worldChallengeIndex>=currentWorldChallengeCount()-1)){
     const elapsed=Math.max(1,Math.ceil((Date.now()-worldQuestStartedAt)/60000));
     $("worldFinalScore").textContent=worldQuestScore;
     $("worldFinalCompleted").textContent=worldQuestCompleted;
@@ -2379,13 +2553,14 @@ $("worldNextChallengeBtn").onclick=()=>{
     window.scrollTo({top:0,behavior:"smooth"});
     return;
   }
-  $("worldNextEnvelopeNumber").textContent="ENVELOPE "+worldEnvelopeWords[worldChallengeIndex+1]+" IS WAITING";
+  const nextEnvelopeIndex=worldRemoteTeamId?worldChallengeIndex:worldChallengeIndex+1;
+  $("worldNextEnvelopeNumber").textContent="ENVELOPE "+worldEnvelopeWords[nextEnvelopeIndex]+" IS WAITING";
   show("worldNextEnvelope",true);
   window.scrollTo({top:0,behavior:"smooth"});
 };
 $("worldBreakNextSealBtn").onclick=()=>{
   show("worldNextEnvelope",false);
-  worldChallengeIndex+=1;
+  if(!worldRemoteTeamId) worldChallengeIndex+=1;
   resetWorldEvidence();
   renderWorldChallengeData();
   show("worldFirstChallenge",true);
