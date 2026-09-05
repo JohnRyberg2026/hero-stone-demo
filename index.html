@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta name="heart-stone-build" content="12f-authoritative-stages">
+<meta name="heart-stone-build" content="12g-private-evidence">
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>HEART STONE™ Kickstarter Demo</title>
@@ -1987,6 +1987,7 @@ let worldCountdownTimer=null;
 let worldChallengeTimer=null;
 let worldChallengeSeconds=1200;
 let worldEvidenceUrl="";
+let worldEvidenceFile=null;
 let worldSkipVotes=[];
 const worldChallenges=[
   {type:"FIND",title:"Find the Heart of Your City",command:"Find a public landmark that represents your city—and capture your whole team with it.",seconds:1200,points:1,ruleOne:"<strong>TEAM PHOTO</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC LANDMARK</strong>The location must be recognizable and publicly accessible."},
@@ -2043,7 +2044,7 @@ function renderWorldChallengeData(){
   $("worldRevealTitle").textContent=challenge.title;
   $("worldRevealCommand").textContent=worldAudienceText(challenge.command);
   $("worldRevealTime").textContent=Math.ceil(challenge.seconds/60)+" MINUTES";
-  $("worldRevealPoints").textContent=challenge.points+" POINTS";
+  $("worldRevealPoints").textContent=challenge.points+" "+(challenge.points===1?"POINT":"POINTS");
   $("worldActiveProgress").textContent="CHALLENGE "+number+" OF "+currentWorldChallengeCount()+" · "+challenge.type;
   $("worldActiveTitle").textContent=challenge.title;
   $("worldActiveCommand").textContent=worldAudienceText(challenge.command);
@@ -2061,6 +2062,7 @@ function renderWorldChallengeData(){
 function resetWorldEvidence(){
   if(worldEvidenceUrl) URL.revokeObjectURL(worldEvidenceUrl);
   worldEvidenceUrl="";
+  worldEvidenceFile=null;
   $("worldEvidenceInput").value="";
   show("worldEvidencePreview",false); show("worldEvidenceName",false);
   $("worldCompleteChallengeBtn").disabled=true;
@@ -2097,6 +2099,7 @@ function resetWorldQuestEntry(){
   worldQuestStartedAt=0;
   if(worldEvidenceUrl) URL.revokeObjectURL(worldEvidenceUrl);
   worldEvidenceUrl="";
+  worldEvidenceFile=null;
   show("worldCountdownView",true);
   show("worldFirstChallenge",false);
   show("worldActiveChallenge",false);
@@ -2478,6 +2481,11 @@ $("worldEnterChallengeBtn").onclick=()=>beginWorldChallenge(false);
 $("worldEvidenceInput").onchange=event=>{
   const file=event.target.files?.[0];
   if(!file) return;
+  if(file.size>10*1024*1024){
+    event.target.value="";
+    return window.alert("Please choose an image smaller than 10 MB.");
+  }
+  worldEvidenceFile=file;
   if(worldEvidenceUrl) URL.revokeObjectURL(worldEvidenceUrl);
   worldEvidenceUrl=URL.createObjectURL(file);
   $("worldEvidencePreview").src=worldEvidenceUrl;
@@ -2542,19 +2550,50 @@ $("worldBackToChallengeBtn").onclick=()=>{
   show("worldEvidenceReview",false);
   show("worldActiveChallenge",true);
 };
-$("worldSubmitEvidenceBtn").onclick=()=>{
+$("worldSubmitEvidenceBtn").onclick=async()=>{
+  if(!worldEvidenceFile) return;
+  $("worldSubmitEvidenceBtn").disabled=true;
   show("worldEvidenceReview",false);
   show("worldVerificationStage",true);
   show("worldVerificationDetails",false);
   $("worldVerificationRing").classList.remove("done");
   $("worldVerificationRing").textContent="🌎";
   $("worldVerificationMessage").textContent="Checking the challenge requirements and preparing your result…";
+  if(worldRemoteTeamId){
+    const extension=(worldEvidenceFile.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8)||"jpg";
+    const objectPath=worldRemoteTeamId+"/challenge-"+(worldChallengeIndex+1)+"/"+crypto.randomUUID()+"."+extension;
+    const {error:uploadError}=await sb.storage.from("world-quest-evidence").upload(objectPath,worldEvidenceFile,{
+      cacheControl:"3600",upsert:false,contentType:worldEvidenceFile.type||"image/jpeg"
+    });
+    if(uploadError){
+      show("worldVerificationStage",false);
+      show("worldEvidenceReview",true);
+      $("worldSubmitEvidenceBtn").disabled=false;
+      return window.alert("Evidence upload error: "+uploadError.message+"\n\nRun the v12g Supabase setup file first.");
+    }
+    const {data,error}=await sb.rpc("submit_world_quest_evidence",{
+      p_team_id:worldRemoteTeamId,
+      p_challenge_index:worldChallengeIndex,
+      p_object_path:objectPath,
+      p_original_name:worldEvidenceFile.name,
+      p_mime_type:worldEvidenceFile.type||"image/jpeg",
+      p_size_bytes:worldEvidenceFile.size,
+      p_points:currentWorldChallenge().points
+    });
+    if(error){
+      show("worldVerificationStage",false);
+      show("worldEvidenceReview",true);
+      $("worldSubmitEvidenceBtn").disabled=false;
+      return window.alert("Evidence record error: "+error.message);
+    }
+    if(data){ worldQuestScore=data.score||worldQuestScore; worldQuestSkips=data.skips||worldQuestSkips; }
+  }
   setTimeout(()=>{
     $("worldVerificationRing").classList.add("done");
     $("worldVerificationRing").textContent="✓";
     $("worldVerificationMessage").textContent="Challenge evidence approved for this playable demo.";
     show("worldVerificationDetails",true);
-    setTimeout(()=>{show("worldVerificationStage",false);showWorldChallengeResult(false);},1100);
+    setTimeout(()=>{show("worldVerificationStage",false);showWorldChallengeResult(false,Boolean(worldRemoteTeamId));},1100);
   },1400);
 };
 
