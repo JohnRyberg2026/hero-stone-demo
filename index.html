@@ -234,11 +234,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .standing-row{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:11px;border-radius:13px;background:rgba(214,168,77,.09);border:1px solid rgba(214,168,77,.24)}
 .standing-icon{font-size:25px;text-align:center}.standing-label{color:#fff;font-weight:850}.standing-sub{color:#bcaeb3;font-size:10px}.standing-rank{color:#f4ca73;font-size:18px;font-weight:950}
 .ceremony-motto{padding:14px;border-top:1px solid rgba(244,202,115,.24);border-bottom:1px solid rgba(244,202,115,.24);color:#f4ca73;font-size:11px;font-weight:900;letter-spacing:.11em;line-height:1.7;margin:15px 0}
-.world-identity-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px;padding:10px;border-radius:14px;background:rgba(31,122,85,.15);border:1px solid rgba(87,211,152,.38);text-align:left}
+.world-identity-bar{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin:0 0 14px;padding:10px;border-radius:14px;background:rgba(31,122,85,.15);border:1px solid rgba(87,211,152,.38);text-align:left;align-items:center}
 .world-identity-item{min-width:0;padding:4px 7px}
 .world-identity-label{display:block;color:#78dda8;font-size:9px;font-weight:900;letter-spacing:.14em;margin-bottom:3px}
 .world-identity-value{display:block;color:#fff;font-size:14px;font-weight:900;overflow-wrap:anywhere}
+.world-switch-player{margin:0!important;padding:10px 12px!important;width:auto!important;font-size:10px!important;background:rgba(255,255,255,.1)!important;color:#fff!important;border:1px solid rgba(255,255,255,.22)!important;white-space:nowrap}
 @media(max-width:430px){.challenge-actions,.active-top{grid-template-columns:1fr}.active-timer{justify-self:start}.challenge-rules{grid-template-columns:1fr}}
+@media(max-width:600px){.world-identity-bar{grid-template-columns:1fr 1fr}.world-identity-item:first-child{grid-column:1/-1}.world-switch-player{grid-column:1/-1;width:100%!important}}
 @media(max-width:700px){.combined-logo{max-height:190px}.quest-choices{grid-template-columns:1fr}.quest-choice-logo,.world-choice-logo,.world-mark{width:138px;height:138px}.world-mark{font-size:62px}.choice-copy{min-height:0}}
 </style>
 </head>
@@ -276,8 +278,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <p class="world-entry-intro">Your city is the game board. The world is the community. HEART STONE™ is the referee.</p>
 
       <div class="world-identity-bar hidden" id="worldIdentityBar" aria-live="polite">
+        <div class="world-identity-item"><span class="world-identity-label">SIGNED-IN ACCOUNT</span><span class="world-identity-value" id="worldIdentityAccount">—</span></div>
         <div class="world-identity-item"><span class="world-identity-label">THIS PLAYER</span><span class="world-identity-value" id="worldIdentityPlayer">—</span></div>
         <div class="world-identity-item"><span class="world-identity-label">TEAM</span><span class="world-identity-value" id="worldIdentityTeam">—</span></div>
+        <button class="world-switch-player" id="worldSwitchPlayerBtn" type="button">SWITCH PLAYER / SIGN OUT</button>
       </div>
 
       <div class="world-panel hidden" id="worldTeamAuthPanel">
@@ -1971,10 +1975,12 @@ let worldRemoteResultShown=-1;
 let worldRemoteChallengeStartedKey="";
 let worldCurrentUserId="";
 let worldPlayerIdentity="";
+let worldAccountIdentity="";
 function renderWorldIdentity(){
-  if(!worldPlayerIdentity||!worldLobbyTeam){ show("worldIdentityBar",false); return; }
-  $("worldIdentityPlayer").textContent=worldPlayerIdentity;
-  $("worldIdentityTeam").textContent=worldLobbyTeam;
+  if(!worldAccountIdentity){ show("worldIdentityBar",false); return; }
+  $("worldIdentityAccount").textContent=worldAccountIdentity;
+  $("worldIdentityPlayer").textContent=worldPlayerIdentity||"Not connected";
+  $("worldIdentityTeam").textContent=worldLobbyTeam||"Not in a team";
   show("worldIdentityBar",true);
 }
 async function checkWorldQuestResume(){
@@ -1983,6 +1989,8 @@ async function checkWorldQuestResume(){
   const user=await currentUser();
   if(!user) return;
   worldCurrentUserId=user.id;
+  worldAccountIdentity=user.email||"Authenticated account";
+  renderWorldIdentity();
   const {data,error}=await sb.rpc("resume_world_quest_team");
   if(error||!data) return;
   worldRemoteState=data;
@@ -2098,6 +2106,7 @@ function resetWorldQuestEntry(){
   worldRemoteTeamId="";
   worldCurrentUserId="";
   worldPlayerIdentity="";
+  worldAccountIdentity="";
   show("worldIdentityBar",false);
   worldRemoteResultShown=-1;
   worldRemoteChallengeStartedKey="";
@@ -2250,7 +2259,9 @@ $("worldCreateTeamBtn").onclick=async()=>{
     return window.alert("Team creation error: "+error.message+"\n\nRun the v12 Supabase setup file first.");
   }
   worldRemoteTeamId=data.team_id;
-  worldCurrentUserId=(await currentUser())?.id||"";
+  const signedInUser=await currentUser();
+  worldCurrentUserId=signedInUser?.id||"";
+  worldAccountIdentity=signedInUser?.email||"Authenticated account";
   worldPlayerIdentity=playerName;
   worldLobbyCode=data.invite_code;
   worldLobbyTeam=data.team_name;
@@ -2276,12 +2287,26 @@ $("worldJoinTeamBtn").onclick=async()=>{
   }
   statusBox.textContent="Connecting to your team…";
   $("worldJoinTeamBtn").disabled=true;
+  const signedInUser=await currentUser();
+  if(!signedInUser){
+    $("worldJoinTeamBtn").disabled=false;
+    statusBox.textContent="Sign in with this player's own account before joining.";
+    return;
+  }
+  const {data:existingTeam}=await sb.rpc("resume_world_quest_team");
+  const existingPlayer=(existingTeam?.members||[]).find(member=>member.user_id===signedInUser.id);
+  if(existingPlayer&&existingPlayer.display_name&&existingPlayer.display_name.trim().toLowerCase()!==playerName.toLowerCase()){
+    $("worldJoinTeamBtn").disabled=false;
+    statusBox.textContent="This account is already connected as "+existingPlayer.display_name+". Use SWITCH PLAYER / SIGN OUT, then sign in with "+playerName+"'s own account.";
+    return;
+  }
   const {data,error}=await sb.rpc("join_world_quest_team",{p_code:code,p_display_name:playerName});
   if(error){ $("worldJoinTeamBtn").disabled=false; statusBox.textContent="Join error: "+error.message; return; }
   statusBox.textContent="Connected. Your team can see you in the lobby.";
   $("worldJoinTeamBtn").textContent="TEAM FOUND";
   worldRemoteTeamId=data.team_id;
-  worldCurrentUserId=(await currentUser())?.id||"";
+  worldCurrentUserId=signedInUser.id;
+  worldAccountIdentity=signedInUser.email||"Authenticated account";
   worldPlayerIdentity=playerName;
   worldLobbyCode=data.invite_code;
   worldLobbyTeam=data.team_name;
@@ -2392,6 +2417,19 @@ async function openWorldLobby(){
 $("worldOpenCreatedLobbyBtn").onclick=openWorldLobby;
 $("worldOpenJoinedLobbyBtn").onclick=openWorldLobby;
 $("worldLeaveLobbyBtn").onclick=resetWorldQuestEntry;
+$("worldSwitchPlayerBtn").onclick=async()=>{
+  if(!window.confirm("Sign out on this device so a different player can sign in?")) return;
+  $("worldSwitchPlayerBtn").disabled=true;
+  $("worldSwitchPlayerBtn").textContent="SIGNING OUT…";
+  const {error}=await sb.auth.signOut({scope:"local"});
+  $("worldSwitchPlayerBtn").disabled=false;
+  $("worldSwitchPlayerBtn").textContent="SWITCH PLAYER / SIGN OUT";
+  if(error){ window.alert("Sign-out error: "+error.message); return; }
+  resetWorldQuestEntry();
+  show("worldResumeQuestBtn",false);
+  show("worldResumeQuestStatus",false);
+  window.alert("Signed out on this device. Choose CREATE A TEAM or JOIN A TEAM, then sign in with the correct player's account.");
+};
 function launchWorldQuest(){
   worldChallengeIndex=0;
   worldQuestScore=0;
