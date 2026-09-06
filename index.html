@@ -290,6 +290,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <input id="worldTeamAuthEmail" type="email" placeholder="Email" autocomplete="email"/>
         <input id="worldTeamAuthPassword" type="password" placeholder="Password" autocomplete="current-password"/>
         <button id="worldTeamAuthBtn">SIGN IN &amp; CONTINUE</button>
+        <button class="secondary" id="worldTeamCreateAccountBtn" type="button">CREATE NEW PLAYER ACCOUNT</button>
         <div class="status" id="worldTeamAuthStatus">Your individual and couple demos remain available without team synchronization.</div>
         <button class="secondary worldCancelBtn">BACK</button>
       </div>
@@ -2190,6 +2191,28 @@ $("worldTeamAuthBtn").onclick=async()=>{
   $("worldTeamAuthBtn").disabled=false;
   if(error) return status("worldTeamAuthStatus","Sign-in error: "+error.message);
   const next=worldPendingPath||"create";
+  worldPendingPath="";
+  openWorldPath(next);
+};
+
+$("worldTeamCreateAccountBtn").onclick=async()=>{
+  const email=$("worldTeamAuthEmail").value.trim();
+  const password=$("worldTeamAuthPassword").value;
+  if(!email||!password) return status("worldTeamAuthStatus","Enter the new player's own email and password.");
+  if(password.length<6) return status("worldTeamAuthStatus","Create a password with at least 6 characters.");
+  $("worldTeamCreateAccountBtn").disabled=true;
+  $("worldTeamAuthBtn").disabled=true;
+  status("worldTeamAuthStatus","Creating this player's private account…");
+  const {data,error}=await sb.auth.signUp({email,password});
+  $("worldTeamCreateAccountBtn").disabled=false;
+  $("worldTeamAuthBtn").disabled=false;
+  if(error) return status("worldTeamAuthStatus","Account creation error: "+error.message);
+  if(!data.session){
+    status("worldTeamAuthStatus","Account created. Check that email for the confirmation message, confirm it, then return here and press SIGN IN & CONTINUE.");
+    return;
+  }
+  status("worldTeamAuthStatus","New player account created and signed in.");
+  const next=worldPendingPath||"join";
   worldPendingPath="";
   openWorldPath(next);
 };
