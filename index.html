@@ -592,7 +592,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <div class="status" id="profileStatus">Your choices stay attached to your private profile.</div>
         <div style="margin-top:14px;padding:14px;border:1px solid #eadfd5;border-radius:12px;">
           <strong>Explore Getting to Know You</strong>
-          <p class="small">Try the first journey prototype: broad interests, today's limits, an adventure, and a reflection. Your answers and memories save privately to your account. You choose each interest answer to show your linked partner. Today's temporary limits stay on this device.</p>
+          <p class="small">Try the first journey prototype: broad interests, today's limits, an adventure, and a reflection. Interest answers save privately to your account. You choose each answer to show your linked partner. Other preview drafts stay on this device.</p>
           <a href="./heart-stone-first-journey.html" style="display:inline-block;padding:10px 14px;border-radius:8px;background:#173f38;color:#fff;text-decoration:none;">Open first journey preview</a>
 
         <div style="margin-top:18px;padding-top:16px;border-top:1px solid #eadfd5;">
@@ -884,7 +884,6 @@ function setConnectedUI(connected){
   show("signOutBtn",false);
   show("connectedState",connected);
   show("inviteCard",!connected);
-  $("signedInEmail").textContent="";
   if(connected){
     step(3);
     loadMyProfile();
@@ -923,7 +922,6 @@ async function currentUser(){
 async function loadMyProfile(){
   const u=await currentUser();
   if(!u) return;
-  $("signedInEmail").textContent=u.email ? "Signed in as: "+u.email : "";
   const {data,error}=await sb.from("profiles")
     .select("first_name,gender,pronouns,share_pronouns_with_partner")
     .eq("id",u.id)
@@ -1150,6 +1148,7 @@ async function loadExistingActiveDemoAdventure(){
     // pre-acceptance "waiting for your partner" message behind.
     status("inviteStatus","");
     const {data:{user}}=await sb.auth.getUser();
+  if($("signedInEmail")) $("signedInEmail").textContent = user?.email ? ("Signed in as: " + user.email) : "";
     const inviter=(adv.created_by_user_id===user?.id);
     $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
     $("acceptedMessage").textContent=inviter?"Your partner accepted. Your adventure is ready.":"Your invitation is accepted. Your adventure is waiting...";
