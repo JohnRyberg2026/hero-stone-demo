@@ -885,7 +885,11 @@ function setConnectedUI(connected){
   show("connectedState",connected);
   show("inviteCard",!connected);
   $("signedInEmail").textContent="";
-  if(!connected) $("homeCoupleNames").textContent="OUR HEART STONE";
+  if(!connected){
+    profileLoadVersion++;
+    clearProfileFields();
+    $("homeCoupleNames").textContent="OUR HEART STONE";
+  }
   if(connected){
     step(3);
     loadMyProfile();
@@ -921,14 +925,26 @@ async function currentUser(){
   return data?.user || null;
 }
 
+let profileLoadVersion=0;
+function clearProfileFields(){
+  $("profileFirstName").value="";
+  $("profileGender").value="";
+  $("profilePronouns").value="";
+  $("sharePronounsWithPartner").checked=false;
+  status("profileStatus","Your choices stay attached to your private profile.");
+}
 async function loadMyProfile(){
+  const version=++profileLoadVersion;
+  clearProfileFields();
   const u=await currentUser();
-  if(!u) return;
+  if(version!==profileLoadVersion || !u) return;
   $("signedInEmail").textContent=u.email ? "Signed in as: "+u.email : "";
   const {data,error}=await sb.from("profiles")
     .select("first_name,gender,pronouns,share_pronouns_with_partner")
     .eq("id",u.id)
     .maybeSingle();
+  const active=await currentUser();
+  if(version!==profileLoadVersion || active?.id!==u.id) return;
   if(error){
     status("profileStatus","Could not load your profile: "+error.message);
     return;
