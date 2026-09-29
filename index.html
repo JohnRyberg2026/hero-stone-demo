@@ -599,6 +599,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <div style="margin-top:14px;padding:14px;border:1px solid #eadfd5;border-radius:12px;">
           <strong>Explore Getting to Know You</strong>
           <p class="small">Try the first journey prototype: broad interests, today's limits, an adventure, and a reflection. Your answers and memories save privately to your account. You choose each interest answer to show your linked partner. Today's temporary limits stay on this device.</p>
+          <p class="small" id="firstJourneyProgress" role="status" aria-live="polite">Checking your private interest answers...</p>
           <a href="./heart-stone-first-journey.html" style="display:inline-block;padding:10px 14px;border-radius:8px;background:#173f38;color:#fff;text-decoration:none;">Open first journey preview</a>
 
         <div style="margin-top:18px;padding-top:16px;border-top:1px solid #eadfd5;">
@@ -966,6 +967,7 @@ function clearProfileFields(){
   $("profilePronouns").value="";
   $("sharePronounsWithPartner").checked=false;
   status("profileStatus","Your choices stay attached to your private profile.");
+  status("firstJourneyProgress","Sign in to see your private interest progress.");
 }
 async function loadMyProfile(){
   const version=++profileLoadVersion;
@@ -973,6 +975,7 @@ async function loadMyProfile(){
   const u=await currentUser();
   if(version!==profileLoadVersion || !u) return;
   $("signedInEmail").textContent=u.email ? "Signed in as: "+u.email : "";
+  status("firstJourneyProgress","Checking your private interest answers...");
   const {data,error}=await sb.from("profiles")
     .select("first_name,gender,pronouns,share_pronouns_with_partner")
     .eq("id",u.id)
@@ -990,6 +993,15 @@ async function loadMyProfile(){
     $("sharePronounsWithPartner").checked=!!data.share_pronouns_with_partner;
     status("profileStatus","Your profile is ready.");
   }
+  const {count, error:answersError}=await sb.from("user_onboarding_answers")
+    .select("question_key",{count:"exact",head:true})
+    .eq("user_id",u.id)
+    .like("question_key","first_journey_interest_%");
+  const stillActive=await currentUser();
+  if(version!==profileLoadVersion || stillActive?.id!==u.id) return;
+  status("firstJourneyProgress",answersError
+    ? "Could not load your interest progress right now."
+    : (count||0)+" interest answers saved to this account.");
 }
 
 $("saveProfileBtn").onclick=async()=>{
