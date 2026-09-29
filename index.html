@@ -896,6 +896,11 @@ function setConnectedUI(connected){
     profileLoadVersion++;
     clearProfileFields();
     $("homeCoupleNames").textContent="OUR HEART STONE";
+    setAccountCardCollapsed(false);
+    ["homeCard","questCard","recommendationsCard","dateInvitationCard",
+      "sealedEnvelopePanel","openedInvitationPanel","acceptedPanel",
+      "adventureCard","completeCard","feedbackCard","historyCard"
+    ].forEach(id=>{ if($(id)) show(id,false); });
   }
   if(connected){
     step(3);
@@ -1064,10 +1069,14 @@ $("signInBtn").onclick = async()=>{
 };
 
 async function signOutUser(){
-  await sb.auth.signOut();
+  const {error}=await sb.auth.signOut();
+  if(error) return status("authStatus","Sign-out error: "+error.message);
   if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; }
+  heartStoneId="";
+  localStorage.removeItem("hs_heart_stone_id");
   setConnectedUI(false);
   status("authStatus","Signed out.");
+  $("authCard").scrollIntoView({behavior:"smooth",block:"start"});
 }
 $("signOutBtn").onclick = signOutUser;
 $("connectedSignOutBtn").onclick = signOutUser;
