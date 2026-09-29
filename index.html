@@ -837,26 +837,32 @@ function setAccountCardCollapsed(collapsed){
   if(card) card.classList.toggle("profile-collapsed",collapsed);
 }
 
+let homeLoadVersion=0;
 async function loadHeartStoneHome(){
   if(!heartStoneId) return;
+  const version=++homeLoadVersion;
+  const requestedHeartStoneId=heartStoneId;
+  const requestedUser=await currentUser();
+  if(version!==homeLoadVersion || !requestedUser) return;
   homeRestingMode=true;
   localStorage.setItem("hs_home_resting_mode","1");
   try{
     const {data,error}=await sb.rpc("get_heart_stone_partner_personalization",{
-      p_heart_stone_id:heartStoneId
+      p_heart_stone_id:requestedHeartStoneId
     });
     const partner=Array.isArray(data)?data[0]:data;
-    const {data:{user}}=await sb.auth.getUser();
-    const {data:mine}=await sb.from("profiles").select("first_name").eq("id",user?.id).maybeSingle();
+    const {data:mine}=await sb.from("profiles").select("first_name").eq("id",requestedUser.id).maybeSingle();
+    const activeUser=await currentUser();
+    if(version!==homeLoadVersion || requestedHeartStoneId!==heartStoneId || activeUser?.id!==requestedUser.id) return;
     const names=[mine?.first_name,partner?.first_name].filter(Boolean);
-    if(names.length && heartStoneId && user?.id && !$("connectedState").classList.contains("hidden")) $("homeCoupleNames").textContent=names.join(" & ");
+    if(names.length && !$("connectedState").classList.contains("hidden")) $("homeCoupleNames").textContent=names.join(" & ");
   }catch(e){}
 
   // Build 42 Home v16 race fix:
   // loadHeartStoneHome() begins asynchronously when the connected UI is restored.
   // If the user has already chosen Create/Continue while profile data was loading,
   // that newer navigation intent must win; never redraw Home from this stale load.
-  if(!homeRestingMode) return;
+  if(version!==homeLoadVersion || requestedHeartStoneId!==heartStoneId || $("connectedState").classList.contains("hidden") || !homeRestingMode) return;
 
   setAccountCardCollapsed(true);
   show("homeCard",true);
@@ -886,6 +892,7 @@ function setConnectedUI(connected){
   show("inviteCard",!connected);
   $("signedInEmail").textContent="";
   if(!connected){
+    homeLoadVersion++;
     profileLoadVersion++;
     clearProfileFields();
     $("homeCoupleNames").textContent="OUR HEART STONE";
