@@ -77,6 +77,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .home-topbar{display:flex;justify-content:flex-end;margin-bottom:8px}
 .home-topbar button{width:auto;margin:0;padding:8px 12px;font-size:13px}
 .profile-collapsed{display:none!important}
+.signed-out #inviteCard,.signed-out #homeCard,.signed-out #questCard,
+.signed-out #recommendationsCard,.signed-out #dateInvitationCard,
+.signed-out #sealedEnvelopePanel,.signed-out #openedInvitationPanel,
+.signed-out #acceptedPanel,.signed-out #adventureCard,
+.signed-out #completeCard,.signed-out #feedbackCard,
+.signed-out #historyCard{display:none!important}
 
 
 .official-logo{display:block;margin:0 auto;border-radius:50%;object-fit:cover;background:#000;box-shadow:0 8px 28px rgba(0,0,0,.18)}
@@ -531,7 +537,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
 </section>
 
-<div class="wrap hidden" id="dateQuestApp">
+<div class="wrap hidden signed-out" id="dateQuestApp">
   <div class="brand">
     <img class="official-logo" src="images/official-logo.png" alt="DATE QUEST official logo"/>
     <div class="tag">Where We Create the Timeless Story of Our Love.</div>
@@ -886,12 +892,15 @@ async function loadHeartStoneHome(){
 }
 
 function setConnectedUI(connected){
+  $("dateQuestApp").classList.toggle("signed-out",!connected);
   ["email","password","signInBtn","authStatus"].forEach(id=>show(id,!connected));
   show("signOutBtn",false);
   show("connectedState",connected);
-  show("inviteCard",!connected);
+  show("inviteCard",false);
   $("signedInEmail").textContent="";
   if(!connected){
+    $("password").value="";
+    step(1);
     homeLoadVersion++;
     profileLoadVersion++;
     clearProfileFields();
@@ -1044,6 +1053,7 @@ async function loadExistingHeartStone(){
     status("connectionInviteStatus","Could not load existing HEART STONE: "+error.message);
     return null;
   }
+  if((await currentUser())?.id!==u.id) return null;
   const id=data?.[0]?.heart_stone_id||null;
   if(id){
     heartStoneId=id;
@@ -1062,10 +1072,12 @@ $("signInBtn").onclick = async()=>{
   status("authStatus","Signing in...");
   const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
   if(error) return status("authStatus","Sign-in error: "+error.message);
+  $("dateQuestApp").classList.remove("signed-out");
+  $("password").value="";
   status("authStatus","Signed in as "+data.user.email);
   step(2);
   const connected = await loadExistingHeartStone();
-  if(!connected){ show("signOutBtn",true); }
+  if(!connected){ show("signOutBtn",true); show("inviteCard",true); }
 };
 
 async function signOutUser(){
@@ -2936,7 +2948,11 @@ $("worldRestartQuestBtn").onclick=()=>{
     status("authStatus","Signed in as "+u.email);
     step(2);
     const connected = await loadExistingHeartStone();
-    if(!connected){ show("signOutBtn",true); }
+    if(!connected){
+      $("dateQuestApp").classList.remove("signed-out");
+      show("signOutBtn",true);
+      show("inviteCard",true);
+    }
   } else if(heartStoneId) {
     status("inviteStatus","This phone remembers HEART STONE ID: "+heartStoneId);
   }
