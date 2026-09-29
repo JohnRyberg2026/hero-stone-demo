@@ -982,24 +982,30 @@ async function loadMyProfile(){
 $("saveProfileBtn").onclick=async()=>{
   const u=await currentUser();
   if(!u) return status("profileStatus","Please sign in first.");
+  const version=profileLoadVersion;
   const firstName=$("profileFirstName").value.trim();
   if(!firstName) return status("profileStatus","Please enter your first name.");
+  const changes={
+    first_name:firstName,
+    gender:$("profileGender").value||null,
+    pronouns:$("profilePronouns").value||null,
+    share_pronouns_with_partner:$("sharePronounsWithPartner").checked,
+    updated_at:new Date().toISOString()
+  };
 
   $("saveProfileBtn").disabled=true;
   status("profileStatus","Saving your profile...");
 
-  const {error}=await sb.from("profiles")
-    .update({
-      first_name:firstName,
-      gender:$("profileGender").value||null,
-      pronouns:$("profilePronouns").value||null,
-      share_pronouns_with_partner:$("sharePronounsWithPartner").checked,
-      updated_at:new Date().toISOString()
-    })
-    .eq("id",u.id);
+  const {data,error}=await sb.from("profiles")
+    .update(changes)
+    .eq("id",u.id)
+    .select("id")
+    .maybeSingle();
 
   $("saveProfileBtn").disabled=false;
+  if(version!==profileLoadVersion || (await currentUser())?.id!==u.id) return;
   if(error) return status("profileStatus","Profile error: "+error.message);
+  if(!data) return status("profileStatus","Profile was not saved. Please try again.");
 
   status("profileStatus","Saved ❤️ HEART STONE will use your choices respectfully.");
 };
