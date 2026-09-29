@@ -844,6 +844,27 @@ function setAccountCardCollapsed(collapsed){
 }
 
 let homeLoadVersion=0;
+let homeNamesVersion=0;
+async function refreshHomeNames(){
+  const version=++homeNamesVersion;
+  const requestedHeartStoneId=heartStoneId;
+  if(!requestedHeartStoneId) return;
+  const requestedUser=await currentUser();
+  if(!requestedUser || version!==homeNamesVersion) return;
+  try{
+    const [partnerResult,mineResult]=await Promise.all([
+      sb.rpc("get_heart_stone_partner_personalization",{p_heart_stone_id:requestedHeartStoneId}),
+      sb.from("profiles").select("first_name").eq("id",requestedUser.id).maybeSingle()
+    ]);
+    const activeUser=await currentUser();
+    if(version!==homeNamesVersion || requestedHeartStoneId!==heartStoneId ||
+       activeUser?.id!==requestedUser.id || $("connectedState").classList.contains("hidden")) return;
+    if(partnerResult.error || mineResult.error) return;
+    const partner=Array.isArray(partnerResult.data)?partnerResult.data[0]:partnerResult.data;
+    const names=[mineResult.data?.first_name,partner?.first_name].filter(Boolean);
+    $("homeCoupleNames").textContent=names.length?names.join(" & "):"OUR HEART STONE";
+  }catch(e){}
+}
 async function loadHeartStoneHome(){
   if(!heartStoneId) return;
   const version=++homeLoadVersion;
@@ -852,17 +873,8 @@ async function loadHeartStoneHome(){
   if(version!==homeLoadVersion || !requestedUser) return;
   homeRestingMode=true;
   localStorage.setItem("hs_home_resting_mode","1");
-  try{
-    const {data,error}=await sb.rpc("get_heart_stone_partner_personalization",{
-      p_heart_stone_id:requestedHeartStoneId
-    });
-    const partner=Array.isArray(data)?data[0]:data;
-    const {data:mine}=await sb.from("profiles").select("first_name").eq("id",requestedUser.id).maybeSingle();
-    const activeUser=await currentUser();
-    if(version!==homeLoadVersion || requestedHeartStoneId!==heartStoneId || activeUser?.id!==requestedUser.id) return;
-    const names=[mine?.first_name,partner?.first_name].filter(Boolean);
-    if(names.length && !$("connectedState").classList.contains("hidden")) $("homeCoupleNames").textContent=names.join(" & ");
-  }catch(e){}
+  await refreshHomeNames();
+  if((await currentUser())?.id!==requestedUser.id) return;
 
   // Build 42 Home v16 race fix:
   // loadHeartStoneHome() begins asynchronously when the connected UI is restored.
@@ -902,6 +914,7 @@ function setConnectedUI(connected){
     $("password").value="";
     step(1);
     homeLoadVersion++;
+    homeNamesVersion++;
     profileLoadVersion++;
     clearProfileFields();
     $("homeCoupleNames").textContent="OUR HEART STONE";
@@ -1008,6 +1021,7 @@ $("saveProfileBtn").onclick=async()=>{
   if(!data) return status("profileStatus","Profile was not saved. Please try again.");
 
   status("profileStatus","Saved ❤️ HEART STONE will use your choices respectfully.");
+  if(heartStoneId) refreshHomeNames();
 };
 
 const FIRST_JOURNEY_KEY="first_journey_backup_v1";
