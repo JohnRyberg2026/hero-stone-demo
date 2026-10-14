@@ -84,10 +84,10 @@ function render(){
   if(current==='overview'){
     const c=card('Your living profile');
     c.append(paragraph('Start with a few helpful details. You can skip any question, stop anytime, and return to change or deepen your answers. There is no completion score.'));
-    c.append(paragraph('This first profile build saves your preferences privately. Connecting these new answers to adventure recommendations is a later implementation step.','muted'));
+    c.append(paragraph('Your supported interests and free-experience preference can now inform the private first journey preview. Written requirements pause sample suggestions until they can be checked.','muted'));
     const row=document.createElement('div');row.className='row';
     const resume=sections.find(s=>s.id===answers.resume)?.id || 'about';
-    row.append(button('Continue My Profile',()=>navigate(resume),true),button('Review My Profile',()=>navigate('review')));c.append(row);
+    row.append(button('Continue My Profile',()=>navigate(resume),true),button('Review My Profile',()=>navigate('review')));c.append(row);const preview=document.createElement('a');preview.href='./heart-stone-first-journey.html';preview.textContent='Try a private adventure preview';preview.onclick=async e=>{e.preventDefault();if(await flush())location.href=preview.href;};c.append(preview);
     phases.forEach((phase,i)=>{const p=card(phase);p.append(paragraph(i===0?'A few essentials to help you begin.':'Tell HEART STONE More, whenever you want.','muted'));const list=document.createElement('div');list.className='section-list';sections.filter(s=>s.phase===i).forEach(s=>list.append(button(s.title,()=>navigate(s.id))));p.append(list);});
   }else if(current==='review'){
     const c=card('Review My Profile');c.append(paragraph('Unknown stays unknown. Skip for Now keeps any previously saved answer. Use Leave Unanswered to remove an answer.'));
@@ -108,7 +108,7 @@ function render(){
         q.options.forEach(option=>{
           const selected=()=>q.kind==='multi_choice'?(answers[q.key]||[]).includes(option):answers[q.key]===option;
           const b=button(option,()=>{const value=q.kind==='multi_choice'?(selected()?answers[q.key].filter(v=>v!==option):[...(answers[q.key]||[]),option]):option;stage(q.key,Array.isArray(value)&&!value.length?null:value,q.kind);for(const child of group.children)child.setAttribute('aria-pressed',q.kind==='multi_choice'?(answers[q.key]||[]).includes(child.dataset.option):answers[q.key]===child.dataset.option);});
-          b.dataset.option=option;b.setAttribute('aria-pressed',selected());group.append(b);
+          b.dataset.option=option;b.setAttribute('aria-label',option);b.setAttribute('aria-pressed',selected());group.append(b);
         });box.append(group);
       }
       box.append(button('Leave Unanswered',()=>{stage(q.key,null,q.kind);render();}));c.append(box);
@@ -134,5 +134,5 @@ async function boot(){
 }
 $('home').addEventListener('click',async e=>{e.preventDefault();if(loading&&!owner){location.href='./index.html';return;}if(await flush())location.href='./index.html';});
 window.addEventListener('beforeunload',e=>{if(pending.size||saving){e.preventDefault();e.returnValue='';}});
-sb.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'||event==='SIGNED_IN')setTimeout(()=>boot(),0);});
+sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(event==='SIGNED_IN'&&session?.user?.id!==owner))setTimeout(()=>boot(),0);});
 boot();

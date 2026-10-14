@@ -9,6 +9,8 @@ const vm=require('node:vm');vm.runInContext(fs.readFileSync(path.join(root,'acco
 const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
 (async()=>{
  await run('boot()');await run("navigate('about')");
+ // A repeated sign-in event for the same user (such as refocusing a tab) keeps pending edits.
+ run("stage('everyday_life','Refocused draft')");authChange('SIGNED_IN',{user});await new Promise(r=>setTimeout(r,5));assert.equal(run('answers.everyday_life'),'Refocused draft');
  run("stage('everyday_life','Slow weekends')");await run("navigate('interests')");assert.equal(read('everyday_life'),'Slow weekends');
  const btn=name=>[...w.document.querySelectorAll('button')].find(b=>b.textContent===name);
  btn('Nature').click();btn('Bookstores').click();assert.equal(btn('Nature').getAttribute('aria-pressed'),'true');await run('flush()');assert.deepEqual(Array.from(read('interests')),['Nature','Bookstores']);

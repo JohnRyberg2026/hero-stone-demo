@@ -1,0 +1,10 @@
+{
+  "name": "heart-stone-profile",
+  "private": true,
+  "scripts": {
+    "test": "node tests/account-profile.cjs && node tests/profile-adventure-runtime.cjs && node tests/profile-preview.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
+}
