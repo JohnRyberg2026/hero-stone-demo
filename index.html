@@ -248,6 +248,30 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:430px){.challenge-actions,.active-top{grid-template-columns:1fr}.active-timer{justify-self:start}.challenge-rules{grid-template-columns:1fr}}
 @media(max-width:600px){.world-identity-bar{grid-template-columns:1fr 1fr}.world-identity-item:first-child{grid-column:1/-1}.world-switch-player{grid-column:1/-1;width:100%!important}}
 @media(max-width:700px){.combined-logo{max-height:190px}.quest-choices{grid-template-columns:1fr}.quest-choice-logo,.world-choice-logo,.world-mark{width:138px;height:138px}.world-mark{font-size:62px}.choice-copy{min-height:0}}
+
+/* Clear selection feedback across planning and invitation controls. */
+.choice-grid .choice, .style-grid button {
+  border:3px solid transparent;
+}
+.choice-grid .choice:not(.selected), .style-grid button:not(.selected) {
+  background:#f4ebe2;color:#2d241f;border-color:#d8c3af;
+}
+.choice-grid .choice.selected, .style-grid button.selected {
+  background:#164b3b;color:#fff;border-color:#164b3b;
+  outline:3px solid #e3b34d;outline-offset:2px;
+  box-shadow:0 3px 8px rgba(0,0,0,.18);
+}
+.choice-grid .choice::after, .style-grid button::after {
+  content:"";display:block;min-height:16px;margin-top:5px;
+  font-size:12px;font-weight:800;line-height:16px;
+}
+.choice-grid .choice.selected::after, .style-grid button.selected::after {
+  content:"✓ Selected";
+}
+.choice-grid .choice:focus-visible, .style-grid button:focus-visible {
+  outline:3px solid #235bb2;outline-offset:4px;
+}
+
 </style>
 </head>
 <body>
@@ -2991,5 +3015,21 @@ $("worldRestartQuestBtn").onclick=()=>{
   }
 })();
 </script>
+
+<script>
+(function () {
+  const selector = ".choice-grid .choice, .style-grid button";
+  function syncSelection(button) {
+    button.setAttribute("aria-pressed", String(button.classList.contains("selected")));
+  }
+  document.querySelectorAll(selector).forEach(syncSelection);
+  new MutationObserver(function (changes) {
+    changes.forEach(function (change) {
+      if (change.target.matches(selector)) syncSelection(change.target);
+    });
+  }).observe(document.body, {subtree:true, attributes:true, attributeFilter:["class"]});
+})();
+</script>
+
 </body>
 </html>
