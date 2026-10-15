@@ -858,6 +858,11 @@ async function ensureFreshAuth(){
 function step(n){ for(let i=1;i<=6;i++) $("p"+i).classList.toggle("on",i<=n); }
 function show(id,on=true){ $(id).classList.toggle("hidden",!on); }
 function setAdventureFocus(on=true){
+  if(on){
+    homeRestingMode=false;
+    localStorage.removeItem("hs_home_resting_mode");
+    show("homeCard",false);
+  }
   show("questCard",!on);
   if(on) show("recommendationsCard",false);
 }
@@ -1870,8 +1875,36 @@ $("homeContinueBtn").onclick=async()=>{
       await loadSharedDemoState();
       return;
     }
+    // Completed adventures still have a feedback screen to resume.
+    const {data:completed,error:completedErr}=await sb.from("adventures")
+      .select("id")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .eq("status","completed")
+      .is("demo_ready_at",null)
+      .order("created_at",{ascending:false})
+      .limit(1);
+    if(completedErr) throw completedErr;
+    const finished=completed?.[0];
+    if(finished && finished.id!==dismissedCompletedAdventureId){
+      adventureId=finished.id;
+      stepId=null;
+      setAdventureFocus(true);
+      show("dateInvitationCard",false);
+      show("adventureCard",false);
+      show("completeCard",true);
+      step(6);
+      status("completeStatus","Adventure Complete — you can save your own private demo feedback.");
+      $("completeCard").scrollIntoView({behavior:"smooth",block:"start"});
+      return;
+    }
   }catch(e){
     console.error("Continue recovery error",e);
+    homeRestingMode=true;
+    localStorage.setItem("hs_home_resting_mode","1");
+    show("homeCard",true);
+    status("homeStatus","We couldn't load your adventure. Please try Continue Our Adventure again.");
+    return;
   }
 
   // No unfinished adventure exists. Do NOT reopen old recommendation choices.
