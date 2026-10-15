@@ -664,6 +664,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <h1 class="home-title">Our HEART STONE</h1>
       <div class="home-sub">What should we create together today?</div>
     </div>
+    <div class="status hidden" id="invitationResponseNotice" role="status" aria-live="polite" style="border:2px solid var(--accent2);padding:16px">
+      <h2>Not tonight ❤️</h2>
+      <p id="invitationResponseMessage" style="color:var(--ink);margin:0 0 10px"></p>
+      <button class="secondary" id="dismissInvitationResponseBtn">Okay</button>
+    </div>
     <div class="home-actions">
       <button class="good" id="homeCreateBtn">Create an Adventure ❤️</button>
       <button class="gold" id="homeContinueBtn">Continue Our Adventure 🧭</button>
@@ -947,6 +952,8 @@ function setConnectedUI(connected){
     homeNamesVersion++;
     profileLoadVersion++;
     clearProfileFields();
+    show("invitationResponseNotice",false);
+    $("invitationResponseMessage").textContent="";
     $("homeCoupleNames").textContent="OUR HEART STONE";
     setAccountCardCollapsed(false);
     ["homeCard","questCard","recommendationsCard","dateInvitationCard",
@@ -1322,6 +1329,36 @@ async function partnerAcceptedHeading(){
   }
 }
 
+function isDeclinedInvitation(adv){
+  // Accepted adventures can also be abandoned later; those are cancellations.
+  return adv?.status==="abandoned" && !!adv.invitation_style && !adv.invitation_accepted_at;
+}
+async function showInvitationDeclined(adv){
+  if(!isDeclinedInvitation(adv)) return;
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user) return;
+  const noticeKey="hs_decline_notice:"+user.id+":"+adv.id;
+  if(localStorage.getItem(noticeKey)) return;
+  const inviter=adv.created_by_user_id===user.id;
+  $("invitationResponseMessage").textContent=inviter
+    ? "Your partner declined this invitation for tonight. You can plan another time whenever you’re both ready."
+    : "Your “Not tonight” response was sent. Your partner knows you declined this invitation. No explanation needed.";
+  localStorage.setItem(noticeKey,"1");
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  adventureId=null;
+  stepId=null;
+  ["questCard","recommendationsCard","dateInvitationCard","sealedEnvelopePanel",
+    "openedInvitationPanel","acceptedPanel","adventureCard","completeCard","feedbackCard"]
+    .forEach(id=>show(id,false));
+  show("homeCard",true);
+  show("invitationResponseNotice",true);
+  status("homeStatus","This invitation is closed.");
+  step(3);
+  $("invitationResponseNotice").scrollIntoView({behavior:"smooth",block:"center"});
+}
+$("dismissInvitationResponseBtn").onclick=()=>show("invitationResponseNotice",false);
+
 async function loadSharedDemoState(){
   if(Date.now()<suppressSharedRenderUntil) return;
   // Do not blank the current invitation UI while asynchronous shared-state
@@ -1334,9 +1371,13 @@ async function loadSharedDemoState(){
   const {data:invited,error:invitedErr}=await sb.from("adventures")
     .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
     .eq("heart_stone_id",heartStoneId).eq("is_demo",true)
-    .not("invitation_style","is",null).in("status",["proposed","active"])
+    .not("invitation_style","is",null).in("status",["proposed","active","completed","abandoned"])
     .order("created_at",{ascending:false}).limit(1);
   if(invitedErr) return status("questStatus","Invitation sync error: "+invitedErr.message);
+  if(isDeclinedInvitation(invited?.[0])){
+    await showInvitationDeclined(invited[0]);
+    return;
+  }
   if(invited?.[0] && invited[0].status==="active" && invited[0].invitation_accepted_at && invited[0].adventure_revealed_at){
     const adv=invited[0]; adventureId=adv.id;
     show("dateInvitationCard",false);
@@ -1597,6 +1638,10 @@ async function loadSharedDemoState(){
       }
 
       if(advs[0].status==="abandoned"){
+        if(isDeclinedInvitation(advs[0])){
+          await showInvitationDeclined(advs[0]);
+          return;
+        }
         adventureId=null;
         stepId=null;
         show("adventureCard",false);
@@ -2056,13 +2101,26 @@ $("revealAdventureBtn").onclick=async()=>{
 };
 
 $("declineDateBtn").onclick=async()=>{
-  if(!adventureId) return;
-  const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:adventureId,p_accept:false});
-  if(error) return status("inviteStatus","Invitation error: "+error.message);
-  adventureId=null; stepId=null;
-  show("dateInvitationCard",false); show("adventureCard",false); show("recommendationsCard",false); show("questCard",true);
-  status("questStatus","Not tonight ❤️ No problem. Choose something else whenever you’re ready.");
-  step(3);
+  if(!adventureId || $("declineDateBtn").disabled) return;
+  const declinedId=adventureId;
+  $("declineDateBtn").disabled=true;
+  status("inviteStatus","Sending your response...");
+  try{
+    const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:declinedId,p_accept:false});
+    if(error) return status("inviteStatus","Invitation error: "+error.message);
+    const {data:adv,error:loadError}=await sb.from("adventures")
+      .select("id,status,created_by_user_id,invitation_style,invitation_accepted_at")
+      .eq("id",declinedId).maybeSingle();
+    if(loadError || !adv){
+      status("inviteStatus","Your response was sent. Refresh to view the updated invitation.");
+      return;
+    }
+    await showInvitationDeclined(adv);
+  }catch(e){
+    status("inviteStatus","We couldn't confirm your response. Please refresh before trying again.");
+  }finally{
+    $("declineDateBtn").disabled=false;
+  }
 };
 
 $("cancelAdventureBtn").onclick = async()=>{
