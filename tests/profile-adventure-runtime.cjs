@@ -20,11 +20,21 @@ assert.equal(result.ordered[0].title,'Books');
 result=runtime.plan(profile,candidates,{}, {...today,walking:true,maxMinutes:30});
 assert.deepEqual(result.ordered,[]);
 // Each written requirement is a stop, not an inferred permission or verified match.
-for(const key of ['avoid','food_needs','food_requirements','budget_notes','travel','transport','accessibility','physical_comfort_notes','hard_nos','ask_first','adventure_notes','surprise_notes','privacy_notes']){
+for(const key of ['avoid','food_needs','food_requirements','budget_notes','travel','transport','accessibility','physical_comfort_notes','hard_nos','hard_no_details','accommodation_details','ask_first','adventure_notes','surprise_notes','privacy_notes']){
   result=runtime.plan({...profile,[key]:'Private requirement'},candidates,{},today);
   assert.equal(result.review.length,1);assert.deepEqual(result.ordered,[]);
   assert(!JSON.stringify(result).includes('Private requirement'));
 }
+// Structured needs stop unverified templates even in Wild/Just Decide mode or without a private marker.
+for(const [key,none,positive] of [['hard_no_categories','Nothing comes to mind right now','Crowds'],['accommodation_needs','No accommodations right now','Step-free/wheelchair-friendly access']]){
+ for(const value of [[positive],[none,positive],'malformed value']){
+  result=runtime.plan({[key]:value,exploration:'Wild',decisions:'Just Decide for Me',boundaries_private:false,accommodations_private:false},candidates,{},today);
+  assert.equal(result.review.length,1);assert.deepEqual(result.ordered,[]);assert(!JSON.stringify(result).includes(positive));
+ }
+ for(const value of [null,[],[none]])assert.deepEqual(runtime.plan({[key]:value},candidates,{},today).review,[]);
+}
+assert.equal(runtime.plan({hard_no_categories:['Nothing comes to mind right now'],hard_no_details:'PRIVATE note'},candidates,{},today).review.length,1);
+assert.equal(runtime.plan({accommodation_needs:['No accommodations right now'],accommodation_details:'PRIVATE note'},candidates,{},today).review.length,1);
 // Missing and skipped information remains unknown; unrelated keys are excluded.
 const decoded=runtime.decode([
  {question_key:'account_profile_v1_interests',answer_json:{value:['Bookstores']},skipped:true},

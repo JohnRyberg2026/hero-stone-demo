@@ -84,7 +84,23 @@ const read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
  button('Give me ideas — I’ll handle the rest').click();button('Handle almost everything — Give me what I need and tell me where to go').click();
  await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();assert.equal(run('current'),'starter_planning');assert.equal(button('Please take some of the planning off my plate').getAttribute('aria-pressed'),'true');
  assert.equal(read('surprise'),'Give Me Some Mystery');assert.equal(read('planning'),undefined);assert.equal(read('planning_assistance').length,2);
- await button('Save & Continue').onclick();assert.equal(run('current'),'starter_pause');
+ await button('Save & Continue').onclick();assert.equal(run('current'),'starter_decisions');
+
+ // Decision style and flexibility are independent single defaults, not permission to bypass constraints.
+ button('Show Me Everything').click();button('Give Me 3').click();button('Yes').click();button('No').click();await button('Save & Continue').onclick();
+ assert.equal(read('decisions'),'Give Me 3');assert.equal(read('decision_flexibility'),'No');assert.equal(read('surprise'),'Give Me Some Mystery');assert.equal(run('current'),'starter_boundaries');
+ assert.equal(w.document.getElementById('boundaries_private').checked,true);assert.equal(read('boundaries_private'),undefined);
+ button('Crowds').click();button('Heights').click();button('Nothing comes to mind right now').click();assert.deepEqual(Array.from(run('answers.hard_no_categories')),['Nothing comes to mind right now']);
+ const boundaryBox=w.document.getElementById('question-hard_no_categories');boundaryBox.lastElementChild.click();await run('flush()');assert.equal(read('hard_no_categories'),null);assert.equal(button('Nothing comes to mind right now').getAttribute('aria-pressed'),'false');
+ button('Crowds').click();const boundaryNote=w.document.getElementById('hard_no_details');boundaryNote.value='PRIVATE boundary explanation';boundaryNote.oninput();
+ const privateBoundary=w.document.getElementById('boundaries_private');privateBoundary.checked=false;privateBoundary.onchange();
+ await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();assert.equal(run('current'),'starter_boundaries');assert.equal(w.document.getElementById('boundaries_private').checked,false);assert.equal(read('hard_no_details'),'PRIVATE boundary explanation');
+ await button('Save & Continue').onclick();assert.equal(run('current'),'starter_accessibility');assert.equal(w.document.getElementById('accommodations_private').checked,true);
+ button('Minimal walking').click();button('Easy restroom access').click();button('No accommodations right now').click();assert.deepEqual(Array.from(run('answers.accommodation_needs')),['No accommodations right now']);
+ button('Step-free/wheelchair-friendly access').click();assert.deepEqual(Array.from(run('answers.accommodation_needs')),['Step-free/wheelchair-friendly access']);
+ const accessNote=w.document.getElementById('accommodation_details');accessNote.value='PRIVATE practical access need';accessNote.oninput();const privateAccess=w.document.getElementById('accommodations_private');privateAccess.checked=false;privateAccess.onchange();privateAccess.checked=true;privateAccess.onchange();
+ await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();assert.equal(run('current'),'starter_accessibility');assert.equal(w.document.getElementById('accommodations_private').checked,true);assert.equal(read('boundaries_private'),false);assert.equal(read('accommodations_private'),true);
+ assert.equal(read('accessibility'),undefined);assert.equal(read('hard_nos'),undefined);await button('Save & Continue').onclick();assert.equal(run('current'),'starter_pause');
  assert(writes.flat().every(r=>r.question_key.startsWith('account_profile_v1_')));
  // A failed save keeps the person on the current screen and can be retried.
  await run("navigate('starter_about')");fail=true;button('Stay close to home').click();await button('Save & Continue').onclick();assert.equal(run('current'),'starter_about');
@@ -94,7 +110,7 @@ const read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
  await run('boot()');await run("navigate('starter_adventure')");assert(w.document.querySelector('#app').textContent.includes('Saved earlier: Keep a little mystery'));assert.equal(w.document.querySelectorAll('[aria-label="And how much do you like surprises?"] [aria-pressed="true"]').length,0);assert.equal(read('surprise'),'Keep a little mystery');
  await run("navigate('review')");assert.equal([...w.document.querySelectorAll('dt')].filter(n=>n.textContent==='And how much do you like surprises?').length,1);
  user={id:'bob',email:'bob@example.test'};await run('boot()');assert.equal(run('current'),'welcome');await button('Get Started').onclick();assert.equal(w.document.getElementById('call_me').value,'');assert.equal(run('answers.planning_for'),undefined);
- for(let i=0;i<12;i++)await button('Skip for Now').onclick();assert.equal(run('current'),'starter_pause');assert(Object.values(store).filter(r=>r.user_id==='bob').every(r=>['account_profile_v1_starter_resume','account_profile_v1_starter_started'].includes(r.question_key)));
+ for(let i=0;i<15;i++)await button('Skip for Now').onclick();assert.equal(run('current'),'starter_pause');assert(Object.values(store).filter(r=>r.user_id==='bob').every(r=>['account_profile_v1_starter_resume','account_profile_v1_starter_started'].includes(r.question_key)));
  user=null;authChange('SIGNED_OUT');await new Promise(r=>setTimeout(r,10));assert(w.document.querySelector('h2').textContent.includes('Sign in'));
- console.log('PASS: approved opening/first twelve screens, optional exit, multi/single selection, independent surprise defaults, save/resume/retry, legacy preservation, no invites, and account isolation.');dom.window.close();
+ console.log('PASS: approved opening/first fifteen screens, optional exit, multi/single selection, independent surprise defaults, save/resume/retry, legacy preservation, no invites, and account isolation.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

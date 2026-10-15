@@ -4,7 +4,7 @@
 
 The approved Profile Application Flow extends through Step 28. Its architecture pause point remains Step 29. The current implementation follows that baseline incrementally; coding progress is separate from architecture approval.
 
-The opening and the first twelve approved screens are implemented:
+The opening and the first fifteen approved screens are implemented:
 
 - Opening: Get Started / I’ll Do This Later; optional answers, no completion score.
 - Step 1, A Little About You: optional private call-me name and the approved multi-select free-time choices.
@@ -19,8 +19,11 @@ The opening and the first twelve approved screens are implemented:
 - Step 10, How Far Should We Go?: multiple typical-distance preferences, a farther-for-special default, and an overnight default. Lodging choices appear only with a positive overnight preference, are capped at three, and can optionally be ranked with move controls. Changing overnight to Not really my thing retains lodging answers as inactive; review identifies them as inactive.
 - Step 11, Your Spending Comfort: multiple comfort levels and whole-experience cost factors. No income or required dollar disclosure. These preferences do not increase another person's comfort or change today's spending choices.
 - Step 12, How Do You Like Plans to Happen?: multiple initiative/planning-work preferences and assistance levels. Asking HEART STONE to take the lead does not change surprise choices, bypass constraints, book anything, or send invitations.
+- Step 13, Decision-Making & Choice Style: one default among Show Me Everything / Give Me 3 / Recommend the Best One / Just Decide for Me, with a separate Yes/No situation-flexibility question. This does not authorize actions or bypass boundaries. Couple style reconciliation is not implemented here.
+- Step 14, Personal Boundaries, Hard No’s & Safety Preferences: multiple avoidance categories, optional details, and a private marker. Nothing comes to mind right now is exclusive with positive categories and distinct from leaving the question unanswered. Changing that choice does not erase saved written details.
+- Step 15, Accessibility, Accommodations & Experience Needs: practical needs rather than diagnoses, optional details, and a private marker. No accommodations right now is exclusive with positive needs; all questions can be skipped. Written details remain independently editable.
 
-The original 17-section scaffold remains available for additional details. It must not be described as the full approved 28-step flow. Steps 13–28 still need alignment with their approved screen specifications. The final readiness transition is not implemented yet; the starter does not claim a completed profile.
+The original 17-section scaffold remains available for additional details. It must not be described as the full approved 28-step flow. Steps 16–28 still need alignment with their approved screen specifications. The final readiness transition is not implemented yet; the starter does not claim a completed profile.
 
 ## Storage and compatibility
 
@@ -33,6 +36,12 @@ Steps 4–6 add `connection_styles`, `connection_other`, `available_windows`, `p
 Steps 7–9 add `social_settings`, `meeting_people`, `food_adventurousness`, `food_experiences`, `food_dislikes`, `food_requirements`, `enjoyed_interests`, `enjoyed_other`, and `curious_interests`. Earlier scaffold keys remain intact. New enjoyment categories and curiosities are saved separately from the older preview-supported `interests` taxonomy; broader recommendation use remains pending. The new `food_requirements` key joins the requirement gate without copying its contents into suggestion reasons, journey snapshots, or shares.
 
 Steps 10–12 add `travel_distance`, `farther_for_special`, `overnight_comfort`, `lodging_preferences`, `lodging_ranked`, `spending_comfort`, `cost_considerations`, `planning_initiative`, and `planning_assistance`. The lodging array is ranked only when the member explicitly sets `lodging_ranked` to true; otherwise order conveys no priority. Saved lodging answers do not imply overnight openness. These new defaults are not yet consumed by the main recommendation engine or sample preview, and do not overwrite older travel, budget, planning, or surprise answers.
+
+Step 13 reuses `decisions` and adds `decision_flexibility`. Steps 14–15 add `hard_no_categories`, `hard_no_details`, `boundaries_private`, `accommodation_needs`, `accommodation_details`, and `accommodations_private`. The older free-text `hard_nos` and `accessibility` keys remain intact, without inferred migration.
+
+Private markers default to private in the UI, without writing an answer until the member acts. These are owner-only annotations, not sharing controls: turning a marker off never grants partner access or authorizes disclosure. Future consumers must still require explicit sharing permission. No partner planning integration with these new requirements is implemented yet.
+
+Positive boundary/accessibility categories, malformed nonempty requirement data, and optional requirement details pause unverified sample suggestions. Generic requirement labels are shown; categories and explanations do not enter suggestion reasons or journey snapshots. None selections are not consent, do not erase other requirements, and never override written details. Wild, Just Decide for Me, and private-marker settings cannot bypass this gate.
 
 Adventure comfort reuses `exploration`. Surprise level reuses `surprise`. Previously saved surprise wording is shown as a prior answer without translating or overwriting it. Members choose whether to replace it. Review displays shared fields once.
 
