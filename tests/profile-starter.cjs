@@ -62,6 +62,28 @@ const read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
  await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();
  assert.equal(run('current'),'starter_interests');assert.equal(button('Gardening & farms').getAttribute('aria-pressed'),'true');assert.equal(w.document.getElementById('curious_interests').value,'Pottery, sailing');
  assert.deepEqual(Array.from(read('enjoyed_interests')),['Gardening & farms','Classes & learning','Something else — Tell HEART STONE']);assert.equal(read('enjoyed_other'),'Board game cafes');assert.equal(read('interests'),undefined);
+ await button('Save & Continue').onclick();assert.equal(run('current'),'starter_travel');
+
+ // Overnight choice controls lodging visibility without deleting saved preferences.
+ assert.equal(w.document.getElementById('question-lodging_preferences').hidden,true);
+ button('Stay close').click();button('Worth the drive').click();button('Absolutely').click();button('Maybe—show me why it’s worth it').click();
+ button('Occasionally').click();assert.equal(w.document.getElementById('question-lodging_preferences').hidden,false);
+ button('Hotel').click();button('Cabin').click();button('Bed & Breakfast / Inn').click();button('Resort').click();
+ assert.equal(run('answers.lodging_preferences.length'),3);assert.equal(button('Resort').getAttribute('aria-pressed'),'false');assert(w.document.getElementById('lodging_preferences-limit').textContent.includes('Pick up to 3'));
+ const rank=w.document.getElementById('lodging_ranked');rank.checked=true;rank.onchange();button('Move Cabin earlier').click();
+ assert.deepEqual(Array.from(run('answers.lodging_preferences')),['Cabin','Hotel','Bed & Breakfast / Inn']);
+ button('Not really my thing').click();assert.equal(w.document.getElementById('question-lodging_preferences').hidden,true);
+ await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();
+ assert.equal(run('current'),'starter_travel');assert.equal(w.document.getElementById('question-lodging_preferences').hidden,true);assert.deepEqual(Array.from(read('lodging_preferences')),['Cabin','Hotel','Bed & Breakfast / Inn']);assert.equal(read('lodging_ranked'),true);
+ await run("navigate('review')");assert(w.document.querySelector('#app').textContent.includes('lodging preferences are inactive'));await run("navigate('starter_travel')");button('Occasionally').click();assert.equal(w.document.getElementById('lodging_ranked').checked,true);
+ button('Hotel').click();button('Resort').click();assert.deepEqual(Array.from(run('answers.lodging_preferences')),['Cabin','Bed & Breakfast / Inn','Resort']);
+ await button('Save & Continue').onclick();assert.equal(read('farther_for_special'),'Maybe—show me why it’s worth it');assert.equal(run('current'),'starter_spending');
+ button('Free is fantastic').click();button('Treat ourselves now and then').click();button('It depends—ask me').click();button('Total for both').click();button('Food & drinks').click();button('Transportation & parking').click();
+ await button('Save & Continue').onclick();assert.equal(run('current'),'starter_planning');assert.equal(read('budget_style'),undefined);assert.deepEqual(Array.from(read('cost_considerations')),['Total for both','Food & drinks','Transportation & parking']);
+ button('I usually end up being the planner').click();button('Please take some of the planning off my plate').click();button('I like planning together').click();
+ button('Give me ideas — I’ll handle the rest').click();button('Handle almost everything — Give me what I need and tell me where to go').click();
+ await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();assert.equal(run('current'),'starter_planning');assert.equal(button('Please take some of the planning off my plate').getAttribute('aria-pressed'),'true');
+ assert.equal(read('surprise'),'Give Me Some Mystery');assert.equal(read('planning'),undefined);assert.equal(read('planning_assistance').length,2);
  await button('Save & Continue').onclick();assert.equal(run('current'),'starter_pause');
  assert(writes.flat().every(r=>r.question_key.startsWith('account_profile_v1_')));
  // A failed save keeps the person on the current screen and can be retried.
@@ -72,7 +94,7 @@ const read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
  await run('boot()');await run("navigate('starter_adventure')");assert(w.document.querySelector('#app').textContent.includes('Saved earlier: Keep a little mystery'));assert.equal(w.document.querySelectorAll('[aria-label="And how much do you like surprises?"] [aria-pressed="true"]').length,0);assert.equal(read('surprise'),'Keep a little mystery');
  await run("navigate('review')");assert.equal([...w.document.querySelectorAll('dt')].filter(n=>n.textContent==='And how much do you like surprises?').length,1);
  user={id:'bob',email:'bob@example.test'};await run('boot()');assert.equal(run('current'),'welcome');await button('Get Started').onclick();assert.equal(w.document.getElementById('call_me').value,'');assert.equal(run('answers.planning_for'),undefined);
- for(let i=0;i<9;i++)await button('Skip for Now').onclick();assert.equal(run('current'),'starter_pause');assert(Object.values(store).filter(r=>r.user_id==='bob').every(r=>['account_profile_v1_starter_resume','account_profile_v1_starter_started'].includes(r.question_key)));
+ for(let i=0;i<12;i++)await button('Skip for Now').onclick();assert.equal(run('current'),'starter_pause');assert(Object.values(store).filter(r=>r.user_id==='bob').every(r=>['account_profile_v1_starter_resume','account_profile_v1_starter_started'].includes(r.question_key)));
  user=null;authChange('SIGNED_OUT');await new Promise(r=>setTimeout(r,10));assert(w.document.querySelector('h2').textContent.includes('Sign in'));
- console.log('PASS: approved opening/first nine screens, optional exit, multi/single selection, independent surprise defaults, save/resume/retry, legacy preservation, no invites, and account isolation.');dom.window.close();
+ console.log('PASS: approved opening/first twelve screens, optional exit, multi/single selection, independent surprise defaults, save/resume/retry, legacy preservation, no invites, and account isolation.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});
