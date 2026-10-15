@@ -1337,25 +1337,26 @@ async function showInvitationDeclined(adv){
   if(!isDeclinedInvitation(adv)) return;
   const {data:{user}}=await sb.auth.getUser();
   if(!user) return;
-  const noticeKey="hs_decline_notice:"+user.id+":"+adv.id;
+  const noticeKey="hs_decline_notice_v2:"+user.id+":"+adv.id;
   if(localStorage.getItem(noticeKey)) return;
   const inviter=adv.created_by_user_id===user.id;
   $("invitationResponseMessage").textContent=inviter
     ? "Your partner declined this invitation for tonight. You can plan another time whenever you’re both ready."
     : "Your “Not tonight” response was sent. Your partner knows you declined this invitation. No explanation needed.";
-  localStorage.setItem(noticeKey,"1");
   homeRestingMode=true;
   localStorage.setItem("hs_home_resting_mode","1");
   adventureId=null;
   stepId=null;
   ["questCard","recommendationsCard","dateInvitationCard","sealedEnvelopePanel",
-    "openedInvitationPanel","acceptedPanel","adventureCard","completeCard","feedbackCard"]
-    .forEach(id=>show(id,false));
+    "openedInvitationPanel","acceptedPanel","adventureCard","completeCard"]
+    .forEach(id=>{ if($(id)) show(id,false); });
   show("homeCard",true);
   show("invitationResponseNotice",true);
   status("homeStatus","This invitation is closed.");
   step(3);
   $("invitationResponseNotice").scrollIntoView({behavior:"smooth",block:"center"});
+  // Acknowledge only after the notice has rendered successfully.
+  localStorage.setItem(noticeKey,"1");
 }
 $("dismissInvitationResponseBtn").onclick=()=>show("invitationResponseNotice",false);
 
