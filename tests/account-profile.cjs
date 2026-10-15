@@ -23,7 +23,7 @@ const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:
  run("stage('food_likes','Alice private note')");user={id:'bob',email:'bob@example.test'};await run('boot()');assert.equal(run('answers.food_likes'),undefined);assert(writes.every(b=>b.every(r=>r.user_id==='alice')));
  // Overlapping saves are serialized; newest value wins.
  user={id:'alice',email:'alice@example.test'};await run('boot()');delay=20;run("stage('food_likes','Older')");const first=run('flush()');await new Promise(r=>setTimeout(r,5));run("stage('food_likes','Newer')");const second=run('flush()');await Promise.all([first,second]);assert.equal(read('food_likes'),'Newer');
- await run("navigate('review')");assert(!w.document.querySelector('progress'));assert.equal(w.document.querySelectorAll('dl').length,17);
+ await run("navigate('review')");assert(!w.document.querySelector('progress'));assert.equal([...w.document.querySelectorAll('dt')].filter(n=>n.textContent==='When we’re planning something for you, how adventurous do you want me to be?').length,1);
  // Content is rendered as text, including user-entered markup.
  run("stage('avoid','<img src=x onerror=alert(1)>')");await run('flush()');await run("navigate('review')");assert.equal(w.document.querySelectorAll('img').length,0);
  user=null;await run('boot()');assert(w.document.querySelector('h2').textContent.includes('Sign in'));assert.equal(run('owner'),null);
