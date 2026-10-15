@@ -44,7 +44,25 @@ const read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
  await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();
  assert.equal(run('current'),'starter_energy');assert.equal(button('Easy & relaxed').getAttribute('aria-pressed'),'true');assert.equal(button('Half a day').getAttribute('aria-pressed'),'true');
  assert.deepEqual(Array.from(read('energy_pace')),['Easy & relaxed','It depends on the day']);assert.deepEqual(Array.from(read('experience_length')),['An hour or two','Half a day']);assert.equal(read('physical_comfort_notes'),'Standing for long periods');
- assert.equal(read('pace'),undefined);await button('Save & Continue').onclick();assert.equal(run('current'),'starter_pause');
+ assert.equal(read('pace'),undefined);await button('Save & Continue').onclick();assert.equal(run('current'),'starter_social');
+
+ // Crowd comfort is distinct from comfort with interacting with strangers.
+ button('Just us').click();button('Big crowds are fine').click();assert.equal(read('meeting_people'),undefined);
+ button('Sometimes').click();button('Only if it happens naturally').click();await button('Save & Continue').onclick();
+ assert.deepEqual(Array.from(read('social_settings')),['Just us','Big crowds are fine']);assert.deepEqual(Array.from(read('meeting_people')),['Sometimes','Only if it happens naturally']);
+ assert.equal(run('current'),'starter_food');
+ button('I know what I like').click();button('I love discovering new foods').click();button('Coffee shops & bakeries').click();button('Picnics & outdoor dining').click();
+ const dislike=w.document.getElementById('food_dislikes');dislike.value='Olives';dislike.oninput();assert.equal(read('food_requirements'),undefined);
+ const foodRequirement=w.document.getElementById('food_requirements');foodRequirement.value='Peanuts';foodRequirement.oninput();await button('Save & Continue').onclick();
+ assert.equal(read('food_dislikes'),'Olives');assert.equal(read('food_requirements'),'Peanuts');assert.equal(read('food_needs'),undefined);
+ assert.equal(run('current'),'starter_interests');assert.equal(w.document.getElementById('question-enjoyed_other').hidden,true);
+ button('Gardening & farms').click();button('Classes & learning').click();button('Something else — Tell HEART STONE').click();
+ const enjoyedOther=w.document.getElementById('enjoyed_other');enjoyedOther.value='Board game cafes';enjoyedOther.oninput();
+ const curiosity=w.document.getElementById('curious_interests');curiosity.value='Pottery, sailing';curiosity.oninput();
+ await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();
+ assert.equal(run('current'),'starter_interests');assert.equal(button('Gardening & farms').getAttribute('aria-pressed'),'true');assert.equal(w.document.getElementById('curious_interests').value,'Pottery, sailing');
+ assert.deepEqual(Array.from(read('enjoyed_interests')),['Gardening & farms','Classes & learning','Something else — Tell HEART STONE']);assert.equal(read('enjoyed_other'),'Board game cafes');assert.equal(read('interests'),undefined);
+ await button('Save & Continue').onclick();assert.equal(run('current'),'starter_pause');
  assert(writes.flat().every(r=>r.question_key.startsWith('account_profile_v1_')));
  // A failed save keeps the person on the current screen and can be retried.
  await run("navigate('starter_about')");fail=true;button('Stay close to home').click();await button('Save & Continue').onclick();assert.equal(run('current'),'starter_about');
@@ -54,7 +72,7 @@ const read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
  await run('boot()');await run("navigate('starter_adventure')");assert(w.document.querySelector('#app').textContent.includes('Saved earlier: Keep a little mystery'));assert.equal(w.document.querySelectorAll('[aria-label="And how much do you like surprises?"] [aria-pressed="true"]').length,0);assert.equal(read('surprise'),'Keep a little mystery');
  await run("navigate('review')");assert.equal([...w.document.querySelectorAll('dt')].filter(n=>n.textContent==='And how much do you like surprises?').length,1);
  user={id:'bob',email:'bob@example.test'};await run('boot()');assert.equal(run('current'),'welcome');await button('Get Started').onclick();assert.equal(w.document.getElementById('call_me').value,'');assert.equal(run('answers.planning_for'),undefined);
- for(let i=0;i<6;i++)await button('Skip for Now').onclick();assert.equal(run('current'),'starter_pause');assert(Object.values(store).filter(r=>r.user_id==='bob').every(r=>['account_profile_v1_starter_resume','account_profile_v1_starter_started'].includes(r.question_key)));
+ for(let i=0;i<9;i++)await button('Skip for Now').onclick();assert.equal(run('current'),'starter_pause');assert(Object.values(store).filter(r=>r.user_id==='bob').every(r=>['account_profile_v1_starter_resume','account_profile_v1_starter_started'].includes(r.question_key)));
  user=null;authChange('SIGNED_OUT');await new Promise(r=>setTimeout(r,10));assert(w.document.querySelector('h2').textContent.includes('Sign in'));
- console.log('PASS: approved opening/first six screens, optional exit, multi/single selection, independent surprise defaults, save/resume/retry, legacy preservation, no invites, and account isolation.');dom.window.close();
+ console.log('PASS: approved opening/first nine screens, optional exit, multi/single selection, independent surprise defaults, save/resume/retry, legacy preservation, no invites, and account isolation.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

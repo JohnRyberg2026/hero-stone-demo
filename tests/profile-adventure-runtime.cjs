@@ -20,7 +20,7 @@ assert.equal(result.ordered[0].title,'Books');
 result=runtime.plan(profile,candidates,{}, {...today,walking:true,maxMinutes:30});
 assert.deepEqual(result.ordered,[]);
 // Each written requirement is a stop, not an inferred permission or verified match.
-for(const key of ['avoid','food_needs','budget_notes','travel','transport','accessibility','physical_comfort_notes','hard_nos','ask_first','adventure_notes','surprise_notes','privacy_notes']){
+for(const key of ['avoid','food_needs','food_requirements','budget_notes','travel','transport','accessibility','physical_comfort_notes','hard_nos','ask_first','adventure_notes','surprise_notes','privacy_notes']){
   result=runtime.plan({...profile,[key]:'Private requirement'},candidates,{},today);
   assert.equal(result.review.length,1);assert.deepEqual(result.ordered,[]);
   assert(!JSON.stringify(result).includes('Private requirement'));
@@ -36,4 +36,7 @@ assert.deepEqual(runtime.plan(decoded,candidates,{},today).liked,[]);
 assert.equal(runtime.plan({},candidates,{},today).savedFreeOnly,false);
 assert.deepEqual(runtime.interests({interests:['Nature']},{Nature:'unsure'}),[]);
 assert.deepEqual(runtime.interests({interests:['Nature']},{Nature:'skip'}),[]);
+assert.deepEqual(runtime.plan({food_dislikes:'Olives'},candidates,{},today).review,[]);
+assert.deepEqual(runtime.interests({curious_interests:'Nature and Bookstores'},{}),[]);
+assert.deepEqual(runtime.interests({interests:['Nature'],curious_interests:'Bookstores'},{}),['Nature']);
 console.log('PASS: saved-interest ordering, explicit overrides, free-only constraints, strict time/walking limits, unknowns, and every written-requirement gate.');

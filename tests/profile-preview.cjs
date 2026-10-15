@@ -41,10 +41,12 @@ async function choices(){await run('boot()');run("state.step='choices';state.lim
   assert(![...w.document.querySelectorAll('button')].some(b=>b.textContent==='Choose this adventure'));
   rows=rows.filter(r=>!r.question_key.endsWith('accessibility'));rows.push(row('physical_comfort_notes','PRIVATE standing requirement'));await choices();
   assert(w.document.querySelector('#app').textContent.includes('Physical comfort needs'));assert(!w.document.querySelector('#app').textContent.includes('PRIVATE standing requirement'));assert(![...w.document.querySelectorAll('button')].some(b=>b.textContent==='Choose this adventure'));
+  rows=rows.filter(r=>!r.question_key.endsWith('physical_comfort_notes'));rows.push(row('food_requirements','PRIVATE food requirement'));await choices();
+  assert(w.document.querySelector('#app').textContent.includes('Foods you can’t have'));assert(!w.document.querySelector('#app').textContent.includes('PRIVATE food requirement'));assert(![...w.document.querySelectorAll('button')].some(b=>b.textContent==='Choose this adventure'));
   run("state.name='Alice';state.memory='Private Alice memory'");await run('flushJourney()');
   assert(writes.every(r=>!JSON.stringify(r).includes('PRIVATE medical accommodation')));
   // Failed reads do not silently become an empty profile.
-  rows=rows.filter(r=>!r.question_key.endsWith('accessibility')&&!r.question_key.endsWith('physical_comfort_notes'));failProfile=true;
+  rows=rows.filter(r=>!r.question_key.endsWith('accessibility')&&!r.question_key.endsWith('physical_comfort_notes')&&!r.question_key.endsWith('food_requirements'));failProfile=true;
   await choices();assert(w.document.querySelector('#app').textContent.includes('Check your saved profile'));
   assert(![...w.document.querySelectorAll('button')].some(b=>b.textContent==='Choose this adventure'));
   failProfile=false;

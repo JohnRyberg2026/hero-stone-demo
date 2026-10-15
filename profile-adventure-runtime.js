@@ -3,7 +3,7 @@
   const prefix='account_profile_v1_';
   const interestTags={Nature:'Nature',Bookstores:'Bookstores','Local history':'Local history','Food discoveries':'Restaurants',Volunteering:'Volunteering','Road trips':'Road trips'};
   // Written requirements cannot be treated as satisfied by an unverified sample idea.
-  const reviewFields={avoid:'Things to Avoid',food_needs:'Food & Dining requirements',budget_notes:'Spending limits',travel:'Travel limits',transport:'Transportation needs',accessibility:'Accessibility & Accommodations',physical_comfort_notes:'Physical comfort needs',hard_nos:'Hard No’s',ask_first:'Ask Me First',adventure_notes:'Exploration comfort',surprise_notes:'Surprise requirements',privacy_notes:'Privacy preferences'};
+  const reviewFields={avoid:'Things to Avoid',food_needs:'Food & Dining requirements',food_requirements:'Foods you can’t have',budget_notes:'Spending limits',travel:'Travel limits',transport:'Transportation needs',accessibility:'Accessibility & Accommodations',physical_comfort_notes:'Physical comfort needs',hard_nos:'Hard No’s',ask_first:'Ask Me First',adventure_notes:'Exploration comfort',surprise_notes:'Surprise requirements',privacy_notes:'Privacy preferences'};
   function decode(rows){
     const values={};
     for(const row of rows||[]){
