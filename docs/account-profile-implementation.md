@@ -4,20 +4,25 @@
 
 The approved Profile Application Flow extends through Step 28. Its architecture pause point remains Step 29. The current implementation follows that baseline incrementally; coding progress is separate from architecture approval.
 
-The opening and the first three approved screens are implemented:
+The opening and the first six approved screens are implemented:
 
 - Opening: Get Started / I’ll Do This Later; optional answers, no completion score.
 - Step 1, A Little About You: optional private call-me name and the approved multi-select free-time choices.
 - Step 2, Your Adventure Comfort Zone: single Familiar/Stretch/Wild default with descriptions, and the four independent surprise choices. These are defaults, never permission to exceed boundaries.
 - Step 3, Who Are We Planning For?: multi-select partner/family/friends/group/sometimes just me. Selecting a context does not invite or share with anyone.
+- Step 4, What Helps You Feel Connected?: multiple connection styles, plus an optional own-words field for Something else. A saved own-words answer remains accessible even if Something else is later deselected.
+- Step 5, Your Timing & Rhythm: multiple availability windows and a single notice preference. Availability permits suggestions, not obligations or bookings; setup connects no calendars.
+- Step 6, Your Energy & Pace: multiple comfortable paces and durations, plus optional physical-comfort notes. No medical details are required. Saving typical pace or duration does not change temporary limits for today.
 
-The original 17-section scaffold remains available for additional details. It must not be described as the full approved 28-step flow. Steps 4–28 still need alignment with their approved screen specifications. The final readiness transition is not implemented yet; the starter does not claim a completed profile.
+The original 17-section scaffold remains available for additional details. It must not be described as the full approved 28-step flow. Steps 7–28 still need alignment with their approved screen specifications. The final readiness transition is not implemented yet; the starter does not claim a completed profile.
 
 ## Storage and compatibility
 
 All answers use the existing owner-only `user_onboarding_answers` table and `account_profile_v1_` prefix. No schema or sharing-policy changes are required.
 
 New keys: `call_me`, `free_time`, `planning_for`, `starter_resume`, and `starter_started`. The optional private `call_me` name is distinct from the required account identity in `profiles.first_name`; this flow does not alter the account identity or partner-visible name.
+
+Steps 4–6 add `connection_styles`, `connection_other`, `available_windows`, `planning_notice`, `energy_pace`, `experience_length`, and `physical_comfort_notes`. These do not overwrite the earlier scaffold's free-text connection/timing or single pace answers. Their broader recommendation integration is still pending. Physical-comfort notes do participate in the existing written-requirement gate: sample suggestions pause until needs can be verified, and note contents do not appear in suggestion output.
 
 Adventure comfort reuses `exploration`. Surprise level reuses `surprise`. Previously saved surprise wording is shown as a prior answer without translating or overwriting it. Members choose whether to replace it. Review displays shared fields once.
 

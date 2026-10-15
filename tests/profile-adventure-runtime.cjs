@@ -20,7 +20,7 @@ assert.equal(result.ordered[0].title,'Books');
 result=runtime.plan(profile,candidates,{}, {...today,walking:true,maxMinutes:30});
 assert.deepEqual(result.ordered,[]);
 // Each written requirement is a stop, not an inferred permission or verified match.
-for(const key of ['avoid','food_needs','budget_notes','travel','transport','accessibility','hard_nos','ask_first','adventure_notes','surprise_notes','privacy_notes']){
+for(const key of ['avoid','food_needs','budget_notes','travel','transport','accessibility','physical_comfort_notes','hard_nos','ask_first','adventure_notes','surprise_notes','privacy_notes']){
   result=runtime.plan({...profile,[key]:'Private requirement'},candidates,{},today);
   assert.equal(result.review.length,1);assert.deepEqual(result.ordered,[]);
   assert(!JSON.stringify(result).includes('Private requirement'));

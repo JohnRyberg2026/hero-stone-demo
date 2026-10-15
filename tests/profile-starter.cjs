@@ -23,7 +23,28 @@ const read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
  assert.equal(run('current'),'starter_context');assert.equal(button('My partner').getAttribute('aria-pressed'),'true');assert.equal(button('Family').getAttribute('aria-pressed'),'true');
  assert.equal(button('Friends').getAttribute('aria-pressed'),'false');
  // Skip preserves answers already given, and all other options stay unknown.
- await button('Skip for Now').onclick();assert.equal(run('current'),'starter_pause');assert.deepEqual(Array.from(read('planning_for')),['My partner','Family']);
+ await button('Skip for Now').onclick();assert.equal(run('current'),'starter_connection');assert.deepEqual(Array.from(read('planning_for')),['My partner','Family']);
+
+ // Step 4 supports several connection styles and a private optional quick-add.
+ assert.equal(w.document.getElementById('question-connection_other').hidden,true);
+ button('Good conversation').click();button('Quiet time together').click();button('Something else').click();
+ assert.equal(w.document.getElementById('question-connection_other').hidden,false);
+ const other=w.document.getElementById('connection_other');other.value='Making music together';other.oninput();
+ button('Something else').click();assert.equal(w.document.getElementById('question-connection_other').hidden,false);
+ await button('Save & Continue').onclick();assert.equal(read('connection_other'),'Making music together');assert.deepEqual(Array.from(read('connection_styles')),['Good conversation','Quiet time together']);
+ // Step 5 availability is not a booking, and notice stays a single independent default.
+ assert.equal(run('current'),'starter_timing');assert(w.document.querySelector('#app').textContent.includes('never an obligation'));
+ button('Weekday evenings').click();button('Weekend mornings').click();button('My schedule changes a lot').click();
+ button('A few hours').click();button('A day or two').click();await button('Save & Continue').onclick();
+ assert.equal(read('planning_notice'),'A day or two');assert.deepEqual(Array.from(read('available_windows')),['Weekday evenings','Weekend mornings','My schedule changes a lot']);
+ // Step 6 accepts several paces and durations without modifying today's limits or older pace answers.
+ assert.equal(run('current'),'starter_energy');assert.equal(run('answers.pace'),undefined);
+ button('Easy & relaxed').click();button('It depends on the day').click();button('An hour or two').click();button('Half a day').click();
+ const discomfort=w.document.getElementById('physical_comfort_notes');discomfort.value='Standing for long periods';discomfort.oninput();
+ await button('Save & Finish Later').onclick();await run('boot()');await button('Continue Getting Started').onclick();
+ assert.equal(run('current'),'starter_energy');assert.equal(button('Easy & relaxed').getAttribute('aria-pressed'),'true');assert.equal(button('Half a day').getAttribute('aria-pressed'),'true');
+ assert.deepEqual(Array.from(read('energy_pace')),['Easy & relaxed','It depends on the day']);assert.deepEqual(Array.from(read('experience_length')),['An hour or two','Half a day']);assert.equal(read('physical_comfort_notes'),'Standing for long periods');
+ assert.equal(read('pace'),undefined);await button('Save & Continue').onclick();assert.equal(run('current'),'starter_pause');
  assert(writes.flat().every(r=>r.question_key.startsWith('account_profile_v1_')));
  // A failed save keeps the person on the current screen and can be retried.
  await run("navigate('starter_about')");fail=true;button('Stay close to home').click();await button('Save & Continue').onclick();assert.equal(run('current'),'starter_about');
@@ -33,6 +54,7 @@ const read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
  await run('boot()');await run("navigate('starter_adventure')");assert(w.document.querySelector('#app').textContent.includes('Saved earlier: Keep a little mystery'));assert.equal(w.document.querySelectorAll('[aria-label="And how much do you like surprises?"] [aria-pressed="true"]').length,0);assert.equal(read('surprise'),'Keep a little mystery');
  await run("navigate('review')");assert.equal([...w.document.querySelectorAll('dt')].filter(n=>n.textContent==='And how much do you like surprises?').length,1);
  user={id:'bob',email:'bob@example.test'};await run('boot()');assert.equal(run('current'),'welcome');await button('Get Started').onclick();assert.equal(w.document.getElementById('call_me').value,'');assert.equal(run('answers.planning_for'),undefined);
+ for(let i=0;i<6;i++)await button('Skip for Now').onclick();assert.equal(run('current'),'starter_pause');assert(Object.values(store).filter(r=>r.user_id==='bob').every(r=>['account_profile_v1_starter_resume','account_profile_v1_starter_started'].includes(r.question_key)));
  user=null;authChange('SIGNED_OUT');await new Promise(r=>setTimeout(r,10));assert(w.document.querySelector('h2').textContent.includes('Sign in'));
- console.log('PASS: approved opening/first three screens, optional exit, multi/single selection, independent surprise defaults, save/resume/retry, legacy preservation, no invites, and account isolation.');dom.window.close();
+ console.log('PASS: approved opening/first six screens, optional exit, multi/single selection, independent surprise defaults, save/resume/retry, legacy preservation, no invites, and account isolation.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});
