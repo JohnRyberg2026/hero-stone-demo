@@ -6,5 +6,6 @@
     "demo_profile_read_privacy.sql",
     "demo_profile_concurrency.sql"
   ],
-  "review": "demo_profile_access_review.md"
+  "review": "demo_profile_access_review.md",
+  "read_only_preflight": "profile_guard_preflight.sql"
 }

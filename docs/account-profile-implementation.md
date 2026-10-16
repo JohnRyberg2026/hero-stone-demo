@@ -136,3 +136,7 @@ Nine suites now run. The new local PostgreSQL test verifies trigger installation
 ## Combined database draft checkpoint
 
 All four SQL drafts now load and pass together in the isolated integration test. `database/profile_guard_bundle.json` records their order and not-deployed status. The combined flow covers owner editing and private drafts, saved partner edits before proposal/acceptance/reveal, preserved decline, eventual chosen-only sharing, and direct-access denials. Ten automated suites run. This supplements the individual tests; it does not replace production candidate-generation, independent-session contention, PostgREST, or real-device staging tests. No live database changes.
+
+## Read-only preflight checkpoint
+
+A catalog-only baseline preflight now detects changed demo function bodies, missing required columns, disabled scoped RLS, and an existing/partial guard installation. It never marks deployment ready and does not read account answers or mutate the database. Its live read-only run on October 16 matched all six baseline functions, found required columns and scoped RLS, and confirmed the draft guard remains uninstalled. Eleven local suites pass, including deliberate drift/partial-install cases. The result must be refreshed before deployment and does not replace full schema/role/policy/staging validation.
