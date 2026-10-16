@@ -203,6 +203,11 @@ let browser;
   }
   assert.equal(store.get('account_profile_v1_suggest_others').answer_json.value,'Keep DATE QUEST focused on us');assert.equal(store.get('account_profile_v1_planning_notice').answer_json.value,'A day or two');
   await page.getByRole('heading',{name:'Your profile grows with you',exact:true}).waitFor();
+  await page.getByRole('button',{name:'My Profile',exact:true}).click();await page.getByRole('heading',{name:'Choose a profile topic',exact:true}).waitFor();assert.equal(await page.locator('#profileTopicList button').count(),28);assert.equal(await page.locator('details').getAttribute('open'),null);
+  await page.getByLabel('Find a profile topic',{exact:true}).fill('No such topic');assert.equal(await page.locator('#profileTopicEmpty').isVisible(),true);await page.getByLabel('Find a profile topic',{exact:true}).fill('food');assert.equal(await page.locator('#profileTopicList button:visible').count(),1);
+  await page.locator('#profileTopicList').getByRole('button',{name:'Your Food & Dining Style',exact:true}).click();await page.getByRole('heading',{name:'Your Food & Dining Style',exact:true}).waitFor();assert.equal(await page.locator('#food_requirements').inputValue(),'Peanuts');
+  await page.getByRole('button',{name:'Save & Finish Later',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Continue Getting Started',exact:true}).click();await page.getByRole('heading',{name:'Your Food & Dining Style',exact:true}).waitFor();await page.getByRole('button',{name:'My Profile',exact:true}).click();
+  await page.getByLabel('Find a profile topic',{exact:true}).fill('');assert.equal(await page.locator('#profileTopicList button:visible').count(),28);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(process.env.TMPDIR||'/tmp','profile-topics-'+width+'.png'),fullPage:true});
   await page.getByRole('button',{name:'Review My Profile',exact:true}).click();
   await page.getByRole('button',{name:'Edit A Little About You',exact:true}).click();
   failSave=true;await page.getByLabel('What should I call you?',{exact:true}).fill('Jeffrey');
