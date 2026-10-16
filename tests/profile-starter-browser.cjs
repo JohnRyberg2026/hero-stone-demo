@@ -179,6 +179,17 @@ let browser;
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(process.env.TMPDIR||'/tmp','profile-'+shot+'-'+width+'.png'),fullPage:true});await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
   }
   assert.equal(store.get('account_profile_v1_conversation_help').answer_json.value,'No thanks');assert.equal(store.get('account_profile_v1_discovery_openness').answer_json.value,'No');
+  for(const [title,shot] of [['Social Battery & Recovery Style','recovery'],['Weather, Environment & Setting Preferences','environment'],['Transportation & Getting There Style','transportation']]){
+   await page.getByRole('heading',{name:title,exact:true}).waitFor();
+   if(shot==='recovery'){await page.getByRole('button',{name:'Head home and recharge',exact:true}).click();await page.getByRole('button',{name:'Take a break, then continue',exact:true}).click();await page.getByRole('button',{name:'One main experience is plenty',exact:true}).click();await page.getByRole('button',{name:'Yes, definitely',exact:true}).click();}
+   if(shot==='environment'){await page.getByRole('button',{name:'Outdoors in nature',exact:true}).click();await page.getByRole('button',{name:'Indoor/cozy',exact:true}).click();await page.getByRole('button',{name:"I'd rather be comfortable",exact:true}).click();await page.getByRole('button',{name:'Rain',exact:true}).click();await page.getByRole('button',{name:'Nothing in particular',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Rain',exact:true}).getAttribute('aria-pressed'),'false');await page.getByRole('button',{name:'Rain',exact:true}).click();}
+   if(shot==='transportation'){
+    await page.getByRole('button',{name:'I prefer my partner to drive',exact:true}).click();await page.getByRole('button',{name:'Rideshare/taxi',exact:true}).click();await page.getByRole('button',{name:'Scenic routes are worth extra time',exact:true}).click();await page.getByRole('button',{name:'Minimize walking from parking',exact:true}).click();await page.getByRole('button',{name:'Nothing in particular',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Minimize walking from parking',exact:true}).getAttribute('aria-pressed'),'false');await page.getByRole('button',{name:'Need room for equipment or belongings',exact:true}).click();
+    await page.getByRole('button',{name:'Save & Finish Later',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Continue Getting Started',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Rideshare/taxi',exact:true}).getAttribute('aria-pressed'),'true');assert.equal(await page.getByRole('button',{name:'Need room for equipment or belongings',exact:true}).getAttribute('aria-pressed'),'true');
+   }
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(process.env.TMPDIR||'/tmp','profile-'+shot+'-'+width+'.png'),fullPage:true});await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
+  }
+  assert.equal(store.get('account_profile_v1_breathing_room').answer_json.value,'Yes, definitely');assert.deepEqual(store.get('account_profile_v1_weather_avoid').answer_json.value,['Rain']);
   await page.getByRole('heading',{name:'Your profile grows with you',exact:true}).waitFor();
   await page.getByRole('button',{name:'Review My Profile',exact:true}).click();
   await page.getByRole('button',{name:'Edit A Little About You',exact:true}).click();

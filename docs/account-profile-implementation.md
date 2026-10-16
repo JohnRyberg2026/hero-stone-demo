@@ -4,7 +4,7 @@
 
 The approved Profile Application Flow extends through Step 28. Its architecture pause point remains Step 29. The current implementation follows that baseline incrementally; coding progress is separate from architecture approval.
 
-The opening and the first twenty-one approved screens are implemented:
+The opening and the first twenty-four approved screens are implemented:
 
 - Opening: Get Started / I’ll Do This Later; optional answers, no completion score.
 - Step 1, A Little About You: optional private call-me name and the approved multi-select free-time choices.
@@ -23,7 +23,7 @@ The opening and the first twenty-one approved screens are implemented:
 - Step 14, Personal Boundaries, Hard No’s & Safety Preferences: multiple avoidance categories, optional details, and a private marker. Nothing comes to mind right now is exclusive with positive categories and distinct from leaving the question unanswered. Changing that choice does not erase saved written details.
 - Step 15, Accessibility, Accommodations & Experience Needs: practical needs rather than diagnoses, optional details, and a private marker. No accommodations right now is exclusive with positive needs; all questions can be skipped. Written details remain independently editable.
 
-The original 17-section scaffold remains available for additional details. It must not be described as the full approved 28-step flow. Steps 22–28 still need alignment with their approved screen specifications. The final readiness transition is not implemented yet; the starter does not claim a completed profile.
+The original 17-section scaffold remains available for additional details. It must not be described as the full approved 28-step flow. Steps 25–28 still need alignment with their approved screen specifications. The final readiness transition is not implemented yet; the starter does not claim a completed profile.
 
 ## Storage and compatibility
 
@@ -72,3 +72,9 @@ Latest general invitation decline/recovery fixes from main are included. Automat
 Learning, Growth & Curiosity Style saves discovery topics, desired learning depth, and openness beyond known interests separately from existing interests and Familiar/Stretch/Wild. Surprise, Spontaneity & Control saves delegation, required advance details, and reveal timing without changing the earlier surprise default. The know-details and nothing-to-reveal options are exclusive within their own lists. Mandatory consent/safety/accessibility/cost disclosure can never be waived by these preferences. Communication & Connection Style captures multiple ways of connecting, conversation amount, and optional prompt help without relationship scoring or judging differences.
 
 Keys: `learning_discoveries`, `learning_amount`, `discovery_openness`, `surprise_delegation`, `surprise_essentials`, `surprise_reveal`, `communication_connection`, `conversation_amount`, `conversation_help`. All remain optional, owner-only, autosaved, editable, and independently resumable. Broader learning/ranking, surprise delivery, couple reconciliation, and conversation-prompt integration are pending. Required advance details pause the private sample preview until they can be verified; Nothing—keep the surprise cannot clear any other constraint. Tests cover selection exclusions, reload, preserved earlier defaults, no/skip paths, and all 21 screens at three widths. Includes current main Continue-selection and home-status visibility fixes.
+
+## Steps 22–24
+
+Social Battery & Recovery Style stores multiple recovery preferences, one usual itinerary density, and breathing-room preference. Weather, Environment & Setting Preferences keeps liked settings and weather flexibility separate from ordinary avoids; these do not create or replace hard boundaries. Transportation & Getting There Style stores multiple methods and journey preferences (several can fit different days), plus transportation considerations. Nothing in particular is exclusive within each relevant list, distinct from unknown, and cannot erase earlier access needs. Driver preferences do not assign another person or imply vehicle availability.
+
+Keys: `recovery_style`, `itinerary_density`, `breathing_room`, `setting_preferences`, `weather_flexibility`, `weather_avoid`, `transport_methods`, `journey_style`, `transport_considerations`. All remain optional/private/editable with save/resume. New transportation considerations pause unverified sample suggestions with a generic label, without exposing selected details. Ordinary weather preferences do not become safety gates. Broader recovery-aware itinerary planning, weather pivots/live conditions, route/departure guidance, driver reconciliation, and transportation booking remain pending. No schema changes, sharing, bookings, or partner assignments. All 24 screens are covered by automated and three-width browser checks.

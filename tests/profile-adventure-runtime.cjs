@@ -26,7 +26,7 @@ for(const key of ['avoid','food_needs','food_requirements','budget_notes','trave
   assert(!JSON.stringify(result).includes('Private requirement'));
 }
 // Structured needs stop unverified templates even in Wild/Just Decide mode or without a private marker.
-for(const [key,none,positive] of [['surprise_essentials','Nothing—keep the surprise','Cost'],['hard_no_categories','Nothing comes to mind right now','Crowds'],['accommodation_needs','No accommodations right now','Step-free/wheelchair-friendly access']]){
+for(const [key,none,positive] of [['transport_considerations','Nothing in particular','Minimize walking from parking'],['surprise_essentials','Nothing—keep the surprise','Cost'],['hard_no_categories','Nothing comes to mind right now','Crowds'],['accommodation_needs','No accommodations right now','Step-free/wheelchair-friendly access']]){
  for(const value of [[positive],[none,positive],'malformed value']){
   result=runtime.plan({[key]:value,exploration:'Wild',decisions:'Just Decide for Me',boundaries_private:false,accommodations_private:false},candidates,{},today);
   assert.equal(result.review.length,1);assert.deepEqual(result.ordered,[]);assert(!JSON.stringify(result).includes(positive));
@@ -36,6 +36,8 @@ for(const [key,none,positive] of [['surprise_essentials','Nothing—keep the sur
 assert.equal(runtime.plan({hard_no_categories:['Nothing comes to mind right now'],hard_no_details:'PRIVATE note'},candidates,{},today).review.length,1);
 assert.equal(runtime.plan({accommodation_needs:['No accommodations right now'],accommodation_details:'PRIVATE note'},candidates,{},today).review.length,1);
 assert.equal(runtime.plan({surprise_essentials:['Nothing—keep the surprise'],hard_no_details:'PRIVATE note'},candidates,{},today).review.length,1);
+assert.deepEqual(runtime.plan({weather_avoid:['Rain'],recovery_style:['Head home and recharge']},candidates,{},today).review,[]);
+assert.equal(runtime.plan({transport_considerations:['Nothing in particular'],accessibility:'PRIVATE access need'},candidates,{},today).review.length,1);
 // Missing and skipped information remains unknown; unrelated keys are excluded.
 const decoded=runtime.decode([
  {question_key:'account_profile_v1_interests',answer_json:{value:['Bookstores']},skipped:true},
