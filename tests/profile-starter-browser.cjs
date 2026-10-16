@@ -157,6 +157,16 @@ let browser;
   await page.getByRole('button',{name:'Save & Finish Later',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Continue Getting Started',exact:true}).click();
   await page.getByRole('heading',{name:'Accessibility, Accommodations & Experience Needs',exact:true}).waitFor();assert.equal(await page.locator('#accommodation_details').inputValue(),'PRIVATE practical access note');assert.equal(await page.getByLabel('Keep this private',{exact:true}).isChecked(),true);assert.equal(store.get('account_profile_v1_decisions').answer_json.value,'Just Decide for Me');assert.equal(store.get('account_profile_v1_boundaries_private').answer_json.value,false);
   await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
+  await page.getByRole('heading',{name:'Special Occasions, Traditions & Meaningful Dates',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Memorial/remembrance dates',exact:true}).click();await page.locator('#occasion_1_name').fill('PRIVATE tradition');await page.locator('#occasion_1_date').fill('First Sunday in May');await page.locator('#question-occasion_1_handling').getByRole('button',{name:"This matters to me, but I don't want a reminder",exact:true}).click();
+  await page.getByRole('button',{name:'Save & Finish Later',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Continue Getting Started',exact:true}).click();assert.equal(await page.locator('#occasion_1_date').inputValue(),'First Sunday in May');
+  for(const [title,shot] of [['Special Occasions, Traditions & Meaningful Dates','occasions'],['Gifts, Giving & Thoughtfulness Style','thoughtfulness'],['Memory, Keepsakes & Story Preferences','memories']]){
+   await page.getByRole('heading',{name:title,exact:true}).waitFor();
+   if(shot==='thoughtfulness'){await page.locator('#question-thoughtful_receiving').getByRole('button',{name:'I’d rather not receive gifts',exact:true}).click();await page.locator('#question-thoughtful_giving').getByRole('button',{name:'Acts of service',exact:true}).click();await page.getByRole('button',{name:'No thanks',exact:true}).click();}
+   if(shot==='memories'){await page.getByRole('button',{name:'I mostly just enjoy the moment',exact:true}).click();await page.getByRole('button',{name:'Only when I ask',exact:true}).click();await page.getByRole('button',{name:'Never',exact:true}).click();}
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(process.env.TMPDIR||'/tmp','profile-'+shot+'-'+width+'.png'),fullPage:true});await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
+  }
+  assert.equal(store.get('account_profile_v1_memory_followup').answer_json.value,'Never');
   await page.getByRole('heading',{name:'Your profile grows with you',exact:true}).waitFor();
   await page.getByRole('button',{name:'Review My Profile',exact:true}).click();
   await page.getByRole('button',{name:'Edit A Little About You',exact:true}).click();

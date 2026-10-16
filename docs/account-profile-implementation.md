@@ -1,10 +1,10 @@
 # Account-holder profile implementation
 
-## Coding checkpoint — October 15, 2026
+## Coding checkpoint — October 16, 2026
 
 The approved Profile Application Flow extends through Step 28. Its architecture pause point remains Step 29. The current implementation follows that baseline incrementally; coding progress is separate from architecture approval.
 
-The opening and the first fifteen approved screens are implemented:
+The opening and the first eighteen approved screens are implemented:
 
 - Opening: Get Started / I’ll Do This Later; optional answers, no completion score.
 - Step 1, A Little About You: optional private call-me name and the approved multi-select free-time choices.
@@ -23,7 +23,7 @@ The opening and the first fifteen approved screens are implemented:
 - Step 14, Personal Boundaries, Hard No’s & Safety Preferences: multiple avoidance categories, optional details, and a private marker. Nothing comes to mind right now is exclusive with positive categories and distinct from leaving the question unanswered. Changing that choice does not erase saved written details.
 - Step 15, Accessibility, Accommodations & Experience Needs: practical needs rather than diagnoses, optional details, and a private marker. No accommodations right now is exclusive with positive needs; all questions can be skipped. Written details remain independently editable.
 
-The original 17-section scaffold remains available for additional details. It must not be described as the full approved 28-step flow. Steps 16–28 still need alignment with their approved screen specifications. The final readiness transition is not implemented yet; the starter does not claim a completed profile.
+The original 17-section scaffold remains available for additional details. It must not be described as the full approved 28-step flow. Steps 19–28 still need alignment with their approved screen specifications. The final readiness transition is not implemented yet; the starter does not claim a completed profile.
 
 ## Storage and compatibility
 
@@ -58,3 +58,11 @@ Supported saved interests and free-experience preferences inform the private fir
 `npx playwright install chromium` followed by `npm run test:browser` checks the starter at 320px, 390px, and 1280px widths, including save/reload, selection, skipping, and failure/retry. `PROFILE_BROWSER_EXECUTABLE` optionally selects an existing Chromium executable; `PROFILE_BROWSER_ARGS` optionally provides a JSON array of launch flags. Screenshots go to the temporary directory.
 
 Real-account end-to-end verification and deployment remain separate steps. Test fixtures do not modify personal account answers.
+
+## Steps 16–18
+
+Meaningful occasions support the approved categories and two optional named items with free-form dates (no year required) and independent handling preferences, including no reminder. Private markers remain owner-only annotations. Thoughtfulness stores receiving and giving separately, with optional help preferences and no gift obligation. Memory preferences distinguish capture help from post-adventure prompts; no recap is required.
+
+New keys: `meaningful_occasions`, `occasion_1_name`, `occasion_1_date`, `occasion_1_handling`, corresponding `occasion_2_*`, `occasions_private`, `thoughtful_receiving`, `thoughtful_giving`, `thoughtful_help`, `memory_styles`, `story_help`, `memory_followup`. These are private profile preferences only. Reminder scheduling, date-driven planning, purchases, capture, sharing, and prompt delivery are not implemented or authorized by these answers. No automations are created. Broader integrations must honor no-reminder, no-gift, only-on-request, and never preferences before use.
+
+Latest general invitation decline/recovery fixes from main are included. Automated and responsive browser coverage extends through all 18 screens, including optional skips, private date persistence, independent giving/receiving, and no recap defaults.
