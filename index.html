@@ -1871,23 +1871,21 @@ $("homeContinueBtn").onclick=async()=>{
   status("homeStatus","Checking your shared HEART STONE...");
   show("homeCard",false);
 
-  // Build 42 true Continue recovery:
-  // Recover an EXISTING unfinished demo adventure first. Never fall back into
-  // a recommendation request/choice flow, because Continue must resume—not create.
+  // The latest adventure owns Continue. Never search past a closed adventure
+  // and resurrect an older draft or completion screen.
   try{
     const {data:{user}}=await sb.auth.getUser();
     const {data:existing,error:existingErr}=await sb.from("adventures")
       .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
       .eq("heart_stone_id",heartStoneId)
       .eq("is_demo",true)
-      .in("status",["proposed","active"])
       .order("created_at",{ascending:false})
       .limit(1);
 
     if(existingErr) throw existingErr;
     const adv=existing?.[0]||null;
 
-    if(adv){
+    if(adv && ["proposed","active"].includes(adv.status)){
       adventureId=adv.id;
 
       // Private unsent proposal: only its creator may resume the invitation draft.
@@ -1921,19 +1919,9 @@ $("homeContinueBtn").onclick=async()=>{
       await loadSharedDemoState();
       return;
     }
-    // Completed adventures still have a feedback screen to resume.
-    const {data:completed,error:completedErr}=await sb.from("adventures")
-      .select("id")
-      .eq("heart_stone_id",heartStoneId)
-      .eq("is_demo",true)
-      .eq("status","completed")
-      .is("demo_ready_at",null)
-      .order("created_at",{ascending:false})
-      .limit(1);
-    if(completedErr) throw completedErr;
-    const finished=completed?.[0];
-    if(finished && finished.id!==dismissedCompletedAdventureId){
-      adventureId=finished.id;
+    // Recover feedback only when the latest adventure itself is completed.
+    if(adv?.status==="completed" && !adv.demo_ready_at && adv.id!==dismissedCompletedAdventureId){
+      adventureId=adv.id;
       stepId=null;
       setAdventureFocus(true);
       show("dateInvitationCard",false);
@@ -1954,6 +1942,8 @@ $("homeContinueBtn").onclick=async()=>{
   }
 
   // No unfinished adventure exists. Do NOT reopen old recommendation choices.
+  adventureId=null;
+  stepId=null;
   homeRestingMode=true;
   localStorage.setItem("hs_home_resting_mode","1");
   show("questCard",false);
