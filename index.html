@@ -754,6 +754,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
     <button id="questBtn">Find Our Adventure</button>
     <button class="secondary hidden" id="syncPartnerBtn">Load Partner’s Adventure</button>
+    <p class="hidden" id="planningProfileReview"><a href="./account-profile.html">Review My Profile</a></p>
     <div class="status" id="questStatus">Your demo choices stay separate from your real HEART STONE history.</div>
   </section>
 
@@ -840,6 +841,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="footer">HEART STONE™ Alpha • Simulated demonstration activity is clearly marked as Demo Mode.</div>
 </div>
 
+<script src="./profile-adventure-runtime.js"></script>
+<script src="./profile-planning-guard.js"></script>
 <script>
 const SUPABASE_URL = "https://iqxhqxlcraatdheslqeo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h";
@@ -1195,8 +1198,22 @@ $("acceptInviteBtn").onclick = async()=>{
   startAutomaticPartnerSync();
 };
 
+async function allowProfilePlanning(){
+  const check=window.HeartStonePlanningGuard?.create(sb,window.HeartStoneProfileRuntime,()=>heartStoneId);
+  const result=check?await check():{allowed:false,code:'unavailable'};
+  show("planningProfileReview",!result.allowed);
+  if(result.allowed)return true;
+  // This status stays on the current device; private profile details never enter a shared request.
+  show("recommendationsCard",false);
+  show("questCard",true);
+  const message=result.code==='requirements'?'Your saved requirements come first. This demo cannot verify them yet, so new suggestions are paused. You can review My Account-Holder Profile in Profile & Settings; you do not need to remove your boundaries.':result.code==='signed_out'?'Please sign in before planning an adventure.':result.code==='changed'?'Your account or connection changed. Please try planning again.':'Your saved profile could not be checked. Please try again before planning.';
+  status("questStatus",message);
+  return false;
+}
+
 $("questBtn").onclick = async()=>{
   if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
+  if(!await allowProfilePlanning())return;
   status("questStatus","HEART STONE is choosing...");
   const moods=$("mood").value.split(",").map(x=>x.trim()).filter(Boolean);
   const {data,error}=await sb.rpc("begin_demo_quest",{
@@ -1231,6 +1248,7 @@ async function loadRecommendations(){
     show("recommendationsCard",false);
     return;
   }
+  if(!await allowProfilePlanning())return;
   const {data,error}=await sb.from("recommendations").select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at,source_discovery_candidate_id").eq("request_id",requestId).order("created_at");
   if(error) return status("questStatus","Recommendation load error: "+error.message);
   (data||[]).forEach(r=>{
@@ -1969,6 +1987,7 @@ $("syncPartnerBtn").onclick=loadSharedDemoState;
 $("refreshPartnerBtn").onclick=loadSharedDemoState;
 $("moreRecommendationsBtn").onclick=async()=>{
   if(!requestId || privateRequestId!==requestId) return;
+  if(!await allowProfilePlanning())return;
   status("questStatus","Finding three fresh ideas just for you...");
   const {error}=await sb.rpc("refresh_demo_recommendations",{
     p_request_id:requestId,
@@ -1985,6 +2004,7 @@ $("moreRecommendationsBtn").onclick=async()=>{
 };
 
 async function chooseRecommendation(r){
+  if(!await allowProfilePlanning())return;
   privateRequestId=null;
   const {data,error}=await sb.rpc("propose_demo_recommendation",{p_recommendation_id:r.id});
   if(error) return alert("Choose error: "+error.message);
