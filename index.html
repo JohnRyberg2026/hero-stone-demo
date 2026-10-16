@@ -71,6 +71,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .home-actions button{margin:0;padding:15px 14px;font-size:16px}
 .home-secondary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .home-secondary button{margin:0}
+#homeStatus{
+  margin-top:18px;padding:17px 18px;
+  font-size:17px;font-weight:750;line-height:1.5;
+  color:#2d241f;background:#fff4dc;
+  border:2px solid #a56a25;border-left-width:6px;
+  text-align:center;
+}
 @media(max-width:430px){.home-secondary{grid-template-columns:1fr}.home-title{font-size:27px}}
 
 
@@ -678,7 +685,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button class="secondary" id="homeMemoriesBtn">Our Memories</button>
       <button class="secondary" id="homeStoryBtn">Our Story</button>
     </div>
-    <div class="status" id="homeStatus">Your HEART STONE is ready.</div>
+    <div class="status" id="homeStatus" role="status" aria-live="polite" aria-atomic="true">Your HEART STONE is ready.</div>
   </section>
 
 <section class="card" id="questCard">
@@ -1872,23 +1879,21 @@ $("homeContinueBtn").onclick=async()=>{
   status("homeStatus","Checking your shared HEART STONE...");
   show("homeCard",false);
 
-  // Build 42 true Continue recovery:
-  // Recover an EXISTING unfinished demo adventure first. Never fall back into
-  // a recommendation request/choice flow, because Continue must resume—not create.
+  // The latest adventure owns Continue. Never search past a closed adventure
+  // and resurrect an older draft or completion screen.
   try{
     const {data:{user}}=await sb.auth.getUser();
     const {data:existing,error:existingErr}=await sb.from("adventures")
       .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
       .eq("heart_stone_id",heartStoneId)
       .eq("is_demo",true)
-      .in("status",["proposed","active"])
       .order("created_at",{ascending:false})
       .limit(1);
 
     if(existingErr) throw existingErr;
     const adv=existing?.[0]||null;
 
-    if(adv){
+    if(adv && ["proposed","active"].includes(adv.status)){
       adventureId=adv.id;
 
       // Private unsent proposal: only its creator may resume the invitation draft.
@@ -1922,19 +1927,9 @@ $("homeContinueBtn").onclick=async()=>{
       await loadSharedDemoState();
       return;
     }
-    // Completed adventures still have a feedback screen to resume.
-    const {data:completed,error:completedErr}=await sb.from("adventures")
-      .select("id")
-      .eq("heart_stone_id",heartStoneId)
-      .eq("is_demo",true)
-      .eq("status","completed")
-      .is("demo_ready_at",null)
-      .order("created_at",{ascending:false})
-      .limit(1);
-    if(completedErr) throw completedErr;
-    const finished=completed?.[0];
-    if(finished && finished.id!==dismissedCompletedAdventureId){
-      adventureId=finished.id;
+    // Recover feedback only when the latest adventure itself is completed.
+    if(adv?.status==="completed" && !adv.demo_ready_at && adv.id!==dismissedCompletedAdventureId){
+      adventureId=adv.id;
       stepId=null;
       setAdventureFocus(true);
       show("dateInvitationCard",false);
@@ -1955,6 +1950,8 @@ $("homeContinueBtn").onclick=async()=>{
   }
 
   // No unfinished adventure exists. Do NOT reopen old recommendation choices.
+  adventureId=null;
+  stepId=null;
   homeRestingMode=true;
   localStorage.setItem("hs_home_resting_mode","1");
   show("questCard",false);

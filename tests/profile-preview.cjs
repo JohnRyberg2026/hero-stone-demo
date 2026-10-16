@@ -47,6 +47,8 @@ async function choices(){await run('boot()');run("state.step='choices';state.lim
   assert(w.document.querySelector('#app').textContent.includes('Your boundaries'));assert(!w.document.querySelector('#app').textContent.includes('Crowds'));assert(![...w.document.querySelectorAll('button')].some(b=>b.textContent==='Choose this adventure'));
   rows=rows.filter(r=>!r.question_key.endsWith('hard_no_categories'));rows.push(row('accommodation_needs',['Step-free/wheelchair-friendly access']),row('accommodations_private',false));await choices();
   assert(w.document.querySelector('#app').textContent.includes('Your accessibility needs'));assert(!w.document.querySelector('#app').textContent.includes('Step-free/wheelchair-friendly access'));assert(![...w.document.querySelectorAll('button')].some(b=>b.textContent==='Choose this adventure'));
+  rows=rows.filter(r=>!r.question_key.endsWith('accommodation_needs'));rows.push(row('surprise_essentials',['Cost']));await choices();
+  assert(w.document.querySelector('#app').textContent.includes('Details you need beforehand'));assert(![...w.document.querySelectorAll('button')].some(b=>b.textContent==='Choose this adventure'));
   run("state.name='Alice';state.memory='Private Alice memory'");await run('flushJourney()');
   assert(writes.every(r=>!JSON.stringify(r).includes('PRIVATE medical accommodation')));
   // Failed reads do not silently become an empty profile.

@@ -167,6 +167,18 @@ let browser;
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(process.env.TMPDIR||'/tmp','profile-'+shot+'-'+width+'.png'),fullPage:true});await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
   }
   assert.equal(store.get('account_profile_v1_memory_followup').answer_json.value,'Never');
+  for(const [title,shot] of [['Learning, Growth & Curiosity Style','learning'],['Surprise, Spontaneity & Control','surprise-control'],['Communication & Connection Style','communication']]){
+   await page.getByRole('heading',{name:title,exact:true}).waitFor();
+   if(shot==='learning'){await page.getByRole('button',{name:'Learn a new skill',exact:true}).click();await page.getByRole('button',{name:'Just for fun',exact:true}).click();await page.getByRole('button',{name:'No',exact:true}).click();}
+   if(shot==='surprise-control'){
+    await page.getByRole('button',{name:'Where we go',exact:true}).click();await page.getByRole('button',{name:"I'd rather know the details",exact:true}).click();assert.equal(await page.getByRole('button',{name:'Where we go',exact:true}).getAttribute('aria-pressed'),'false');
+    await page.getByRole('button',{name:'Cost',exact:true}).click();await page.getByRole('button',{name:'Nothing—keep the surprise',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Cost',exact:true}).getAttribute('aria-pressed'),'false');await page.getByRole('button',{name:'Cost',exact:true}).click();await page.getByRole('button',{name:"Don't tell me—just lead the way",exact:true}).click();
+    await page.getByRole('button',{name:'Save & Finish Later',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Continue Getting Started',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Cost',exact:true}).getAttribute('aria-pressed'),'true');assert.equal(store.get('account_profile_v1_surprise').answer_json.value,'Give Me Some Mystery');
+   }
+   if(shot==='communication'){await page.getByRole('button',{name:'Quiet time together',exact:true}).click();await page.getByRole('button',{name:'Just being present',exact:true}).click();await page.getByRole('button',{name:'Not much — I’d rather focus on what we’re doing',exact:true}).click();await page.getByRole('button',{name:'No thanks',exact:true}).click();}
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(process.env.TMPDIR||'/tmp','profile-'+shot+'-'+width+'.png'),fullPage:true});await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
+  }
+  assert.equal(store.get('account_profile_v1_conversation_help').answer_json.value,'No thanks');assert.equal(store.get('account_profile_v1_discovery_openness').answer_json.value,'No');
   await page.getByRole('heading',{name:'Your profile grows with you',exact:true}).waitFor();
   await page.getByRole('button',{name:'Review My Profile',exact:true}).click();
   await page.getByRole('button',{name:'Edit A Little About You',exact:true}).click();
