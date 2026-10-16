@@ -140,3 +140,7 @@ All four SQL drafts now load and pass together in the isolated integration test.
 ## Read-only preflight checkpoint
 
 A catalog-only baseline preflight now detects changed demo function bodies, missing required columns, disabled scoped RLS, and an existing/partial guard installation. It never marks deployment ready and does not read account answers or mutate the database. Its live read-only run on October 16 matched all six baseline functions, found required columns and scoped RLS, and confirmed the draft guard remains uninstalled. Eleven local suites pass, including deliberate drift/partial-install cases. The result must be refreshed before deployment and does not replace full schema/role/policy/staging validation.
+
+## Server guard recovery checkpoint
+
+The main app now translates the four public profile guard sentinel errors into generic recovery messages for generation, refresh, selection, send, acceptance, and reveal. Messages never identify which account supplied a requirement or render database details. A failed selection retains its private request state so retry remains available. No success panels advance on these failures; existing decline/cancel controls remain available. Twelve local suites cover the new recovery behavior as well as the existing profile/database drafts. This is draft client integration for SQL that remains uninstalled; staging and real-account checks remain pending.

@@ -1198,6 +1198,20 @@ $("acceptInviteBtn").onclick = async()=>{
   startAutomaticPartnerSync();
 };
 
+function handleProfilePlanningError(error,target){
+  // Match only public sentinel messages, never render database details or identify whose answer blocked an action.
+  const message=String(error?.message||'').trim();
+  const messages={
+    PROFILE_REQUIREMENTS_UNVERIFIED:'This demo cannot verify the saved requirements for this adventure yet. This action is paused. You do not need to remove your boundaries. You can still decline or cancel.',
+    PLANNING_RETRY_REQUIRED:'Planning could not safely finish. Please try this action again. Nothing was confirmed.',
+    PLANNING_UNAVAILABLE:'This connection is not ready for planning. Refresh your connection before trying again.',
+    AUTH_REQUIRED:'Please sign in again before continuing.'
+  };
+  if(!Object.prototype.hasOwnProperty.call(messages,message))return false;
+  status(target,messages[message]);
+  return true;
+}
+
 async function allowProfilePlanning(){
   const check=window.HeartStonePlanningGuard?.create(sb,window.HeartStoneProfileRuntime,()=>heartStoneId);
   const result=check?await check():{allowed:false,code:'unavailable'};
@@ -1228,6 +1242,7 @@ $("questBtn").onclick = async()=>{
     p_limit:3
   });
   if(error){
+    if(handleProfilePlanningError(error,"questStatus"))return;
     if((error.message||"").includes("ACTIVE_ADVENTURE_ALREADY_EXISTS")){
       status("questStatus","You already have an adventure in progress. Loading it now...");
       const loaded=await loadExistingActiveDemoAdventure();
@@ -1995,6 +2010,7 @@ $("moreRecommendationsBtn").onclick=async()=>{
     p_limit:3
   });
   if(error){
+    if(handleProfilePlanningError(error,"questStatus"))return;
     status("questStatus","Refresh error: "+error.message);
     return;
   }
@@ -2005,9 +2021,12 @@ $("moreRecommendationsBtn").onclick=async()=>{
 
 async function chooseRecommendation(r){
   if(!await allowProfilePlanning())return;
-  privateRequestId=null;
   const {data,error}=await sb.rpc("propose_demo_recommendation",{p_recommendation_id:r.id});
-  if(error) return alert("Choose error: "+error.message);
+  if(error){
+    if(handleProfilePlanningError(error,"questStatus"))return;
+    return alert("Choose error: "+error.message);
+  }
+  privateRequestId=null;
   adventureId=data;
   setAdventureFocus(true); show("adventureCard",false); show("dateInvitationCard",true);
   show("senderStylePanel",true); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",false);
@@ -2048,7 +2067,7 @@ $("sendInvitationBtn").onclick=async()=>{
   if(!adventureId)return;
   status("inviteStatus","Sealing your HEART STONE invitation...");
   const {error}=await sb.rpc("set_demo_invitation_style",{p_adventure_id:adventureId,p_style:selectedInvitationStyle});
-  if(error)return status("inviteStatus","Invitation error: "+error.message);
+  if(error){ if(handleProfilePlanningError(error,"inviteStatus"))return; return status("inviteStatus","Invitation error: "+error.message); }
   show("senderStylePanel",false); status("inviteStatus","Invitation sent ❤️ Waiting for your partner to open it.");
 };
 $("openInvitationBtn").onclick=async()=>{
@@ -2099,7 +2118,7 @@ $("acceptDateBtn").onclick=async()=>{
   if(!adventureId) return;
   status("inviteStatus","Accepting your date invitation...");
   const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:adventureId,p_accept:true});
-  if(error) return status("inviteStatus","Invitation error: "+error.message);
+  if(error){ if(handleProfilePlanningError(error,"inviteStatus"))return; return status("inviteStatus","Invitation error: "+error.message); }
   show("openedInvitationPanel",false); show("acceptedPanel",true);
   $("acceptedTitle").textContent="❤️ IT'S A DATE";
   $("acceptedMessage").textContent="Your adventure is waiting...";
@@ -2114,7 +2133,7 @@ $("revealAdventureBtn").onclick=async()=>{
   if(!adventureId)return;
   status("inviteStatus","Revealing your adventure...");
   const {error}=await sb.rpc("reveal_demo_adventure",{p_adventure_id:adventureId});
-  if(error)return status("inviteStatus","Reveal error: "+error.message);
+  if(error){ if(handleProfilePlanningError(error,"inviteStatus"))return; return status("inviteStatus","Reveal error: "+error.message); }
   show("dateInvitationCard",false);
   await loadExistingActiveDemoAdventure();
 };
@@ -2126,7 +2145,7 @@ $("declineDateBtn").onclick=async()=>{
   status("inviteStatus","Sending your response...");
   try{
     const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:declinedId,p_accept:false});
-    if(error) return status("inviteStatus","Invitation error: "+error.message);
+    if(error){ if(handleProfilePlanningError(error,"inviteStatus"))return; return status("inviteStatus","Invitation error: "+error.message); }
     const {data:adv,error:loadError}=await sb.from("adventures")
       .select("id,status,created_by_user_id,invitation_style,invitation_accepted_at")
       .eq("id",declinedId).maybeSingle();
