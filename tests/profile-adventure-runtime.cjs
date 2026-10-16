@@ -38,6 +38,10 @@ assert.equal(runtime.plan({accommodation_needs:['No accommodations right now'],a
 assert.equal(runtime.plan({surprise_essentials:['Nothing—keep the surprise'],hard_no_details:'PRIVATE note'},candidates,{},today).review.length,1);
 assert.deepEqual(runtime.plan({weather_avoid:['Rain'],recovery_style:['Head home and recharge']},candidates,{},today).review,[]);
 assert.equal(runtime.plan({transport_considerations:['Nothing in particular'],accessibility:'PRIVATE access need'},candidates,{},today).review.length,1);
+for(const n of [1,2])for(const feedback of ['Not for us','Never suggest again']){
+ result=runtime.plan({['past_place_'+n+'_name']:'PRIVATE venue',['past_place_'+n+'_feedback']:feedback,place_discovery:'Keep surprising us',exploration:'Wild'},candidates,{},today);assert.deepEqual(result.ordered,[]);assert(result.review.includes('Places you don’t want repeated'));assert(!JSON.stringify(result).includes('PRIVATE venue'));
+}
+assert.deepEqual(runtime.plan({past_place_1_name:'PRIVATE favorite',past_place_1_feedback:'Loved it — bring us back',cost_change_handling:'I’m flexible for something special'},candidates,{},today).review,[]);
 // Missing and skipped information remains unknown; unrelated keys are excluded.
 const decoded=runtime.decode([
  {question_key:'account_profile_v1_interests',answer_json:{value:['Bookstores']},skipped:true},

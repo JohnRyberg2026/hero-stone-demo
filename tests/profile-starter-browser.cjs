@@ -190,6 +190,18 @@ let browser;
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(process.env.TMPDIR||'/tmp','profile-'+shot+'-'+width+'.png'),fullPage:true});await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
   }
   assert.equal(store.get('account_profile_v1_breathing_room').answer_json.value,'Yes, definitely');assert.deepEqual(store.get('account_profile_v1_weather_avoid').answer_json.value,['Rain']);
+  for(const [title,shot] of [['Time-of-Day & Experience Timing Style','daytime'],['Familiar Places vs. New Discoveries','familiarity'],['Comfort With Cost Changes & Upgrades','upgrades'],['Who We Enjoy Experiences With','companions']]){
+   await page.getByRole('heading',{name:title,exact:true}).waitFor();
+   if(shot==='daytime'){await page.getByRole('button',{name:'Morning',exact:true}).click();await page.getByRole('button',{name:'Sunset',exact:true}).click();await page.locator('#daytime_ideas').fill('Morning markets');await page.getByRole('button',{name:'It depends',exact:true}).click();}
+   if(shot==='familiarity'){
+    await page.getByRole('button',{name:'Mix favorites with new discoveries',exact:true}).click();await page.locator('#favorite_places').fill('PRIVATE favorite park');assert.equal(await page.locator('#question-past_place_1_feedback').isVisible(),false);await page.locator('#past_place_1_name').fill('PRIVATE old venue');await page.getByRole('button',{name:'Never suggest again',exact:true}).click();await page.locator('#past_place_1_name').fill('PRIVATE different venue');assert.equal(await page.getByRole('button',{name:'Never suggest again',exact:true}).getAttribute('aria-pressed'),'false');await page.getByRole('button',{name:'Not for us',exact:true}).click();
+    await page.getByRole('button',{name:'Save & Finish Later',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Continue Getting Started',exact:true}).click();assert.equal(await page.locator('#past_place_1_name').inputValue(),'PRIVATE different venue');assert.equal(await page.getByRole('button',{name:'Not for us',exact:true}).getAttribute('aria-pressed'),'true');
+   }
+   if(shot==='upgrades'){await page.getByRole('button',{name:'Ask me first',exact:true}).click();await page.getByRole('button',{name:'Always show me the better value',exact:true}).click();await page.getByRole('button',{name:'Don’t optimize around price unless I ask',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Always show me the better value',exact:true}).getAttribute('aria-pressed'),'false');}
+   if(shot==='companions'){await page.getByRole('button',{name:'Just the two of us',exact:true}).click();await page.getByRole('button',{name:'Our children',exact:true}).click();await page.getByRole('button',{name:'Very important',exact:true}).click();await page.getByRole('button',{name:'Keep DATE QUEST focused on us',exact:true}).click();}
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(process.env.TMPDIR||'/tmp','profile-'+shot+'-'+width+'.png'),fullPage:true});await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
+  }
+  assert.equal(store.get('account_profile_v1_suggest_others').answer_json.value,'Keep DATE QUEST focused on us');assert.equal(store.get('account_profile_v1_planning_notice').answer_json.value,'A day or two');
   await page.getByRole('heading',{name:'Your profile grows with you',exact:true}).waitFor();
   await page.getByRole('button',{name:'Review My Profile',exact:true}).click();
   await page.getByRole('button',{name:'Edit A Little About You',exact:true}).click();

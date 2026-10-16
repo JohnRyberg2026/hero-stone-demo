@@ -25,7 +25,8 @@
       if(!Array.isArray(value))return true;
       return value.some(option=>option!==rule.none);
     }).map(([,rule])=>rule.label);
-    return [...written,...structured];
+    const excludedPlaces=[1,2].some(n=>['Not for us','Never suggest again'].includes(profile['past_place_'+n+'_feedback']));
+    return [...written,...structured,...(excludedPlaces?['Places you don’t want repeated']:[])];
   }
   function interests(profile, currentLikes){
     const selected=Array.isArray(profile.interests)?profile.interests:[];
