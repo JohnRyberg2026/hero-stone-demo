@@ -148,3 +148,7 @@ The main app now translates the four public profile guard sentinel errors into g
 ## Optional exit during save failure
 
 A failed profile save now exposes Leave without saving alongside the existing retry path. Confirmation explains that previously saved answers remain and unconfirmed changes may be lost. Canceling preserves the pending edits. Confirming invalidates queued jobs, clears the local pending queue and autosave timer, and returns home without deleting any saved rows. Departure is blocked while an active save is running. Account reload hides the escape action again. Local tests cover both confirmation outcomes, preserved stored answers, and no later queued write. No live changes or invitation-design changes.
+
+## Profile keyboard focus checkpoint
+
+Leave Unanswered now has a question-specific accessible name and restores focus to the replacement control after the screen refresh. Save & Finish Later focuses the overview heading, matching normal screen navigation. Automated DOM checks cover both paths. The separately merged personal invitation opening preview from main is included unchanged. All changes remain draft-only.

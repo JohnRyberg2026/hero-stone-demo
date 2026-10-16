@@ -24,6 +24,8 @@ let browser;
   assert.equal(await page.getByRole('button',{name:'Retry Save',exact:true}).count(),0);
   await page.getByRole('button',{name:'Get Started',exact:true}).click();
   await page.getByRole('heading',{name:'A Little About You',exact:true}).waitFor();
+  await page.locator('#clear-call_me').click();
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'clear-call_me');
   await page.getByLabel('What should I call you?',{exact:true}).fill('John');
   await page.getByRole('button',{name:'Get outside',exact:true}).click();
   await page.getByRole('button',{name:'Food & dining',exact:true}).click();

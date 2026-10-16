@@ -151,8 +151,9 @@ async function navigate(destination){
   }else if(sections.some(s=>s.id===destination)){
     stage('resume',destination);if(!await flush())return;
   }
-  current=destination;render();$('app').querySelector('h2')?.focus();
+  current=destination;render();focusProfileHeading();
 }
+function focusProfileHeading(){$('app').querySelector('h2')?.focus();}
 function render(){
   $('app').replaceChildren();
   if(loading)return;
@@ -218,11 +219,11 @@ function render(){
           const ordered=document.createElement('div');ordered.id=q.key+'-order';ordered.className='preference-order';box.append(ordered);
         }
       }
-      box.append(button('Leave Unanswered',()=>{stage(q.key,null,q.kind);if(q.clearsKey)stage(q.clearsKey,null,'single_choice');render();}));c.append(box);if(q.orderKey)renderPreferenceOrder(q);
+      const clear=button('Leave Unanswered',()=>{stage(q.key,null,q.kind);if(q.clearsKey)stage(q.clearsKey,null,'single_choice');render();$('clear-'+q.key)?.focus();});clear.id='clear-'+q.key;clear.setAttribute('aria-label','Leave Unanswered: '+q.label);box.append(clear);c.append(box);if(q.orderKey)renderPreferenceOrder(q);
     });
     if(s.id==='starter_context'){const p=paragraph('When your partner has their own profile, I can bring both of your preferences together—without either of you having to give up what matters to you.','muted');p.id='companionNote';p.hidden=!(answers.planning_for||[]).includes('My partner');c.append(p);}
     const sequence=isStarter?starterScreens:sections,index=sequence.indexOf(s),next=sequence[index+1]?.id || (isStarter?'starter_pause':'review');const row=document.createElement('div');row.className='row';
-    row.append(button('Save & Continue',()=>navigate(next),true),button('Skip for Now',()=>navigate(next)),button('Save & Finish Later',async()=>{if(await flush()){current='overview';render();note('Saved. Return whenever you want.');}}),button('Back',()=>navigate(sequence[index-1]?.id || (isStarter?'welcome':'overview'))));c.append(row);
+    row.append(button('Save & Continue',()=>navigate(next),true),button('Skip for Now',()=>navigate(next)),button('Save & Finish Later',async()=>{if(await flush()){current='overview';render();focusProfileHeading();note('Saved. Return whenever you want.');}}),button('Back',()=>navigate(sequence[index-1]?.id || (isStarter?'welcome':'overview'))));c.append(row);
   }
   if(current!=='welcome'||retryNeeded){const row=document.createElement('div');row.className='row';const retry=button('Retry Save',()=>flush());retry.id='retrySave';retry.hidden=!retryNeeded;row.append(retry);if(current!=='overview')row.append(button('My Profile',()=>navigate('overview')));$('app').append(row);}
 }

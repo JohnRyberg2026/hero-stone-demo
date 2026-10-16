@@ -17,7 +17,8 @@ const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:
  await run('boot()');await run("navigate(answers.resume)");assert.equal(btn('Nature').getAttribute('aria-pressed'),'true');
  fail=true;btn('Music').click();await run("navigate('avoid')");assert.equal(run('current'),'interests');assert(w.document.getElementById('status').textContent.includes('Not saved'));
  fail=false;await run('flush()');assert(read('interests').includes('Music'));
- btn('Leave Unanswered').click();await run('flush()');assert.equal(read('interests'),null);
+ btn('Leave Unanswered').click();assert.equal(w.document.activeElement.id,'clear-interests');assert(w.document.activeElement.getAttribute('aria-label').includes('Leave Unanswered:'));await run('flush()');assert.equal(read('interests'),null);
+ btn('Save & Finish Later').click();await run('flush()');await new Promise(r=>setTimeout(r,0));assert.equal(w.document.activeElement.textContent,'Your living profile');
  await run("navigate('avoid')");run("stage('avoid','Loud crowds')");btn('Skip for Now').click();await run('flush()');assert.equal(read('avoid'),'Loud crowds');
  // Waiting edits must never migrate to another person's account.
  run("stage('food_likes','Alice private note')");user={id:'bob',email:'bob@example.test'};await run('boot()');assert.equal(run('answers.food_likes'),undefined);assert(writes.every(b=>b.every(r=>r.user_id==='alice')));
