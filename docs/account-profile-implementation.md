@@ -144,3 +144,7 @@ A catalog-only baseline preflight now detects changed demo function bodies, miss
 ## Server guard recovery checkpoint
 
 The main app now translates the four public profile guard sentinel errors into generic recovery messages for generation, refresh, selection, send, acceptance, and reveal. Messages never identify which account supplied a requirement or render database details. A failed selection retains its private request state so retry remains available. No success panels advance on these failures; existing decline/cancel controls remain available. Twelve local suites cover the new recovery behavior as well as the existing profile/database drafts. This is draft client integration for SQL that remains uninstalled; staging and real-account checks remain pending.
+
+## Optional exit during save failure
+
+A failed profile save now exposes Leave without saving alongside the existing retry path. Confirmation explains that previously saved answers remain and unconfirmed changes may be lost. Canceling preserves the pending edits. Confirming invalidates queued jobs, clears the local pending queue and autosave timer, and returns home without deleting any saved rows. Departure is blocked while an active save is running. Account reload hides the escape action again. Local tests cover both confirmation outcomes, preserved stored answers, and no later queued write. No live changes or invitation-design changes.

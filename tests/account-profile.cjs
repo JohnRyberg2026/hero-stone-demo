@@ -26,6 +26,15 @@ const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:
  await run("navigate('review')");assert(!w.document.querySelector('progress'));assert.equal([...w.document.querySelectorAll('dt')].filter(n=>n.textContent==='When we’re planning something for you, how adventurous do you want me to be?').length,1);
  // Content is rendered as text, including user-entered markup.
  run("stage('avoid','<img src=x onerror=alert(1)>')");await run('flush()');await run("navigate('review')");assert.equal(w.document.querySelectorAll('img').length,0);
+ // A failed save never traps the person: canceling departure preserves edits; explicit departure drops only the local queue.
+ fail=true;run("stage('food_likes','Unsaved departure draft')");await run('flush()');
+ assert.equal(w.document.getElementById('leaveUnsaved').hidden,false);
+ let departures=0;w.confirm=()=>false;w.testDeparture=()=>departures++;run('returnToHeartStone=testDeparture');
+ assert.equal(run('leaveWithoutSaving()'),false);assert.equal(departures,0);assert(run('pending.has("food_likes")'));
+ const savedBefore=read('food_likes'),writeCount=writes.length;
+ w.confirm=()=>true;assert.equal(run('leaveWithoutSaving()'),true);assert.equal(departures,1);assert.equal(run('pending.size'),0);assert.equal(read('food_likes'),savedBefore);
+ await run('flush()');assert.equal(writes.length,writeCount);assert.equal(w.document.getElementById('leaveUnsaved').hidden,true);
+ fail=false;await run('boot()');assert.notEqual(run('answers.food_likes'),'Unsaved departure draft');
  user=null;await run('boot()');assert(w.document.querySelector('h2').textContent.includes('Sign in'));assert.equal(run('owner'),null);
  console.log('PASS: save/resume, selection, skip preservation, unknown reset, failed-save recovery, serialized edits, account isolation, safe rendering, sign-out.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

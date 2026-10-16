@@ -214,9 +214,14 @@ let browser;
   await page.getByRole('button',{name:'Save & Continue',exact:true}).click();
   await page.getByRole('button',{name:'Retry Save',exact:true}).waitFor();
   assert.equal(await page.getByRole('heading',{name:'A Little About You',exact:true}).count(),1);
+  assert(await page.getByRole('button',{name:'Leave without saving',exact:true}).isVisible());
+  page.once('dialog',dialog=>dialog.dismiss());
+  await page.getByRole('button',{name:'Leave without saving',exact:true}).click();
+  assert(await page.getByLabel('What should I call you?',{exact:true}).isVisible());
   failSave=false;await page.getByRole('button',{name:'Retry Save',exact:true}).click();
   await page.waitForFunction(()=>document.getElementById('status').textContent==='Saved to your private account.');
   assert.equal(await page.getByRole('button',{name:'Retry Save',exact:true}).isVisible(),false);
+  assert.equal(await page.getByRole('button',{name:'Leave without saving',exact:true}).isVisible(),false);
   assert.equal(store.get('account_profile_v1_call_me').answer_json.value,'Jeffrey');
   assert.equal(await page.getByRole('progressbar').count(),0);assert.deepEqual(errors,[]);await browser.close();browser=null;
  }

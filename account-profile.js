@@ -69,7 +69,7 @@ const reviewSections=[...starterScreens,...sections.map(s=>({...s,questions:s.qu
 const $ = id => document.getElementById(id);
 let owner=null, generation=0, answers={}, pending=new Map(), queue=Promise.resolve(), timer=null, current='overview', loading=true, saving=0, retryNeeded=false;
 function note(message){$('status').textContent=message;}
-function retryState(value){retryNeeded=value;if($('retrySave'))$('retrySave').hidden=!value;}
+function retryState(value){retryNeeded=value;if($('retrySave'))$('retrySave').hidden=!value;$('leaveUnsaved').hidden=!value;}
 function button(label, action, primary=false){const b=document.createElement('button');b.type='button';b.textContent=label;if(primary)b.className='primary';b.onclick=action;return b;}
 function paragraph(message, className=''){const p=document.createElement('p');p.textContent=message;p.className=className;return p;}
 function questionVisible(q){if(!q.showWhen)return true;if(q.showWhen.nonempty)return typeof answers[q.showWhen.key]==='string'&&answers[q.showWhen.key].trim().length>0;if(q.showWhen.oneOf)return q.showWhen.oneOf.includes(answers[q.showWhen.key]);return (answers[q.showWhen.key]||[]).includes(q.showWhen.includes)||(typeof answers[q.key]==='string'&&answers[q.key].trim().length>0);}
@@ -137,7 +137,7 @@ async function flush(){
       if(token!==generation)return false;
       for(const [key,a] of batch)if(!pending.has(key))pending.set(key,a);
       retryState(true);
-      note('Not saved: '+e.message+' Use Retry Save before leaving.');
+      note('Not saved: '+e.message+' You can retry, or choose Leave without saving.');
       return false;
     }finally{saving--;}
   };
@@ -227,7 +227,7 @@ function render(){
   if(current!=='welcome'||retryNeeded){const row=document.createElement('div');row.className='row';const retry=button('Retry Save',()=>flush());retry.id='retrySave';retry.hidden=!retryNeeded;row.append(retry);if(current!=='overview')row.append(button('My Profile',()=>navigate('overview')));$('app').append(row);}
 }
 async function boot(){
-  const token=++generation;owner=null;answers={};pending.clear();clearTimeout(timer);retryNeeded=false;loading=true;render();$('identity').textContent='';note('Loading your private profile…');
+  const token=++generation;owner=null;answers={};pending.clear();clearTimeout(timer);retryState(false);loading=true;render();$('identity').textContent='';note('Loading your private profile…');
   try{
     const {data,error}=await sb.auth.getUser();if(error)throw error;if(token!==generation)return;
     if(!data?.user){loading=false;note('Sign in to begin or resume.');render();return;}
@@ -240,7 +240,16 @@ async function boot(){
     owner=user;loading=false;current=answers.starter_started||answers.resume?'overview':'welcome';$('identity').textContent='Signed in as '+(data.user.email||'your account');note('Your private profile is ready.');render();
   }catch(e){if(token!==generation)return;note('Could not load your profile: '+e.message);const c=card('Try loading again');c.append(button('Retry Load',()=>boot()));}
 }
-async function leaveProfile(){if(loading&&!owner){location.href='./index.html';return;}if(await flush())location.href='./index.html';}
+function returnToHeartStone(){location.href='./index.html';}
+async function leaveProfile(){if(loading&&!owner){returnToHeartStone();return;}if(await flush())returnToHeartStone();}
+function leaveWithoutSaving(){
+  if(!retryNeeded || saving)return false;
+  if(!window.confirm('Leave without saving your latest changes? Previously saved answers will remain. Changes not confirmed as saved may be lost.'))return false;
+  // Invalidate queued jobs and stop autosave before leaving; never delete saved account answers.
+  generation++;clearTimeout(timer);pending.clear();retryState(false);
+  returnToHeartStone();return true;
+}
+$('leaveUnsaved').onclick=leaveWithoutSaving;
 $('home').addEventListener('click',async e=>{e.preventDefault();await leaveProfile();});
 window.addEventListener('beforeunload',e=>{if(pending.size||saving){e.preventDefault();e.returnValue='';}});
 sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(event==='SIGNED_IN'&&session?.user?.id!==owner))setTimeout(()=>boot(),0);});
