@@ -34,6 +34,9 @@ async function choices(){await run('boot()');run("state.step='choices';state.lim
   headings=[...w.document.querySelectorAll('#app h2')].map(h=>h.textContent);
   assert.equal(headings[1],'A story around the corner');
   assert.equal(rows[0].answer_json.value[0],'Nature');
+  rows.push(row('enjoyed_interests',['Paranormal & unusual experiences']),row('curious_interests','Bookstores'));run('state.likes={}');await choices();headings=[...w.document.querySelectorAll('#app h2')].map(h=>h.textContent);assert.equal(headings[1],'A place with a story');assert(!w.document.querySelector('#app').textContent.includes('Paranormal & unusual experiences'));
+  run("state.likes={'Paranormal stories':'skip'};render()");headings=[...w.document.querySelectorAll('#app h2')].map(h=>h.textContent);assert.equal(headings[1],'A story around the corner');assert.deepEqual(Array.from(run('HeartStoneProfileRuntime.interests(profileValues,state.likes)')),[]);
+  rows=rows.filter(r=>!r.question_key.endsWith('enjoyed_interests')&&!r.question_key.endsWith('curious_interests'));
   // Written needs pause suggestions and their contents never enter markup or saved journeys.
   rows.push(row('accessibility','PRIVATE medical accommodation'));
   await choices();assert(w.document.querySelector('#app').textContent.includes('Your saved requirements come first'));

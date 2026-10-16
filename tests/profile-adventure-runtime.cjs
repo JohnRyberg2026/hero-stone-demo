@@ -57,3 +57,11 @@ assert.deepEqual(runtime.plan({food_dislikes:'Olives'},candidates,{},today).revi
 assert.deepEqual(runtime.interests({curious_interests:'Nature and Bookstores'},{}),[]);
 assert.deepEqual(runtime.interests({interests:['Nature'],curious_interests:'Bookstores'},{}),['Nature']);
 console.log('PASS: saved-interest ordering, explicit overrides, free-only constraints, strict time/walking limits, unknowns, and every written-requirement gate.');
+
+// Approved enjoyment categories inform only their supported sample tags; curiosity never becomes a like.
+assert.deepEqual(runtime.interests({enjoyed_interests:['Nature & wildlife','Hiking & exploring','Local history & hidden places','Paranormal & unusual experiences','Volunteering & community','Live music & concerts','Unknown'],curious_interests:'Bookstores'},{}),['Nature','Walks','Local history','Paranormal stories','Volunteering']);
+for(const value of [null,[], 'malformed'])assert.deepEqual(runtime.interests({interests:['Nature'],enjoyed_interests:value},{}),[]);
+for(const value of ['dislike','unsure','skip'])assert.deepEqual(runtime.interests({enjoyed_interests:['Nature & wildlife']},{Nature:value}),[]);
+assert.deepEqual(runtime.interests({interests:['Nature'],enjoyed_interests:['Local history & hidden places']},{Nature:'like'}),['Local history','Nature']);
+result=runtime.plan({enjoyed_interests:['Nature & wildlife'],hard_no_categories:['Crowds']},candidates,{},today);assert.deepEqual(result.ordered,[]);
+result=runtime.plan({enjoyed_interests:['Hiking & exploring']},candidates,{}, {...today,walking:true});assert(!result.ordered.some(a=>a.walking));

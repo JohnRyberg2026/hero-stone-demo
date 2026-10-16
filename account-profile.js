@@ -169,7 +169,7 @@ function render(){
   }else if(current==='overview'){
     const c=card('Your living profile');
     c.append(paragraph('Start with a few helpful details. You can skip any question, stop anytime, and return to change or deepen your answers. There is no completion score.'));
-    c.append(paragraph('Your supported interests and free-experience preference can now inform the private first journey preview. Written requirements pause sample suggestions until they can be checked.','muted'));
+    c.append(paragraph('Your supported profile interests and free-experience preference can now inform the private first journey preview. Written requirements pause sample suggestions until they can be checked.','muted'));
     const row=document.createElement('div');row.className='row';
     const starterResume=starterScreens.find(s=>s.id===answers.starter_resume)?.id || 'starter_about';
     row.append(button(answers.starter_started?'Continue Getting Started':'Get Started',()=>navigate(starterResume),true));
