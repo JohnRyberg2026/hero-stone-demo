@@ -40,3 +40,13 @@ Legacy function bodies are represented by mutation-capable stubs for privilege t
 5. Test acceptance/reveal, decline/cancel/complete, history, and both-device behavior in staging with a reversible deployment/rollback plan and advisors.
 
 Apply `demo_profile_requirements_guard.sql` before `demo_profile_access_hardening.sql` only after that review. These files are proposals, not applied migrations. WORLD QUEST and unrelated services are outside this change.
+
+## Read restriction draft added
+
+`demo_profile_read_privacy.sql` adds restrictive policies rather than replacing membership predicates. Requests are creator-only. Recommendations are visible to their request creator or, for other members, only when linked to a revealed sent demo adventure (or an existing active/completed non-demo adventure). Unchosen alternatives remain private. Unsent demo adventure rows are creator-only; sent envelope rows remain available to the recipient. Demo steps stay with their creator until reveal. `get_alpha_quest_state(uuid)` loses direct client execution because its definer body can otherwise return private drafts outside RLS; current main does not call it.
+
+Local tests verify creator/recipient access before send, after send, after acceptance, and after reveal; an extra permissive recommendation policy does not bypass the restrictive filter. Inactive members, outsiders, and anonymous roles see no scoped rows. Completed/revealed shared material remains accessible to active participants rather than being treated as a private browsing draft.
+
+Important remaining limit: RLS controls rows, not individual columns. A sent adventure row still includes its existing title/source fields before reveal. This draft protects private browsing, unchosen recommendations, and unrevealed step rows; it does not certify cinematic surprise secrecy. That requires a separate sanitized envelope API or column/view design, reconciled with the ongoing invitation/story design. Read RPCs beyond the inspected state/history functions and all cross-product surfaces still require review. No live policies or data were changed.
+
+The read-only index inspection found primary-key indexes for request/adventure lookups and an existing unique partial index on `adventures.source_recommendation_id`. These support the new policy joins. The policies wrap `auth.uid()` in scalar subqueries. No production query benchmarks were run; broader read/list performance remains a staging check.
