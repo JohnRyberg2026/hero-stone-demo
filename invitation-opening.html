@@ -48,9 +48,24 @@
 <p class="helper">A surprise can stay a surprise while the practical details stay clear. HEART STONE compass guidance comes in a later part of this preview.</p>
 <div id="detailError" role="alert" class="notice"></div><div class="actions"><button class="primary" type="button" id="reviewDetails">Review Our Beginning ❤️</button><button class="secondary" type="button" id="detailsBack">Back — Our Kind of Moment</button></div><div class="exit"><button class="textbutton" type="button" data-save>Save for later on this device</button><button class="textbutton" type="button" data-cancel>Cancel invitation</button><button class="textbutton" type="button" data-home>Back to Our HEART STONE</button></div></section>
 <section class="card hidden" id="reviewScreen"><div class="eyebrow">Your first gesture</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1">A moment chosen with love</h1><p id="reviewKind"></p><div class="quote" id="reviewMessage"></div>
-<div id="reviewPlan" class="quote"></div><p>Your beginning is ready to keep. Choosing the experience and creating the finished invitation come next.</p><p class="helper">This preview ends here. No invitation has been sent.</p>
-<div class="actions"><button type="button" class="primary" data-save>Save for later on this device</button><button type="button" class="secondary" id="backKind">Back — Our Time and Place</button></div>
+<div id="reviewPlan" class="quote"></div><p>Your first gesture is taking shape. Now choose the experience you’d like to share.</p><p class="helper">Nothing has been sent.</p>
+<div class="actions"><button type="button" class="primary" id="chooseExperience">Continue — Choose Our Experience ❤️</button><button type="button" class="secondary" data-save>Save for later on this device</button><button type="button" class="secondary" id="backKind">Back — Our Time and Place</button></div>
 <div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button></div></section>
+<section class="card hidden" id="experience"><div class="eyebrow">A memory waiting to happen</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1">What shall we make of our time?</h1><p>Begin with an idea below, or make something entirely your own. Shape it to fit the time you’ve set aside.</p>
+<p class="helper">These are starting ideas. Places, availability, and costs haven’t been checked.</p>
+<div class="moment-list">
+<button type="button" class="choice" data-idea="wander" aria-pressed="false"><span>🧭</span><span>A little wander, just us<small>Explore a nearby neighborhood and find one place you’d love to return to.</small></span><span class="mark"></span></button>
+<button type="button" class="choice" data-idea="home" aria-pressed="false"><span>🕯️</span><span>Our own little hideaway<small>Make a cozy corner at home, share something delicious, and enjoy each other’s company.</small></span><span class="mark"></span></button>
+<button type="button" class="choice" data-idea="treasure" aria-pressed="false"><span>💎</span><span>Three little treasures<small>Find something beautiful, something that makes you laugh, and something that reminds you of us.</small></span><span class="mark"></span></button>
+<button type="button" class="secondary" id="ownExperience">I have my own idea</button></div>
+<label for="experienceTitle">Give our moment a name</label><input id="experienceTitle" maxlength="120" placeholder="A name that feels like us">
+<label for="experienceStory">What do you have in mind?</label><textarea id="experienceStory" maxlength="2000" placeholder="Describe the moment you’d like to share."></textarea>
+<label for="revealMode">How much shall the invitation reveal?</label><select id="revealMode"><option value="all">Share the whole idea</option><option value="hint">Give a little hint</option><option value="surprise">Keep the experience a surprise</option></select>
+<div id="hintFields" class="hidden"><label for="experienceHint">Your little hint</label><textarea id="experienceHint" maxlength="400" placeholder="Just enough to spark a little anticipation."></textarea></div>
+<p class="helper">The date, time, length, meeting place, and preparation notes stay visible with every choice. A surprise never commits your partner to intimacy or anything they don’t want.</p>
+<div class="notice" id="experienceError" role="alert"></div><div class="actions"><button type="button" class="primary" id="previewInvitation">See Our Invitation ❤️</button><button type="button" class="secondary" id="experienceBack">Back — Our Beginning</button></div>
+<div class="exit"><button type="button" class="textbutton" data-save>Save for later on this device</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button></div></section>
+<section class="card hidden" id="invitation"><div class="eyebrow">An invitation for you</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1" id="invitationTitle"></h1><div class="quote" id="invitationMessage"></div><p id="invitationStory" style="white-space:pre-wrap;overflow-wrap:anywhere"></p><div class="quote" id="invitationPlan"></div><p>A little time together. A memory waiting to happen.</p><p class="helper">Recipient preview only. Nothing has been sent. Delivery and accept, reschedule, or decline responses are still to be built.</p><div class="actions"><button type="button" class="primary" data-save>Save Invitation Draft on This Device</button><button type="button" class="secondary" id="editExperience">Back — Shape Our Experience</button><button type="button" class="textbutton" id="editPlan">Edit Our Time and Place</button></div><div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button></div></section>
 <div class="notice" id="status" role="status" aria-live="polite"></div>
 <div id="restoreBox" class="notice hidden">A beginning is saved on this device.<button type="button" class="secondary" id="restore">Resume Saved Beginning</button><button type="button" class="textbutton" id="deleteSaved">Delete Saved Beginning</button></div>
 <footer>A few thoughtful words can be the beginning of something treasured.<br>Drafts are saved only when you choose. Use a personal device for private words.</footer>
@@ -66,7 +81,7 @@ try{const raw=JSON.parse(localStorage.getItem(draftKey));if(raw&&Array.isArray(r
 function status(s){$("status").textContent=s;}
 function setPressed(button,on){button.setAttribute("aria-pressed",String(on));button.querySelector(".mark").textContent=on?"✓ Selected":"";}
 function renderSelections(){document.querySelectorAll("[data-feeling]").forEach(b=>setPressed(b,selected.has(b.dataset.feeling)));document.querySelectorAll("[data-kind]").forEach(b=>setPressed(b,b.dataset.kind===kind));$("review").disabled=!kind;}
-function screen(id){["feelings","moments","details","reviewScreen"].forEach(s=>$(s).classList.toggle("hidden",s!==id));$("suggestionBox").classList.add("hidden");status("");$(id).querySelector("h1").focus();window.scrollTo({top:0,behavior:"smooth"});}
+function screen(id){["feelings","moments","details","reviewScreen","experience","invitation"].forEach(s=>$(s).classList.toggle("hidden",s!==id));$("suggestionBox").classList.add("hidden");status("");$(id).querySelector("h1").focus();window.scrollTo({top:0,behavior:"smooth"});}
 function updateStart(){if(!edited)$("message").value=[...selected].map(k=>starts[k]).join(" ");renderSelections();}
 document.querySelectorAll("[data-feeling]").forEach(b=>b.onclick=()=>{const k=b.dataset.feeling;selected.has(k)?selected.delete(k):selected.add(k);updateStart();});
 $("message").oninput=()=>{edited=true;};
@@ -92,10 +107,36 @@ $("detailError").textContent="";
 const meeting={together:"We’ll decide together",home:"Meet at home",leave:"Leave together",place:$("meetPlace").value.trim()};
 $("reviewPlan").textContent=[$("whenMode").value==="specific"?$("momentDate").value+" at "+$("momentTime").value+" ("+$("momentZone").value.trim()+")":"Day and time: We’ll decide together","Time together: "+$("length").value,"Meeting: "+meeting[$("meetMode").value],$("preparation").value.trim()?"Before we go: "+$("preparation").value.trim():""].filter(Boolean).join("\n");
 $("reviewKind").textContent=document.querySelector('[data-kind="'+kind+'"] span:nth-child(2)').childNodes[0].textContent;$("reviewMessage").textContent=$("message").value.trim()||"A little moment for us";screen("reviewScreen");};
-function save(){try{saved={feelings:[...selected],message:$("message").value,kind,plan:planDraft()};localStorage.setItem(draftKey,JSON.stringify(saved));$("restoreBox").classList.remove("hidden");status("Your beginning is saved on this device. Nothing has been sent.");return true;}catch{status("Your beginning couldn’t be saved on this device. Your words are still here.");return false;}}
+
+const experienceIds=["experienceTitle","experienceStory","revealMode","experienceHint"];
+const ideas={
+wander:["A little wander, just us","Let’s explore a nearby neighborhood we rarely walk. We’ll each find one place worth coming back to, and follow whatever catches our eye."],
+home:["Our own little hideaway","Let’s make a cozy corner at home, share something delicious, and put the phones aside for a little time with just us."],
+treasure:["Three little treasures","Let’s find three little treasures together: something beautiful, something that makes us laugh, and something that reminds us of us. No purchases needed."]};
+let idea="";
+function renderIdeas(){document.querySelectorAll("[data-idea]").forEach(b=>setPressed(b,b.dataset.idea===idea));}
+$("chooseExperience").onclick=()=>screen("experience");
+document.querySelectorAll("[data-idea]").forEach(b=>b.onclick=()=>{if(($("experienceTitle").value.trim()||$("experienceStory").value.trim())&&!confirm("Replace your current experience name and description with this idea?"))return;idea=b.dataset.idea;[$("experienceTitle").value,$("experienceStory").value]=ideas[idea];renderIdeas();});
+$("ownExperience").onclick=()=>{idea="";renderIdeas();$("experienceTitle").focus();};
+$("experienceTitle").oninput=$("experienceStory").oninput=()=>{idea="";renderIdeas();};
+$("revealMode").onchange=()=>$("hintFields").classList.toggle("hidden",$("revealMode").value!=="hint");
+$("experienceBack").onclick=()=>screen("reviewScreen");
+$("editExperience").onclick=()=>screen("experience");
+$("editPlan").onclick=()=>screen("details");
+$("previewInvitation").onclick=()=>{
+if(!$("experienceTitle").value.trim()||!$("experienceStory").value.trim()){$("experienceError").textContent="Give your moment a name and a few words about what you have in mind.";return;}
+if($("revealMode").value==="hint"&&!$("experienceHint").value.trim()){$("experienceError").textContent="Add your little hint, or choose another reveal option.";return;}
+$("experienceError").textContent="";
+const reveal=$("revealMode").value;
+$("invitationTitle").textContent=reveal==="all"?$("experienceTitle").value.trim():"A little surprise for us";
+$("invitationMessage").textContent=$("message").value.trim()||"I’d love a little time together.";
+$("invitationStory").textContent=reveal==="all"?$("experienceStory").value.trim():reveal==="hint"?$("experienceHint").value.trim():"I have something in mind for us. The experience can stay a surprise; the details below will help you feel ready.";
+$("invitationPlan").textContent=$("reviewPlan").textContent;screen("invitation");};
+
+function save(){try{saved={feelings:[...selected],message:$("message").value,kind,plan:planDraft(),experience:Object.fromEntries(experienceIds.map(id=>[id,$(id).value]))};localStorage.setItem(draftKey,JSON.stringify(saved));$("restoreBox").classList.remove("hidden");status("Your beginning is saved on this device. Nothing has been sent.");return true;}catch{status("Your beginning couldn’t be saved on this device. Your words are still here.");return false;}}
 document.querySelectorAll("[data-save]").forEach(b=>b.onclick=save);
 $("restoreBox").classList.toggle("hidden",!saved);
-$("restore").onclick=()=>{if(!saved)return;selected=new Set(saved.feelings.filter(k=>Object.hasOwn(starts,k)));$("message").value=saved.message.slice(0,1500);kind=["everyday","date","adventure","quest","own"].includes(saved.kind)?saved.kind:"";if(saved.plan&&typeof saved.plan==="object"){detailIds.forEach(id=>{if(typeof saved.plan[id]==="string")$(id).value=saved.plan[id];});$("whenMode").onchange();$("meetMode").onchange();}edited=true;renderSelections();screen("feelings");status("Your saved beginning is ready to continue.");};
+$("restore").onclick=()=>{if(!saved)return;selected=new Set(saved.feelings.filter(k=>Object.hasOwn(starts,k)));$("message").value=saved.message.slice(0,1500);kind=["everyday","date","adventure","quest","own"].includes(saved.kind)?saved.kind:"";if(saved.experience&&typeof saved.experience==="object"){experienceIds.forEach(id=>{if(typeof saved.experience[id]==="string")$(id).value=saved.experience[id].slice(0,$(id).maxLength>0?$(id).maxLength:2000);});if(!["all","hint","surprise"].includes($("revealMode").value))$("revealMode").value="all";$("revealMode").onchange();idea="";renderIdeas();}if(saved.plan&&typeof saved.plan==="object"){detailIds.forEach(id=>{if(typeof saved.plan[id]==="string")$(id).value=saved.plan[id];});$("whenMode").onchange();$("meetMode").onchange();}edited=true;renderSelections();screen("feelings");status("Your saved beginning is ready to continue.");};
 $("deleteSaved").onclick=()=>{if(!confirm("Delete the beginning saved on this device? Your open draft will stay here."))return;try{localStorage.removeItem(draftKey);saved=null;$("restoreBox").classList.add("hidden");status("Saved beginning deleted. Your open draft is unchanged.");}catch{status("The saved beginning couldn’t be deleted. Please try again.");}};
 function exit(mode){exitMode=mode;$("exitTitle").textContent=mode==="cancel"?"Cancel this invitation?":"Leave this beginning?";$("exitCopy").textContent=mode==="cancel"?"Nothing has been sent. Discarding also removes the beginning saved on this device.":"Keep your words on this device for later, or discard this open draft.";$("exitDialog").showModal();}
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>exit("home"));
