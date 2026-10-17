@@ -235,14 +235,17 @@ async function boot(){
     const user=data.user.id;
     const result=await sb.from('user_onboarding_answers').select('question_key,answer_json,skipped').eq('user_id',user).like('question_key',PREFIX+'%');
     if(result.error)throw result.error;
-    const active=await sb.auth.getUser();if(token!==generation || active.data?.user?.id!==user)return;
+    if(!Array.isArray(result.data))throw new Error('Your saved answers could not be confirmed. Please try loading again.');
+    const active=await sb.auth.getUser();if(token!==generation)return;
+    if(active.error)throw new Error('Your account could not be verified. Please try loading again.');
+    if(active.data?.user?.id!==user)throw new Error('Your account changed while loading. Please load your profile again.');
     const allowed=new Set([...questions.map(q=>q.key),...orderingKeys,'resume','starter_resume','starter_started']);
     for(const row of result.data||[]){if(!row.question_key.startsWith(PREFIX))continue;const key=row.question_key.slice(PREFIX.length),q=questions.find(q=>q.key===key),v=row.skipped?null:row.answer_json?.value;if(!allowed.has(key))continue;if(key==='resume'){if(sections.some(s=>s.id===v))answers[key]=v;}else if(key==='starter_resume'){if(starterScreens.some(s=>s.id===v))answers[key]=v;}else if(key==='starter_started'||orderingKeys.has(key)){if(typeof v==='boolean')answers[key]=v;}else if(v===null)answers[key]=null;else if(q.kind==='boolean'&&typeof v==='boolean')answers[key]=v;else if(q.kind==='multi_choice'&&Array.isArray(v))answers[key]=[...new Set(v.filter(x=>q.options.includes(x)))];else if(q.kind==='single_choice'&&(q.options.includes(v)||q.legacyOptions?.includes(v)))answers[key]=v;else if(q.kind==='free_text'&&typeof v==='string')answers[key]=v;}
     owner=user;loading=false;current=answers.starter_started||answers.resume?'overview':'welcome';$('identity').textContent='Signed in as '+(data.user.email||'your account');note('Your private profile is ready.');render();
-  }catch(e){if(token!==generation)return;note('Could not load your profile: '+e.message);const c=card('Try loading again');c.append(button('Retry Load',()=>boot()));}
+  }catch(e){if(token!==generation)return;loading=false;note('Could not load your profile: '+e.message);const c=card('Try loading again');c.append(button('Retry Load',()=>boot()));focusProfileHeading();}
 }
 function returnToHeartStone(){location.href='./index.html';}
-async function leaveProfile(){if(loading&&!owner){returnToHeartStone();return;}if(await flush())returnToHeartStone();}
+async function leaveProfile(){if(!owner){returnToHeartStone();return;}if(await flush())returnToHeartStone();}
 function leaveWithoutSaving(){
   if(!retryNeeded || saving)return false;
   if(!window.confirm('Leave without saving your latest changes? Previously saved answers will remain. Changes not confirmed as saved may be lost.'))return false;

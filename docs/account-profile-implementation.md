@@ -152,3 +152,7 @@ A failed profile save now exposes Leave without saving alongside the existing re
 ## Profile keyboard focus checkpoint
 
 Leave Unanswered now has a question-specific accessible name and restores focus to the replacement control after the screen refresh. Save & Finish Later focuses the overview heading, matching normal screen navigation. Automated DOM checks cover both paths. The separately merged personal invitation opening preview from main is included unchanged. All changes remain draft-only.
+
+## Verified profile load recovery
+
+A missing/non-array answer response no longer becomes an empty editable profile. After reading answers, an authentication error or changed account now shows a focused Retry Load screen instead of silently leaving the page loading. Owner remains unset, so edits cannot be staged or saved until a successful reload. Tests cover both auth failures, null/malformed reads, no writes during failed loads, and successful recovery. Current main invitation timing/place and romance/intimacy preview changes are included unchanged. Draft only; no live changes.

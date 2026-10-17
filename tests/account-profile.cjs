@@ -3,8 +3,8 @@ const {JSDOM}=require('jsdom');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
 const dom=new JSDOM(fs.readFileSync(path.join(root,'account-profile.html'),'utf8'),{runScripts:'outside-only',url:'https://example.test/account-profile.html'});
-const w=dom.window;let user={id:'alice',email:'alice@example.test'},store={},fail=false,delay=0,authChange,writes=[];
-w.supabase={createClient:()=>({auth:{getUser:async()=>({data:{user}}),onAuthStateChange:fn=>authChange=fn},from:()=>{let rows=null,id=null;const b={select(){return b},eq(k,v){id=v;return b},like(){return b},upsert(r){rows=r;return b},then(resolve,reject){return (async()=>{if(rows){await new Promise(r=>setTimeout(r,delay));if(fail)return {error:{message:'offline'}};writes.push(rows);rows.forEach(r=>store[r.user_id+':'+r.question_key]=r);return {data:rows}}return {data:Object.values(store).filter(r=>r.user_id===id)};})().then(resolve,reject)}};return b}})};
+const w=dom.window;let user={id:'alice',email:'alice@example.test'},store={},fail=false,delay=0,authChange,writes=[],authReply=null,afterRead=null,readResult;
+w.supabase={createClient:()=>({auth:{getUser:async()=>authReply||({data:{user}}),onAuthStateChange:fn=>authChange=fn},from:()=>{let rows=null,id=null;const b={select(){return b},eq(k,v){id=v;return b},like(){return b},upsert(r){rows=r;return b},then(resolve,reject){return (async()=>{if(rows){await new Promise(r=>setTimeout(r,delay));if(fail)return {error:{message:'offline'}};writes.push(rows);rows.forEach(r=>store[r.user_id+':'+r.question_key]=r);return {data:rows}}if(afterRead)afterRead();return readResult!==undefined?readResult:{data:Object.values(store).filter(r=>r.user_id===id)};})().then(resolve,reject)}};return b}})};
 const vm=require('node:vm');vm.runInContext(fs.readFileSync(path.join(root,'account-profile.js'),'utf8'),dom.getInternalVMContext());
 const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
 (async()=>{
@@ -36,6 +36,16 @@ const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:
  w.confirm=()=>true;assert.equal(run('leaveWithoutSaving()'),true);assert.equal(departures,1);assert.equal(run('pending.size'),0);assert.equal(read('food_likes'),savedBefore);
  await run('flush()');assert.equal(writes.length,writeCount);assert.equal(w.document.getElementById('leaveUnsaved').hidden,true);
  fail=false;await run('boot()');assert.notEqual(run('answers.food_likes'),'Unsaved departure draft');
+ // Never treat an unconfirmed read as an empty editable profile or leave an auth race stuck loading.
+ const savedRows=JSON.stringify(store),beforeLoadWrites=writes.length;
+ for(const mode of ['auth-error','account-changed','missing-rows','malformed-rows']){
+  authReply=null;afterRead=()=>{if(mode==='auth-error')authReply={data:{user},error:{message:'unverified'}};if(mode==='account-changed')authReply={data:{user:{id:'bob'}}};};
+  readResult=mode==='missing-rows'?{data:null}:mode==='malformed-rows'?{data:{}}:undefined;
+  await run('boot()');assert.equal(run('owner'),null);assert.equal(run('loading'),false);assert(btn('Retry Load'));assert.equal(w.document.activeElement.textContent,'Try loading again');
+  const beforeDeparture=departures;await run('leaveProfile()');assert.equal(departures,beforeDeparture+1);
+  run("stage('food_likes','Must not save')");await run('flush()');assert.equal(writes.length,beforeLoadWrites);assert.equal(JSON.stringify(store),savedRows);
+ }
+ authReply=null;afterRead=null;readResult=undefined;await run('boot()');assert.equal(run('owner'),'alice');assert.equal(btn('Retry Load'),undefined);
  user=null;await run('boot()');assert(w.document.querySelector('h2').textContent.includes('Sign in'));assert.equal(run('owner'),null);
  console.log('PASS: save/resume, selection, skip preservation, unknown reset, failed-save recovery, serialized edits, account isolation, safe rendering, sign-out.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});
