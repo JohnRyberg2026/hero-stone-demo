@@ -1,0 +1,26 @@
+-- Supplements profile-server-schema.sql for testing all four drafts together.
+create table public.profiles(id uuid primary key);
+create table public.heart_stones(id uuid primary key);
+create domain public.surprise_level as text;
+create domain public.quest_reveal_mode as text;
+create domain public.wild_adventure_intensity as text;
+create domain public.wild_adventure_reveal_style as text;
+create function public.generate_recommendations_v2(uuid,integer) returns void language sql as $$ insert into public.test_writes values('generate') $$;
+create function public.accept_alpha_recommendation(uuid) returns void language sql as $$ insert into public.test_writes values('accept') $$;
+create function public.choose_recommendation(uuid) returns void language sql as $$ insert into public.test_writes values('choose') $$;
+create function public.compose_date_quest(uuid,public.surprise_level,public.quest_reveal_mode) returns void language sql as $$ insert into public.test_writes values('compose') $$;
+create function public.create_wild_adventure(uuid,uuid,uuid,public.wild_adventure_intensity,public.wild_adventure_reveal_style) returns void language sql as $$ insert into public.test_writes values('wild') $$;
+create function public.get_alpha_quest_state(uuid) returns jsonb language sql security definer as $$ select jsonb_agg(to_jsonb(r)) from public.recommendations r $$;
+alter function public.is_active_heart_stone_member(uuid) security definer;
+alter table public.recommendation_requests enable row level security;
+alter table public.recommendations enable row level security;
+alter table public.adventures enable row level security;
+alter table public.adventure_steps enable row level security;
+create policy existing_request_select on public.recommendation_requests for select to public using(public.is_active_heart_stone_member(heart_stone_id));
+create policy existing_rec_select on public.recommendations for select to public using(public.is_active_heart_stone_member(heart_stone_id));
+create policy existing_adv_select on public.adventures for select to authenticated using(public.is_active_heart_stone_member(heart_stone_id));
+create policy existing_step_select on public.adventure_steps for select to authenticated using(exists(select 1 from public.adventures a where a.id=adventure_id and public.is_active_heart_stone_member(a.heart_stone_id)));
+create policy owner_insert on public.user_onboarding_answers for insert to authenticated with check(user_id=auth.uid());
+create policy owner_update on public.user_onboarding_answers for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
+create policy owner_delete on public.user_onboarding_answers for delete to authenticated using(user_id=auth.uid());
+grant all on public.recommendation_requests,public.recommendations,public.adventures,public.adventure_steps,public.user_onboarding_answers to anon,authenticated;

@@ -1,0 +1,11 @@
+{
+  "status": "draft_not_deployed",
+  "order": [
+    "demo_profile_requirements_guard.sql",
+    "demo_profile_access_hardening.sql",
+    "demo_profile_read_privacy.sql",
+    "demo_profile_concurrency.sql"
+  ],
+  "review": "demo_profile_access_review.md",
+  "read_only_preflight": "profile_guard_preflight.sql"
+}
