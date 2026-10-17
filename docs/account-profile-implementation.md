@@ -156,3 +156,7 @@ Leave Unanswered now has a question-specific accessible name and restores focus 
 ## Verified profile load recovery
 
 A missing/non-array answer response no longer becomes an empty editable profile. After reading answers, an authentication error or changed account now shows a focused Retry Load screen instead of silently leaving the page loading. Owner remains unset, so edits cannot be staged or saved until a successful reload. Tests cover both auth failures, null/malformed reads, no writes during failed loads, and successful recovery. Current main invitation timing/place and romance/intimacy preview changes are included unchanged. Draft only; no live changes.
+
+## Exact save confirmation checkpoint
+
+Autosave now checks that the response contains every submitted answer key exactly once, rather than accepting a matching row count. Missing, duplicate, unrelated, null, or malformed confirmations preserve the retry batch and show an unconfirmed-save message. Reordered valid responses succeed. An unconfirmed response may follow a committed write; retry is the same owner-scoped idempotent upsert, and the UI does not claim the database rejected or rolled back those writes. Local tests cover these cases. No live changes.

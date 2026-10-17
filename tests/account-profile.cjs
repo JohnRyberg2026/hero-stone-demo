@@ -3,8 +3,8 @@ const {JSDOM}=require('jsdom');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
 const dom=new JSDOM(fs.readFileSync(path.join(root,'account-profile.html'),'utf8'),{runScripts:'outside-only',url:'https://example.test/account-profile.html'});
-const w=dom.window;let user={id:'alice',email:'alice@example.test'},store={},fail=false,delay=0,authChange,writes=[],authReply=null,afterRead=null,readResult;
-w.supabase={createClient:()=>({auth:{getUser:async()=>authReply||({data:{user}}),onAuthStateChange:fn=>authChange=fn},from:()=>{let rows=null,id=null;const b={select(){return b},eq(k,v){id=v;return b},like(){return b},upsert(r){rows=r;return b},then(resolve,reject){return (async()=>{if(rows){await new Promise(r=>setTimeout(r,delay));if(fail)return {error:{message:'offline'}};writes.push(rows);rows.forEach(r=>store[r.user_id+':'+r.question_key]=r);return {data:rows}}if(afterRead)afterRead();return readResult!==undefined?readResult:{data:Object.values(store).filter(r=>r.user_id===id)};})().then(resolve,reject)}};return b}})};
+const w=dom.window;let user={id:'alice',email:'alice@example.test'},store={},fail=false,delay=0,authChange,writes=[],authReply=null,afterRead=null,readResult,saveReply=null;
+w.supabase={createClient:()=>({auth:{getUser:async()=>authReply||({data:{user}}),onAuthStateChange:fn=>authChange=fn},from:()=>{let rows=null,id=null;const b={select(){return b},eq(k,v){id=v;return b},like(){return b},upsert(r){rows=r;return b},then(resolve,reject){return (async()=>{if(rows){await new Promise(r=>setTimeout(r,delay));if(fail)return {error:{message:'offline'}};writes.push(rows);rows.forEach(r=>store[r.user_id+':'+r.question_key]=r);return {data:saveReply?saveReply(rows):rows}}if(afterRead)afterRead();return readResult!==undefined?readResult:{data:Object.values(store).filter(r=>r.user_id===id)};})().then(resolve,reject)}};return b}})};
 const vm=require('node:vm');vm.runInContext(fs.readFileSync(path.join(root,'account-profile.js'),'utf8'),dom.getInternalVMContext());
 const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
 (async()=>{
@@ -20,6 +20,12 @@ const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:
  btn('Leave Unanswered').click();assert.equal(w.document.activeElement.id,'clear-interests');assert(w.document.activeElement.getAttribute('aria-label').includes('Leave Unanswered:'));await run('flush()');assert.equal(read('interests'),null);
  btn('Save & Finish Later').click();await run('flush()');await new Promise(r=>setTimeout(r,0));assert.equal(w.document.activeElement.textContent,'Your living profile');
  await run("navigate('avoid')");run("stage('avoid','Loud crowds')");btn('Skip for Now').click();await run('flush()');assert.equal(read('avoid'),'Loud crowds');
+ // Save confirmation requires each exact answer key once; uncertain responses retain the full retry batch.
+ for(const reply of [r=>[...r.slice(1),{question_key:'unrelated_key'}],r=>r.map(()=>r[0]),()=>null,()=>({length:2})]){
+  saveReply=reply;run("stage('food_likes','Confirmed food');stage('food_dislikes','Confirmed dislikes')");assert.equal(await run('flush()'),false);
+  assert(run('pending.has("food_likes") && pending.has("food_dislikes")'));assert.equal(run('retryNeeded'),true);assert(w.document.getElementById('status').textContent.includes('could not be confirmed'));
+ }
+ saveReply=r=>[...r].reverse();assert.equal(await run('flush()'),true);assert.equal(run('pending.size'),0);assert.equal(run('retryNeeded'),false);saveReply=null;
  // Waiting edits must never migrate to another person's account.
  run("stage('food_likes','Alice private note')");user={id:'bob',email:'bob@example.test'};await run('boot()');assert.equal(run('answers.food_likes'),undefined);assert(writes.every(b=>b.every(r=>r.user_id==='alice')));
  // Overlapping saves are serialized; newest value wins.

@@ -128,7 +128,9 @@ async function flush(){
       const rows=[...batch].map(([key,a])=>({user_id:user,question_key:PREFIX+key,answer_kind:a.kind,answer_json:{value:a.value},skipped:a.value===null,updated_at:new Date().toISOString()}));
       const result=await sb.from('user_onboarding_answers').upsert(rows,{onConflict:'user_id,question_key'}).select('question_key');
       if(result.error)throw result.error;
-      if(result.data?.length!==rows.length)throw new Error('Your changes could not be confirmed.');
+      const expectedKeys=new Set(rows.map(row=>row.question_key));
+      const confirmedKeys=Array.isArray(result.data)?result.data.map(row=>row?.question_key):[];
+      if(confirmedKeys.length!==expectedKeys.size || new Set(confirmedKeys).size!==expectedKeys.size || confirmedKeys.some(key=>!expectedKeys.has(key)))throw new Error('Your changes could not be confirmed.');
       if(token!==generation)return false;
       retryState(false);
       note(pending.size?'More changes waiting to save…':'Saved to your private account.');
