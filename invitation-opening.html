@@ -152,7 +152,26 @@ $("previewAlternative").onclick=()=>{$("senderOutcome").textContent="Your partne
 $("revealAccepted").onclick=()=>{$("revealedMoment").textContent=$("experienceTitle").value.trim()+"\n"+$("experienceStory").value.trim();$("revealedMoment").classList.remove("hidden");};
 
 function save(){try{saved={feelings:[...selected],message:$("message").value,kind,plan:planDraft(),experience:Object.fromEntries(experienceIds.map(id=>[id,$(id).value]))};localStorage.setItem(draftKey,JSON.stringify(saved));$("restoreBox").classList.remove("hidden");status("Your beginning is saved on this device. Nothing has been sent.");return true;}catch{status("Your beginning couldn’t be saved on this device. Your words are still here.");return false;}}
-document.querySelectorAll("[data-save]").forEach(b=>b.onclick=save);
+document.querySelectorAll("[data-save]").forEach(b=>{
+  const confirmation=document.createElement("div");
+  confirmation.setAttribute("role","status");
+  confirmation.setAttribute("aria-live","polite");
+  confirmation.style.cssText="margin:4px 0 10px;padding:12px;border:2px solid #1f7a55;border-radius:12px;background:#edf8f1;color:#174f39;font-weight:750;text-align:center";
+  confirmation.hidden=true;
+  b.insertAdjacentElement("afterend",confirmation);
+  let resetTimer;
+  b.onclick=()=>{
+    const success=save();
+    clearTimeout(resetTimer);
+    confirmation.hidden=false;
+    confirmation.textContent=success?"✓ Draft saved on this device. Nothing has been sent.":"Your draft couldn’t be saved. Your words are still here.";
+    confirmation.style.borderColor=success?"#1f7a55":"#8d2534";
+    confirmation.style.color=success?"#174f39":"#8d2534";
+    const label=b.dataset.saveLabel||(b.dataset.saveLabel=b.textContent);
+    b.textContent=success?"✓ Draft Saved":"Try Saving Again";
+    resetTimer=setTimeout(()=>{b.textContent=label;confirmation.hidden=true;},6000);
+  };
+});
 $("restoreBox").classList.toggle("hidden",!saved);
 $("restore").onclick=()=>{if(!saved)return;selected=new Set(saved.feelings.filter(k=>Object.hasOwn(starts,k)));$("message").value=saved.message.slice(0,1500);kind=["everyday","date","adventure","quest","own"].includes(saved.kind)?saved.kind:"";if(saved.experience&&typeof saved.experience==="object"){experienceIds.forEach(id=>{if(typeof saved.experience[id]==="string")$(id).value=saved.experience[id].slice(0,$(id).maxLength>0?$(id).maxLength:2000);});if(!["all","hint","surprise"].includes($("revealMode").value))$("revealMode").value="all";$("revealMode").onchange();idea="";renderIdeas();}if(saved.plan&&typeof saved.plan==="object"){detailIds.forEach(id=>{if(typeof saved.plan[id]==="string")$(id).value=saved.plan[id];});$("whenMode").onchange();$("meetMode").onchange();}edited=true;renderSelections();screen("feelings");status("Your saved beginning is ready to continue.");};
 $("deleteSaved").onclick=()=>{if(!confirm("Delete the beginning saved on this device? Your open draft will stay here."))return;try{localStorage.removeItem(draftKey);saved=null;$("restoreBox").classList.add("hidden");status("Saved beginning deleted. Your open draft is unchanged.");}catch{status("The saved beginning couldn’t be deleted. Please try again.");}};
