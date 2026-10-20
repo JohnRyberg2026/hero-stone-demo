@@ -5,8 +5,9 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#f4e0d9,transparent 60%),#f8f2e9;color:var(--ink);font:16px/1.55 system-ui,sans-serif}button,textarea,input,select{font:inherit}input,select{width:100%;padding:14px;border:1px solid #cbb9a7;border-radius:12px;background:white;color:var(--ink)}button,a{touch-action:manipulation}button{cursor:pointer}button:disabled{cursor:default;opacity:.5}a{color:var(--wine)}.wrap{max-width:650px;margin:auto;padding:28px 18px 48px}.brand{text-align:center;font-size:12px;letter-spacing:.2em;font-weight:800;color:var(--wine)}.brand img{display:block;width:84px;height:84px;object-fit:contain;margin:0 auto 12px}.preview{text-align:center;font-size:12px;color:var(--muted);margin:10px 0 22px}.card{background:var(--cream);border:1px solid var(--line);border-radius:26px;box-shadow:0 18px 65px #542d2110;padding:32px}.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--wine);font-weight:800}.heart{font-size:28px;margin:12px 0}h1{font:normal clamp(30px,6vw,41px)/1.15 Georgia,serif;margin:10px 0 15px}h2{font-size:19px;line-height:1.4;margin:26px 0 6px}p{margin:0 0 18px;color:var(--muted)}.intro{max-width:460px}.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.choice{position:relative;background:#f7f0e7;border:2px solid #decebd;border-radius:16px;color:var(--ink);padding:16px;text-align:left;min-height:100px;font-weight:750}.choice .mark{display:block;font-size:12px;font-weight:700;min-height:19px;margin-top:7px}.choice[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:white;outline:3px solid var(--gold);outline-offset:2px}.choice.wide{grid-column:1/-1;min-height:0}.icon{display:block;font-size:22px;margin-bottom:8px}.helper{font-size:13px;color:var(--muted)}label{display:block;font-weight:750;margin:25px 0 8px}textarea{display:block;width:100%;resize:vertical;min-height:140px;padding:16px;border:1px solid #cbb9a7;border-radius:14px;background:white;color:var(--ink);line-height:1.6}.actions{display:grid;gap:10px;margin-top:25px}.primary,.secondary,.textbutton{border-radius:13px;padding:14px 18px;font-weight:750;width:100%}.primary{border:1px solid var(--wine);background:var(--wine);color:white}.secondary{background:#f1e7da;color:var(--ink);border:1px solid var(--line)}.textbutton{background:transparent;border:0;color:var(--wine);font-size:14px}.help{width:auto;padding:10px 0;text-align:left}.exit{border-top:1px solid var(--line);margin-top:23px;padding-top:14px;display:flex;gap:8px;flex-wrap:wrap}.exit button{flex:1;min-width:135px}.quote{border-left:3px solid var(--gold);padding:10px 16px;margin:20px 0;background:#f9f2e5;white-space:pre-wrap;overflow-wrap:anywhere;font-family:Georgia,serif;font-size:19px}.moment-list{display:grid;gap:12px;margin:22px 0}.moment-list .choice{min-height:0;display:grid;grid-template-columns:34px 1fr;gap:10px}.moment-list small{display:block;font-weight:400;font-size:13px;margin-top:4px}.moment-list .mark{grid-column:2}.notice{padding:14px 16px;border-radius:12px;background:#fff0d2;border:1px solid #bb873b;font-size:14px;font-weight:650;margin:18px 0}.notice:empty{display:none}.hidden{display:none!important}:focus-visible{outline:3px solid #2867a5;outline-offset:4px}footer{text-align:center;color:var(--muted);font-size:12px;margin:22px auto 0;max-width:460px}dialog{max-width:440px;width:calc(100% - 36px);border:1px solid var(--line);border-radius:22px;padding:28px;color:var(--ink);background:var(--cream)}dialog::backdrop{background:#29151ab3}dialog h2{margin-top:0}@media(max-width:430px){.card{padding:24px 20px}.choices{grid-template-columns:1fr}.choice{min-height:0}.wrap{padding:20px 12px 32px}}
 </style></head><body><main class="wrap">
 <div class="brand"><img src="images/official-logo.png" alt="DATE QUEST">THE SEARCH FOR CONNECTION</div>
-<div class="preview">Invitation opening · Working preview · Nothing is sent</div>
+<div class="preview" id="previewBanner">Create a moment · Drafts stay local until you choose Send</div>
 <details class="card" style="padding:16px"><summary style="cursor:pointer;font-weight:750">Your account connection</summary><p class="helper">Check the account signed in on this browser. This does not upload your draft or send an invitation.</p><button type="button" class="secondary" id="checkAccount">Check My HEART STONE Connection</button><p id="accountConnectionStatus" role="status" aria-live="polite">Not checked yet. You can keep creating your local draft.</p><a href="index.html">Open HEART STONE to Sign In or Connect</a></details>
+<button type="button" class="secondary" id="openSharedInvitations" style="margin:14px 0">Shared Invitations — Sent &amp; Received ❤️</button>
 <section class="card" id="feelings">
 <div class="eyebrow">The first gesture</div><div class="heart" aria-hidden="true">♡</div>
 <h1 tabindex="-1">A little moment for us</h1>
@@ -49,7 +50,7 @@
 <p class="helper">A surprise can stay a surprise while the practical details stay clear. HEART STONE compass guidance comes in a later part of this preview.</p>
 <div id="detailError" role="alert" class="notice"></div><div class="actions"><button class="primary" type="button" id="reviewDetails">Review Our Beginning ❤️</button><button class="secondary" type="button" id="detailsBack">Back — Our Kind of Moment</button></div><div class="exit"><button class="textbutton" type="button" data-save>Save for later on this device</button><button class="textbutton" type="button" data-cancel>Cancel invitation</button><button class="textbutton" type="button" data-home>Back to Our HEART STONE</button></div></section>
 <section class="card hidden" id="reviewScreen"><div class="eyebrow">Your first gesture</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1">A moment chosen with love</h1><p id="reviewKind"></p><div class="quote" id="reviewMessage"></div>
-<div id="reviewPlan" class="quote"></div><p>Your first gesture is taking shape. Now choose the experience you’d like to share.</p><p class="helper">Nothing has been sent.</p>
+<div id="reviewPlan" class="quote"></div><p>Your first gesture is taking shape. Now choose the experience you’d like to share.</p><p class="helper">Saving this draft does not send it.</p>
 <div class="actions"><button type="button" class="primary" id="chooseExperience">Continue — Choose Our Experience ❤️</button><button type="button" class="secondary" data-save>Save for later on this device</button><button type="button" class="secondary" id="backKind">Back — Our Time and Place</button></div>
 <div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button></div></section>
 <section class="card hidden" id="experience"><div class="eyebrow">A memory waiting to happen</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1">What shall we make of our time?</h1><p>Begin with an idea below, or make something entirely your own. Shape it to fit the time you’ve set aside.</p>
@@ -66,10 +67,24 @@
 <p class="helper">The date, time, length, meeting place, and preparation notes stay visible with every choice. A surprise never commits your partner to intimacy or anything they don’t want.</p>
 <div class="notice" id="experienceError" role="alert"></div><div class="actions"><button type="button" class="primary" id="previewInvitation">See Our Invitation ❤️</button><button type="button" class="secondary" id="experienceBack">Back — Our Beginning</button></div>
 <div class="exit"><button type="button" class="textbutton" data-save>Save for later on this device</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button></div></section>
-<section class="card hidden" id="invitation"><div class="eyebrow">An invitation for you</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1" id="invitationTitle"></h1><div class="quote" id="invitationMessage"></div><p id="invitationStory" style="white-space:pre-wrap;overflow-wrap:anywhere"></p><div class="quote" id="invitationPlan"></div><p>A little time together. A memory waiting to happen.</p><p class="helper">Recipient preview only. Nothing has been sent. You can rehearse a response below on this device. Live delivery between accounts is not connected.</p><div class="actions"><button type="button" class="primary" id="tryResponse">Preview Their Response ❤️</button><button type="button" class="secondary" data-save>Save Invitation Draft on This Device</button><button type="button" class="secondary" id="editExperience">Back — Shape Our Experience</button><button type="button" class="textbutton" id="editPlan">Edit Our Time and Place</button></div><div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button></div></section>
+<section class="card hidden" id="invitation"><div class="eyebrow">An invitation for you</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1" id="invitationTitle"></h1><div class="quote" id="invitationMessage"></div><p id="invitationStory" style="white-space:pre-wrap;overflow-wrap:anywhere"></p><div class="quote" id="invitationPlan"></div><p>A little time together. A memory waiting to happen.</p><p class="helper">This is how your invitation will appear. Choose Review Recipient &amp; Send to share it inside HEART STONE, or rehearse a response on this device below.</p><div class="actions"><button type="button" class="primary" id="prepareLiveSend">Review Recipient &amp; Send Invitation ❤️</button><p id="liveSendStatus" role="status" aria-live="polite" class="notice"></p><button type="button" class="secondary" id="tryResponse">Preview Their Response ❤️</button><button type="button" class="secondary" data-save>Save Invitation Draft on This Device</button><button type="button" class="secondary" id="editExperience">Back — Shape Our Experience</button><button type="button" class="textbutton" id="editPlan">Edit Our Time and Place</button></div><div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button></div></section>
 <section class="card hidden" id="responseScreen"><div class="eyebrow">Response rehearsal · Nothing is sent</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1">A little time for us?</h1><div class="quote" id="responseMessage"></div><div class="quote" id="responsePlan"></div><p>Choose what feels right. You can come back to this later.</p><div class="actions"><button type="button" class="primary" data-response="accepted">I’d love to ❤️</button><button type="button" class="secondary" data-response="reschedule">Could we find another time?</button><button type="button" class="secondary" data-response="declined">Thank you for asking. I’ll pass this time.</button><button type="button" class="textbutton" id="responseBack">Back — Our Invitation</button></div></section>
 <section class="card hidden" id="responseResult"><div class="eyebrow">Response rehearsal · This device only</div><div class="heart" aria-hidden="true">♡</div><h1 tabindex="-1" id="responseHeading"></h1><p id="recipientOutcome"></p><h2>What the sender would see</h2><div class="quote" id="senderOutcome"></div><div id="rescheduleFields" class="hidden"><label for="alternativeTime">A time that might work <span class="helper">(optional)</span></label><textarea id="alternativeTime" maxlength="400" placeholder="For example, Saturday afternoon might work better."></textarea><button type="button" class="secondary" id="previewAlternative">Preview My Suggestion</button><p class="helper">This suggestion is shown only here. A new time would need agreement from both of you.</p></div><div id="acceptedReveal" class="hidden"><button type="button" class="primary" id="revealAccepted">Reveal Our Moment ❤️</button><div class="quote hidden" id="revealedMoment"></div><p class="helper">Saying yes to time together leaves room to change your mind or stop.</p></div><p class="helper">No response has been sent or saved to either account. This rehearsal does not change your invitation draft.</p><div class="actions"><button type="button" class="secondary" id="tryAgain">Try Another Response</button><button type="button" class="textbutton" id="resultBack">Back — Our Invitation</button></div><div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button></div></section>
 <div class="notice" id="status" role="status" aria-live="polite"></div>
+<section class="card hidden" id="sharedInbox">
+<div class="eyebrow">Shared Invitations · Connected Accounts</div><h1 tabindex="-1">A little time for us</h1>
+<p id="sharedInvitationAccount" class="helper"></p><p>Invitations you send and receive inside HEART STONE appear here. Tap Refresh to check for replies.</p>
+<button type="button" class="primary" id="refreshSharedInvitations">Refresh Invitations</button>
+<p id="sharedInvitationStatus" class="notice" role="status" aria-live="polite"></p><div id="sharedInvitationList"></div>
+<button type="button" class="secondary" id="backFromSharedInvitations">Back — My Invitation Draft</button>
+<div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button></div></section>
+<dialog id="sendInvitationDialog" aria-labelledby="sendInvitationTitle"><h2 id="sendInvitationTitle">A moment to share</h2>
+<p id="liveSender" class="helper"></p><label for="liveRecipient">Who is this invitation for?</label><select id="liveRecipient"></select>
+<p class="helper">Choose the connected account you intend to invite. The account suffix helps distinguish people with the same name.</p>
+<div class="quote" id="liveSendSummary" style="max-height:40vh;overflow:auto"></div>
+<p id="sendDialogStatus" role="status" aria-live="polite"></p>
+<button type="button" class="primary" id="confirmLiveSend" disabled>Send This Invitation ❤️</button>
+<button type="button" class="secondary" id="keepInvitationDraft">Keep Editing — Don’t Send</button></dialog>
 <div id="restoreBox" class="notice hidden">A beginning is saved on this device.<button type="button" class="secondary" id="restore">Resume Saved Beginning</button><button type="button" class="textbutton" id="deleteSaved">Delete Saved Beginning</button></div>
 <footer>A few thoughtful words can be the beginning of something treasured.<br>Drafts are saved only when you choose. Use a personal device for private words.</footer>
 </main>
@@ -84,7 +99,7 @@ try{const raw=JSON.parse(localStorage.getItem(draftKey));if(raw&&Array.isArray(r
 function status(s){$("status").textContent=s;}
 function setPressed(button,on){button.setAttribute("aria-pressed",String(on));button.querySelector(".mark").textContent=on?"✓ Selected":"";}
 function renderSelections(){document.querySelectorAll("[data-feeling]").forEach(b=>setPressed(b,selected.has(b.dataset.feeling)));document.querySelectorAll("[data-kind]").forEach(b=>setPressed(b,b.dataset.kind===kind));$("review").disabled=!kind;}
-function screen(id){["feelings","moments","details","reviewScreen","experience","invitation","responseScreen","responseResult"].forEach(s=>$(s).classList.toggle("hidden",s!==id));$("suggestionBox").classList.add("hidden");status("");$(id).querySelector("h1").focus();window.scrollTo({top:0,behavior:"smooth"});}
+function screen(id){["feelings","moments","details","reviewScreen","experience","invitation","responseScreen","responseResult","sharedInbox"].forEach(s=>$(s).classList.toggle("hidden",s!==id));$("suggestionBox").classList.add("hidden");status("");$(id).querySelector("h1").focus();window.scrollTo({top:0,behavior:"smooth"});}
 function updateStart(){if(!edited)$("message").value=[...selected].map(k=>starts[k]).join(" ");renderSelections();}
 document.querySelectorAll("[data-feeling]").forEach(b=>b.onclick=()=>{const k=b.dataset.feeling;selected.has(k)?selected.delete(k):selected.add(k);updateStart();});
 $("message").oninput=()=>{edited=true;};
@@ -152,7 +167,7 @@ $("alternativeTime").value="";$("revealedMoment").textContent="";$("revealedMome
 $("previewAlternative").onclick=()=>{$("senderOutcome").textContent="Your partner would like another time. The original time is not confirmed."+($("alternativeTime").value.trim()?" Their suggestion: "+$("alternativeTime").value.trim():"");};
 $("revealAccepted").onclick=()=>{$("revealedMoment").textContent=$("experienceTitle").value.trim()+"\n"+$("experienceStory").value.trim();$("revealedMoment").classList.remove("hidden");};
 
-function save(){try{saved={feelings:[...selected],message:$("message").value,kind,plan:planDraft(),experience:Object.fromEntries(experienceIds.map(id=>[id,$(id).value]))};localStorage.setItem(draftKey,JSON.stringify(saved));$("restoreBox").classList.remove("hidden");status("Your beginning is saved on this device. Nothing has been sent.");return true;}catch{status("Your beginning couldn’t be saved on this device. Your words are still here.");return false;}}
+function save(){try{saved={feelings:[...selected],message:$("message").value,kind,plan:planDraft(),experience:Object.fromEntries(experienceIds.map(id=>[id,$(id).value]))};localStorage.setItem(draftKey,JSON.stringify(saved));$("restoreBox").classList.remove("hidden");status("Your draft is saved on this device. Saving does not send an invitation.");return true;}catch{status("Your beginning couldn’t be saved on this device. Your words are still here.");return false;}}
 document.querySelectorAll("[data-save]").forEach(b=>{
   const confirmation=document.createElement("div");
   confirmation.setAttribute("role","status");
@@ -165,7 +180,7 @@ document.querySelectorAll("[data-save]").forEach(b=>{
     const success=save();
     clearTimeout(resetTimer);
     confirmation.hidden=false;
-    confirmation.textContent=success?"✓ Draft saved on this device. Nothing has been sent.":"Your draft couldn’t be saved. Your words are still here.";
+    confirmation.textContent=success?"✓ Draft saved on this device. Saving does not send an invitation.":"Your draft couldn’t be saved. Your words are still here.";
     confirmation.style.borderColor=success?"#1f7a55":"#8d2534";
     confirmation.style.color=success?"#174f39":"#8d2534";
     const label=b.dataset.saveLabel||(b.dataset.saveLabel=b.textContent);
@@ -176,52 +191,12 @@ document.querySelectorAll("[data-save]").forEach(b=>{
 $("restoreBox").classList.toggle("hidden",!saved);
 $("restore").onclick=()=>{if(!saved)return;selected=new Set(saved.feelings.filter(k=>Object.hasOwn(starts,k)));$("message").value=saved.message.slice(0,1500);kind=["everyday","date","adventure","quest","own"].includes(saved.kind)?saved.kind:"";if(saved.experience&&typeof saved.experience==="object"){experienceIds.forEach(id=>{if(typeof saved.experience[id]==="string")$(id).value=saved.experience[id].slice(0,$(id).maxLength>0?$(id).maxLength:2000);});if(!["all","hint","surprise"].includes($("revealMode").value))$("revealMode").value="all";$("revealMode").onchange();idea="";renderIdeas();}if(saved.plan&&typeof saved.plan==="object"){detailIds.forEach(id=>{if(typeof saved.plan[id]==="string")$(id).value=saved.plan[id];});$("whenMode").onchange();$("meetMode").onchange();}edited=true;renderSelections();screen("feelings");status("Your saved beginning is ready to continue.");};
 $("deleteSaved").onclick=()=>{if(!confirm("Delete the beginning saved on this device? Your open draft will stay here."))return;try{localStorage.removeItem(draftKey);saved=null;$("restoreBox").classList.add("hidden");status("Saved beginning deleted. Your open draft is unchanged.");}catch{status("The saved beginning couldn’t be deleted. Please try again.");}};
-function exit(mode){exitMode=mode;$("exitTitle").textContent=mode==="cancel"?"Cancel this invitation?":"Leave this beginning?";$("exitCopy").textContent=mode==="cancel"?"Nothing has been sent. Discarding also removes the beginning saved on this device.":"Keep your words on this device for later, or discard this open draft.";$("exitDialog").showModal();}
+function exit(mode){exitMode=mode;$("exitTitle").textContent=mode==="cancel"?"Cancel this invitation?":"Leave this beginning?";$("exitCopy").textContent=mode==="cancel"?"Discarding removes this local draft. It does not cancel any invitation you have already sent. Use Shared Invitations to cancel a sent invitation.":"Keep your words on this device for later, or discard this open draft.";$("exitDialog").showModal();}
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>exit("home"));
 document.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=()=>exit("cancel"));
 $("stay").onclick=()=>$("exitDialog").close();
 $("saveExit").onclick=()=>{if(save())location.href="index.html";};
 $("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}location.href="index.html";};
 renderSelections();
-</script><script>
-(function(){
-  const button=document.getElementById("checkAccount");
-  const output=document.getElementById("accountConnectionStatus");
-  let client,loading;
-  function loadClient(){
-    if(client)return Promise.resolve(client);
-    if(!loading)loading=new Promise((resolve,reject)=>{
-      const script=document.createElement("script");
-      script.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js";
-      script.onload=()=>resolve();
-      script.onerror=()=>{script.remove();loading=null;reject(new Error("load"));};
-      document.head.appendChild(script);
-    });
-    return loading.then(()=>{
-      if(!client)client=window.supabase.createClient("https://iqxhqxlcraatdheslqeo.supabase.co","sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h");
-      return client;
-    });
-  }
-  button.onclick=async()=>{
-    button.disabled=true;
-    output.textContent="Checking your account connection…";
-    try{
-      const sb=await loadClient();
-      const {data,error}=await sb.auth.getUser();
-      if(error||!data?.user){output.textContent="No signed-in account could be verified. Open HEART STONE to sign in, then return here and check again. Your local draft stays here.";return;}
-      const userId=data.user.id;
-      const result=await sb.from("heart_stone_memberships").select("heart_stone_id").eq("user_id",userId).eq("status","active").limit(2);
-      if(result.error)throw result.error;
-      const verify=await sb.auth.getUser();
-      if(verify.error||verify.data?.user?.id!==userId){output.textContent="Your account changed during the check. Please check again.";return;}
-      output.textContent=result.data?.length===1
-        ?"Signed-in account verified. One active HEART STONE connection found. This draft is still local; invitation delivery is not connected yet."
-        :result.data?.length>1
-          ?"Signed-in account verified. More than one HEART STONE connection found. A connection must be chosen before sending can be enabled."
-          :"Signed-in account verified. No active HEART STONE connection found. Open HEART STONE to connect with your partner.";
-    }catch{output.textContent="We couldn’t check your connection. Please try again. Your local draft is unchanged.";}
-    finally{button.disabled=false;}
-  };
-})();
-</script>
+</script><script src="moment-invitations.js"></script>
 </body></html>
