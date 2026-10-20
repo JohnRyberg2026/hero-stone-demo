@@ -77,7 +77,7 @@
       prepared={...c,draft};
       el('liveSender').textContent='Sending from '+(c.user.email||'your verified account');
       el('liveRecipient').replaceChildren(new Option('Choose your connected partner',''));
-      c.partners.forEach(p=>el('liveRecipient').add(new Option(p.name+' · account '+p.id.slice(-6),p.id)));
+      c.partners.forEach(p=>el('liveRecipient').add(new Option(p.name,p.id)));
       el('liveSendSummary').textContent=draft.p_message+'\n\n'+draft.p_title+'\n'+draft.p_story+'\n\n'+planText(draft.p_plan)+'\n\nInvitation reveal: '+draft.p_reveal_mode;
       el('confirmLiveSend').disabled=true;
       el('sendDialogStatus').textContent='This sends the invitation inside HEART STONE. It does not send a text message or email.';
