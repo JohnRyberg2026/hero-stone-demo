@@ -2,8 +2,47 @@
   'use strict';
   const el=id=>document.getElementById(id);
   let client,loading,accountId=null,prepared=null,sendBusy=false,inboxBusy=false;
+  const avatars={initials:'Initials',heart:'❤️',sun:'☀️',moon:'🌙',flower:'🌸',compass:'🧭'};
+  let pictureOwner=null,pictureDraft='initials',pictureVersion=0;
+  function person(container,name,picture,prefix=''){
+    container.replaceChildren();
+    let a;
+    if(typeof picture==='string'&&picture.length<=140000&&/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(picture)){
+      a=document.createElement('img');a.src=picture;a.alt=''; 
+    }else{a=document.createElement('span');a.textContent=avatars[picture]&&picture!=='initials'?avatars[picture]:name.trim().slice(0,1).toUpperCase();a.setAttribute('aria-hidden','true');}
+    a.className='avatar';container.append(a,document.createTextNode(prefix+name));
+  }
+  function previewPicture(){person(el('myPicturePreview'),'My picture',pictureDraft);el('avatarChoices').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.avatar===pictureDraft)));}
+  Object.entries(avatars).forEach(([key,label])=>{const b=document.createElement('button');b.type='button';b.dataset.avatar=key;b.textContent=label;b.onclick=()=>{pictureVersion++;pictureDraft=key;previewPicture();};el('avatarChoices').append(b);});
+  el('loadMyPicture').onclick=async()=>{
+    try{const sb=await loadClient(),r=await sb.auth.getUser();if(r.error||!r.data?.user)throw Error('Sign in through HEART STONE first.');
+      const id=r.data.user.id,result=await sb.rpc('my_moment_profile_picture',{p_expected_user:id});
+      const verify=await sb.auth.getUser();if(result.error||verify.data?.user?.id!==id)throw Error('Could not load your picture. Check your account and try again.');
+      pictureOwner=id;accountId=id;pictureDraft=result.data||'initials';pictureVersion++;previewPicture();el('pictureEditor').hidden=false;el('pictureStatus').textContent='Choose a picture, then Save. Your invitation is not sent.';
+    }catch(e){el('pictureStatus').textContent=e.message;}
+  };
+  el('cancelMyPicture').onclick=()=>{pictureVersion++;pictureOwner=null;pictureDraft='initials';el('profilePhoto').value='';el('pictureEditor').hidden=true;el('myPicturePreview').replaceChildren();el('pictureStatus').textContent='Picture changes discarded.';};
+  el('profilePhoto').onchange=async()=>{
+    const version=++pictureVersion,file=el('profilePhoto').files[0];if(!file)return;
+    try{
+      if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Choose a JPG, PNG or WebP photo under 10 MB.');
+      const bitmap=await createImageBitmap(file);
+      const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
+      const ctx=canvas.getContext('2d'),size=Math.min(bitmap.width,bitmap.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,256,256);ctx.drawImage(bitmap,(bitmap.width-size)/2,(bitmap.height-size)/2,size,size,0,0,256,256);bitmap.close();
+      const photo=canvas.toDataURL('image/jpeg',0.8);if(photo.length>140000)throw Error('This photo is too large. Try another.');
+      if(version!==pictureVersion||!pictureOwner)return;pictureDraft=photo;previewPicture();el('pictureStatus').textContent='Photo ready. Save My Picture to use it.';
+    }catch(e){el('pictureStatus').textContent=e.message;}
+  };
+  el('saveMyPicture').onclick=async()=>{
+    const b=el('saveMyPicture');b.disabled=true;
+    try{const sb=await loadClient(),r=await sb.auth.getUser();if(!pictureOwner||r.error||r.data?.user?.id!==pictureOwner)throw Error('Your account changed. Open Edit My Picture again.');
+      const result=await sb.rpc('my_moment_profile_picture',{p_expected_user:pictureOwner,p_picture:pictureDraft});
+      const verify=await sb.auth.getUser();if(result.error||verify.data?.user?.id!==pictureOwner)throw Error('Could not confirm the save. Open Edit My Picture to check.');
+      el('pictureEditor').hidden=true;pictureVersion++;el('pictureStatus').textContent='✓ Profile picture saved. Connected partners will see it when they refresh.';
+    }catch(e){el('pictureStatus').textContent=e.message;}finally{b.disabled=false;}
+  };
   function clearShared(){
-    prepared=null;
+    prepared=null;pictureOwner=null;pictureDraft='initials';el('pictureEditor').hidden=true;el('myPicturePreview').replaceChildren();el('recipientPicture').replaceChildren();
     el('sharedInvitationList').replaceChildren();
     el('sharedInvitationStatus').textContent='Account changed. Refresh invitations to continue.';
     el('accountConnectionStatus').textContent='Account changed. Check your connection again.';
@@ -79,6 +118,7 @@
       el('liveRecipient').replaceChildren(new Option('Choose your connected partner',''));
       c.partners.forEach(p=>el('liveRecipient').add(new Option(p.name,p.id)));
       el('liveSendSummary').textContent=draft.p_message+'\n\n'+draft.p_title+'\n'+draft.p_story+'\n\n'+planText(draft.p_plan)+'\n\nInvitation reveal: '+draft.p_reveal_mode;
+      el('recipientPicture').replaceChildren();
       el('confirmLiveSend').disabled=true;
       el('sendDialogStatus').textContent='This sends the invitation inside HEART STONE. It does not send a text message or email.';
       el('sendInvitationDialog').showModal();
@@ -86,7 +126,7 @@
     }catch(e){prepared=null;el('liveSendStatus').textContent=e.message;}
     finally{button.disabled=false;}
   };
-  el('liveRecipient').onchange=()=>{el('confirmLiveSend').disabled=!el('liveRecipient').value||sendBusy;};
+  el('liveRecipient').onchange=()=>{const p=prepared?.partners.find(p=>p.id===el('liveRecipient').value);el('confirmLiveSend').disabled=!p||sendBusy;if(p)person(el('recipientPicture'),p.name,p.picture,'Send to ');else el('recipientPicture').replaceChildren();};
   el('keepInvitationDraft').onclick=()=>{if(!sendBusy)el('sendInvitationDialog').close();};
   el('sendInvitationDialog').addEventListener('cancel',event=>{if(sendBusy)event.preventDefault();});
   async function requestId(userId,body){
@@ -150,7 +190,7 @@
         const incoming=item.recipient_id===c.user.id;
         const other=c.partners.find(x=>x.id===(incoming?item.sender_id:item.recipient_id));
         const card=node('article',undefined,'card');card.style.marginTop='16px';
-        card.append(node('div',(incoming?'From ':'To ')+(other?.name||'your connected partner'),'eyebrow'));
+        const identity=node('div',undefined,'person');person(identity,other?.name||'your connected partner',other?.picture,incoming?'From ':'To ');card.append(identity);
         card.append(node('h2',item.status==='accepted'&&incoming?'A moment waiting for us':item.title));
         card.append(node('p',statuses[item.status]||item.status,'notice'));
         card.append(node('div',item.message,'quote'));

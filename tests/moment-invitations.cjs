@@ -1,18 +1,18 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),{webcrypto}=require('crypto');
 class Element{
- constructor(tag='div'){this.tagName=tag;this.children=[];this.value='';this.textContent='';this.style={};this.disabled=false;this.hidden=false;this.open=false;this.listeners={};}
+ constructor(tag='div'){this.tagName=tag;this.children=[];this.value='';this.textContent='';this.style={};this.disabled=false;this.hidden=false;this.open=false;this.listeners={};this.dataset={};}
  append(...nodes){this.children.push(...nodes);} appendChild(n){this.children.push(n);return n;} add(n){this.children.push(n);}
  replaceChildren(...nodes){this.children=[...nodes];} setAttribute(k,v){this[k]=v;} addEventListener(k,f){this.listeners[k]=f;}
  showModal(){this.open=true;} close(){this.open=false;} remove(){}
  querySelectorAll(tag){return this.children.flatMap(n=>[...(n.tagName===tag?[n]:[]),...n.querySelectorAll(tag)]);}
 }
 function setup(){
- const ids=['sharedInvitationList','sharedInvitationStatus','accountConnectionStatus','sendInvitationDialog','checkAccount','message','experienceTitle','experienceStory','revealMode','experienceHint','prepareLiveSend','liveSendStatus','liveSender','liveRecipient','liveSendSummary','confirmLiveSend','sendDialogStatus','keepInvitationDraft','previewBanner','refreshSharedInvitations','sharedInvitationAccount','openSharedInvitations','backFromSharedInvitations'];
+ const ids=['pictureEditor','myPicturePreview','recipientPicture','avatarChoices','loadMyPicture','pictureStatus','cancelMyPicture','profilePhoto','saveMyPicture','sharedInvitationList','sharedInvitationStatus','accountConnectionStatus','sendInvitationDialog','checkAccount','message','experienceTitle','experienceStory','revealMode','experienceHint','prepareLiveSend','liveSendStatus','liveSender','liveRecipient','liveSendSummary','confirmLiveSend','sendDialogStatus','keepInvitationDraft','previewBanner','refreshSharedInvitations','sharedInvitationAccount','openSharedInvitations','backFromSharedInvitations'];
  const els=Object.fromEntries(ids.map(x=>[x,new Element()]));
  Object.assign(els.message,{value:'I miss you.'});els.experienceTitle.value='Our hideaway';els.experienceStory.value='A quiet moment';els.revealMode.value='surprise';
  const state={user:{id:'sender',email:'sender@example.test'},hs:'hs',partners:[{id:'partner-123456',name:'Partner'}],items:[],calls:[],failSend:false};
- const sb={auth:{getUser:async()=>({data:{user:state.user}}),onAuthStateChange:f=>{state.authListener=f;}},from:()=>({select(){return this},eq(){return this},limit:async()=>({data:[{heart_stone_id:state.hs}]})}),rpc:async(name,args)=>{state.calls.push({name,args});if(name==='get_moment_invitation_partners')return {data:state.partners};if(name==='list_moment_invitations')return {data:state.items};if(name==='send_checked_moment_invitation'&&state.failSend)return {error:{message:'network'}};return {data:'invitation-id'};}};
- const storage=new Map();const document={getElementById:id=>{assert(els[id],id);return els[id]},createElement:tag=>new Element(tag),head:{appendChild:s=>s.onload()}};
+ const sb={auth:{getUser:async()=>({data:{user:state.user}}),onAuthStateChange:f=>{state.authListener=f;}},from:()=>({select(){return this},eq(){return this},limit:async()=>({data:[{heart_stone_id:state.hs}]})}),rpc:async(name,args)=>{state.calls.push({name,args});if(name==='my_moment_profile_picture')return {data:args.p_picture||'sun'};if(name==='get_moment_invitation_partners')return {data:state.partners};if(name==='list_moment_invitations')return {data:state.items};if(name==='send_checked_moment_invitation'&&state.failSend)return {error:{message:'network'}};return {data:'invitation-id'};}};
+ const storage=new Map();const document={getElementById:id=>{assert(els[id],id);return els[id]},createTextNode:text=>Object.assign(new Element('text'),{textContent:text}),createElement:tag=>new Element(tag),head:{appendChild:s=>s.onload()}};
  const ctx=vm.createContext({document,window:{supabase:{createClient:()=>sb}},Option:function(t,v){const e=new Element('option');e.textContent=t;e.value=v;return e;},TextEncoder,crypto:webcrypto,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},confirm:()=>true,planDraft:()=>({whenMode:'together',length:'About 2 hours',meetMode:'home'}),kind:'date',screen:id=>{state.screen=id;}});
  vm.runInContext(fs.readFileSync('moment-invitations.js','utf8'),ctx);
  return {els,state};
@@ -21,6 +21,9 @@ const texts=e=>[e.textContent,...e.children.map(texts)].join('\n');
 const tick=()=>new Promise(r=>setImmediate(r));
 (async()=>{
  let {els,state}=setup();
+ await els.loadMyPicture.onclick();assert(!els.pictureEditor.hidden);await els.saveMyPicture.onclick();assert(els.pictureStatus.textContent.includes('saved'));await els.loadMyPicture.onclick();els.cancelMyPicture.onclick();assert(els.pictureEditor.hidden);
+ ({els,state}=setup());await els.loadMyPicture.onclick();state.user={id:'other'};await els.saveMyPicture.onclick();assert(els.pictureStatus.textContent.includes('changed'));
+ ({els,state}=setup());
  await els.prepareLiveSend.onclick();assert(els.sendInvitationDialog.open);assert(els.confirmLiveSend.disabled);assert(!state.calls.some(x=>x.name.startsWith('send_')));
  els.keepInvitationDraft.onclick();assert(!els.sendInvitationDialog.open);assert(!state.calls.some(x=>x.name.startsWith('send_')));
  await els.prepareLiveSend.onclick();els.liveRecipient.value=state.partners[0].id;els.liveRecipient.onchange();assert(!els.confirmLiveSend.disabled);
