@@ -80,7 +80,7 @@
 <div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button></div></section>
 <dialog id="sendInvitationDialog" aria-labelledby="sendInvitationTitle"><h2 id="sendInvitationTitle">A moment to share</h2>
 <p id="liveSender" class="helper"></p><label for="liveRecipient">Who is this invitation for?</label><select id="liveRecipient"></select>
-<p class="helper">Choose the connected account you intend to invite. The account suffix helps distinguish people with the same name.</p>
+<p class="helper">Choose the person you’d like to invite.</p>
 <div class="quote" id="liveSendSummary" style="max-height:40vh;overflow:auto"></div>
 <p id="sendDialogStatus" role="status" aria-live="polite"></p>
 <button type="button" class="primary" id="confirmLiveSend" disabled>Send This Invitation ❤️</button>
@@ -198,5 +198,5 @@ $("stay").onclick=()=>$("exitDialog").close();
 $("saveExit").onclick=()=>{if(save())location.href="index.html";};
 $("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}location.href="index.html";};
 renderSelections();
-</script><script src="moment-invitations.js"></script>
+</script><script src="moment-invitations.js?v=names-only"></script>
 </body></html>
