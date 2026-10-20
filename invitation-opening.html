@@ -6,6 +6,7 @@
 </style></head><body><main class="wrap">
 <div class="brand"><img src="images/official-logo.png" alt="DATE QUEST">THE SEARCH FOR CONNECTION</div>
 <div class="preview">Invitation opening · Working preview · Nothing is sent</div>
+<details class="card" style="padding:16px"><summary style="cursor:pointer;font-weight:750">Your account connection</summary><p class="helper">Check the account signed in on this browser. This does not upload your draft or send an invitation.</p><button type="button" class="secondary" id="checkAccount">Check My HEART STONE Connection</button><p id="accountConnectionStatus" role="status" aria-live="polite">Not checked yet. You can keep creating your local draft.</p><a href="index.html">Open HEART STONE to Sign In or Connect</a></details>
 <section class="card" id="feelings">
 <div class="eyebrow">The first gesture</div><div class="heart" aria-hidden="true">♡</div>
 <h1 tabindex="-1">A little moment for us</h1>
@@ -182,4 +183,45 @@ $("stay").onclick=()=>$("exitDialog").close();
 $("saveExit").onclick=()=>{if(save())location.href="index.html";};
 $("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}location.href="index.html";};
 renderSelections();
-</script></body></html>
+</script><script>
+(function(){
+  const button=document.getElementById("checkAccount");
+  const output=document.getElementById("accountConnectionStatus");
+  let client,loading;
+  function loadClient(){
+    if(client)return Promise.resolve(client);
+    if(!loading)loading=new Promise((resolve,reject)=>{
+      const script=document.createElement("script");
+      script.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js";
+      script.onload=()=>resolve();
+      script.onerror=()=>{script.remove();loading=null;reject(new Error("load"));};
+      document.head.appendChild(script);
+    });
+    return loading.then(()=>{
+      if(!client)client=window.supabase.createClient("https://iqxhqxlcraatdheslqeo.supabase.co","sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h");
+      return client;
+    });
+  }
+  button.onclick=async()=>{
+    button.disabled=true;
+    output.textContent="Checking your account connection…";
+    try{
+      const sb=await loadClient();
+      const {data,error}=await sb.auth.getUser();
+      if(error||!data?.user){output.textContent="No signed-in account could be verified. Open HEART STONE to sign in, then return here and check again. Your local draft stays here.";return;}
+      const userId=data.user.id;
+      const result=await sb.from("heart_stone_memberships").select("heart_stone_id").eq("user_id",userId).eq("status","active").limit(2);
+      if(result.error)throw result.error;
+      const verify=await sb.auth.getUser();
+      if(verify.error||verify.data?.user?.id!==userId){output.textContent="Your account changed during the check. Please check again.";return;}
+      output.textContent=result.data?.length===1
+        ?"Signed-in account verified. One active HEART STONE connection found. This draft is still local; invitation delivery is not connected yet."
+        :result.data?.length>1
+          ?"Signed-in account verified. More than one HEART STONE connection found. A connection must be chosen before sending can be enabled."
+          :"Signed-in account verified. No active HEART STONE connection found. Open HEART STONE to connect with your partner.";
+    }catch{output.textContent="We couldn’t check your connection. Please try again. Your local draft is unchanged.";}
+    finally{button.disabled=false;}
+  };
+})();
+</script>
+</body></html>
