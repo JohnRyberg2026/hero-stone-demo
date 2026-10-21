@@ -4,7 +4,7 @@
 <meta name="heart-stone-build" content="12g-private-evidence">
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>HEART STONE™ Kickstarter Demo</title>
+<title>HEART STONE™ · DATE QUEST</title><link rel="stylesheet" href="date-home.css?v=three-parts-1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -665,28 +665,24 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="home-topbar">
       <button class="secondary" id="homeProfileBtn">Profile & Settings</button>
     </div>
-    <div class="home-hero">
-      <div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div>
-      <img class="official-logo home-official-logo" src="images/official-logo.png" alt="DATE QUEST official logo"/>
-      <h1 class="home-title">Our HEART STONE</h1>
-      <div class="home-sub">What should we create together today?</div>
-    </div>
+    <section class="dq-home-part dq-welcome" aria-labelledby="dqGreeting"><p class="dq-eyebrow">01 · HEART STONE welcomes you</p><div class="dq-stone" aria-hidden="true">♡</div><h1 id="dqGreeting">Welcome back.</h1><p class="dq-lead">A little time can become something treasured. What would you like to make room for today?</p><div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div></section>
+    <section class="dq-home-part" aria-labelledby="dqMomentsTitle"><p class="dq-eyebrow">02 · Your DATE QUEST moments</p><h2 id="dqMomentsTitle">Something to look forward to.</h2><p>Time chosen for each other. A WILD ADVENTURE™ with as much surprise as you choose.</p><div id="dqMoments"></div><p id="dqMomentsStatus" role="status"></p><button type="button" class="secondary" id="dqRefreshMoments">Refresh my moments</button><a class="dq-main-link" href="invitation-opening.html">Create a moment ♡</a><a class="dq-main-link dq-green" href="invitation-opening.html#shared-invitations">💌 A Moment Is Calling</a><p class="small">Open your invitations and replies. Nothing is accepted automatically.</p>
     <div class="status hidden" id="invitationResponseNotice" role="status" aria-live="polite" style="border:2px solid var(--accent2);padding:16px">
       <h2>Not tonight ❤️</h2>
       <p id="invitationResponseMessage" style="color:var(--ink);margin:0 0 10px"></p>
       <button class="secondary" id="dismissInvitationResponseBtn">Okay</button>
     </div>
-    <div class="home-actions">
-      <button class="good" id="homeCreateBtn">Create an Adventure ❤️</button>
-      <button class="gold" id="homeContinueBtn">Continue Our Adventure 🧭</button>
+    <details><summary>More ways to continue</summary><div class="home-actions">
+      <button class="good" id="homeCreateBtn">Explore WILD ADVENTURES™ ❤️</button>
+      <button class="gold" id="homeContinueBtn">Continue Our WILD ADVENTURE™ 🧭</button>
     </div>
     <div class="home-secondary">
       <button class="secondary" id="homeMemoriesBtn">Our Memories</button>
       <button class="secondary" id="homeStoryBtn">Our Story</button>
     </div>
-    <a href="invitation-opening.html" style="display:block;text-align:center;padding:14px 16px;margin-top:12px;border:1px solid var(--accent);border-radius:15px;color:var(--accent);font-weight:750">Create or Resume an Invitation ❤️</a>
-    <p class="small" style="text-align:center">Drafts stay on this browser until you choose Send. <a href="invitation-opening.html#shared-invitations">View Shared Invitations</a></p>
-    <div class="status" id="homeStatus" role="status" aria-live="polite" aria-atomic="true">Your HEART STONE is ready.</div>
+    </details><div class="status" id="homeStatus" role="status" aria-live="polite" aria-atomic="true">Your HEART STONE is ready.</div></section>
+    <section class="dq-home-part" aria-labelledby="dqCalendarTitle"><p class="dq-eyebrow">03 · Your calendar</p><h2 id="dqCalendarTitle">Make room for what matters.</h2><p>Birthdays, anniversaries, traditions, milestones and wishes for the years ahead.</p><p class="dq-device-note">Demo calendar: personal entries save only in this browser for the signed-in account. They are not shared or synced. Anyone with access to this browser may be able to read saved data. Selective sharing and shared availability hearts are not connected yet.</p><div class="dq-calendar-nav"><button id="dqPreviousMonth" type="button" class="secondary" aria-label="Previous month">←</button><label>Month<select id="dqMonth"></select></label><label>Year<input id="dqYear" type="number" min="1900" max="2199"></label><button id="dqNextMonth" type="button" class="secondary" aria-label="Next month">→</button></div><button id="dqToday" type="button" class="secondary">Return to today</button><h3 id="dqMonthTitle"></h3><div class="dq-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="dq-calendar-grid" id="dqDays" aria-label="Choose a calendar day"></div><h3 id="dqDayTitle"></h3><div id="dqDayEvents"></div><button id="dqAddEvent" type="button">Add something that matters</button><button id="dqAvailability" type="button" class="secondary">♡ Mark my availability for this day</button><p class="small">Your heart is a personal availability note for that day, never an invitation or an obligation. No one is notified. It expires after that day.</p><details><summary>Future wishes & bucket list</summary><div id="dqFutureWishes"></div></details><p id="dqCalendarStatus" role="status" aria-live="polite"></p><form id="dqEventForm" hidden><h3 id="dqEventHeading">A little place on your calendar</h3><label>Name<input id="dqEventName" maxlength="120" required></label><label>Day<input id="dqEventDay" type="date" required></label><label>What does it mean?<select id="dqEventKind"><option value="birthday">Birthday</option><option value="anniversary">Anniversary</option><option value="holiday">Holiday</option><option value="tradition">Tradition</option><option value="milestone">Milestone</option><option value="reminder">Reminder</option><option value="wish">Future wish / bucket list</option><option value="personal">Personal plan</option></select></label><p class="small">A reminder is a calendar label in this demo; notifications are not scheduled. Entries do not repeat automatically.</p><button type="submit">Save on this device</button><button id="dqCancelEvent" type="button" class="secondary">Cancel — keep my calendar</button></form></section>
+
   </section>
 
 <section class="card" id="questCard">
@@ -950,6 +946,7 @@ async function loadHeartStoneHome(){
 }
 
 function setConnectedUI(connected){
+  window.dispatchEvent(new CustomEvent("heartstone:home-state",{detail:{connected}}));
   $("dateQuestApp").classList.toggle("signed-out",!connected);
   ["email","password","signInBtn","authStatus"].forEach(id=>show(id,!connected));
   show("signOutBtn",false);
@@ -3123,5 +3120,6 @@ $("worldRestartQuestBtn").onclick=()=>{
 })();
 </script>
 
+<script src="date-home.js?v=three-parts-1"></script>
 </body>
 </html>
