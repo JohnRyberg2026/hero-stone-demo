@@ -868,8 +868,13 @@ async function ensureFreshAuth(){
   return r?.data?.session || session;
 }
 function step(n){ for(let i=1;i<=6;i++) $("p"+i).classList.toggle("on",i<=n); }
-function show(id,on=true){ $(id).classList.toggle("hidden",!on); }
+function show(id,on=true){
+  const legacyPanels=["questCard","recommendationsCard","dateInvitationCard","sealedEnvelopePanel","openedInvitationPanel","acceptedPanel","adventureCard","completeCard","feedbackCard","historyCard"];
+  if(homeRestingMode&&((on&&legacyPanels.includes(id))||(!on&&id==="homeCard"))) return;
+  $(id).classList.toggle("hidden",!on);
+}
 function setAdventureFocus(on=true){
+  if(on&&homeRestingMode) return;
   if(on){
     homeRestingMode=false;
     localStorage.removeItem("hs_home_resting_mode");
@@ -946,6 +951,7 @@ async function loadHeartStoneHome(){
 }
 
 function setConnectedUI(connected){
+  if(!connected) homeRestingMode=false;
   window.dispatchEvent(new CustomEvent("heartstone:home-state",{detail:{connected}}));
   $("dateQuestApp").classList.toggle("signed-out",!connected);
   ["email","password","signInBtn","authStatus"].forEach(id=>show(id,!connected));
@@ -1369,6 +1375,7 @@ async function showInvitationDeclined(adv){
 $("dismissInvitationResponseBtn").onclick=()=>show("invitationResponseNotice",false);
 
 async function loadSharedDemoState(){
+  if(homeRestingMode) return;
   if(Date.now()<suppressSharedRenderUntil) return;
   // Do not blank the current invitation UI while asynchronous shared-state
   // queries are running. Each resolved lifecycle branch renders its next
@@ -1382,6 +1389,7 @@ async function loadSharedDemoState(){
     .eq("heart_stone_id",heartStoneId).eq("is_demo",true)
     .not("invitation_style","is",null).in("status",["proposed","active","completed","abandoned"])
     .order("created_at",{ascending:false}).limit(1);
+  if(homeRestingMode) return;
   if(invitedErr) return status("questStatus","Invitation sync error: "+invitedErr.message);
   if(isDeclinedInvitation(invited?.[0])){
     await showInvitationDeclined(invited[0]);
@@ -1725,11 +1733,11 @@ async function getSharedDemoFingerprint(){
 }
 
 async function checkForPartnerUpdates(){
-  if(autoSyncBusy || !heartStoneId) return;
+  if(autoSyncBusy || !heartStoneId || homeRestingMode) return;
   autoSyncBusy=true;
   try{
     const fp=await getSharedDemoFingerprint();
-    if(!fp) return;
+    if(homeRestingMode || !fp) return;
 
     let shared=null;
     try{ shared=JSON.parse(fp); }catch(e){}
@@ -2206,10 +2214,23 @@ const gatewayDateLogo=$("gatewayDateLogo");
 const existingDateLogo=document.querySelector(".brand .official-logo");
 if(gatewayDateLogo && existingDateLogo) gatewayDateLogo.src=existingDateLogo.src;
 
-$("enterDateQuestBtn").onclick=()=>{
+$("enterDateQuestBtn").onclick=async()=>{
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  homeLoadVersion++;
   show("platformGateway",false);
   show("dateQuestApp",true);
+  ["questCard","recommendationsCard","dateInvitationCard","sealedEnvelopePanel","openedInvitationPanel","acceptedPanel","adventureCard","completeCard","feedbackCard","historyCard"].forEach(id=>show(id,false));
+  const connected=!$("connectedState").classList.contains("hidden");
+  setAccountCardCollapsed(connected);
+  if(connected) show("homeCard",true);
   window.scrollTo({top:0,behavior:"smooth"});
+  try{
+    const user=await currentUser();
+    if(!user){setConnectedUI(false);return;}
+    if(connected&&heartStoneId) await loadHeartStoneHome();
+    else await loadExistingHeartStone();
+  }catch{status("authStatus","Could not check your account. Please try entering DATE QUEST again.");}
 };
 
 $("enterWorldQuestBtn").onclick=async()=>{
