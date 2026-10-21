@@ -1,6 +1,7 @@
 (function(){
   'use strict';
   const el=id=>document.getElementById(id);
+  let momentDialog=null,momentVersion=0;
   let client,loading,accountId=null,prepared=null,sendBusy=false,inboxBusy=false;
   const avatars={initials:'Initials',heart:'❤️',sun:'☀️',moon:'🌙',flower:'🌸',compass:'🧭'};
   let pictureOwner=null,pictureDraft='initials',pictureVersion=0;
@@ -42,6 +43,7 @@
     }catch(e){el('pictureStatus').textContent=e.message;}finally{b.disabled=false;}
   };
   function clearShared(){
+    momentVersion++;if(momentDialog){momentDialog.close();momentDialog=null;}
     prepared=null;pictureOwner=null;pictureDraft='initials';el('pictureEditor').hidden=true;el('myPicturePreview').replaceChildren();el('recipientPicture').replaceChildren();
     el('sharedInvitationList').replaceChildren();
     el('sharedInvitationStatus').textContent='Account changed. Refresh invitations to continue.';
@@ -184,6 +186,41 @@
       await refreshInbox();
     }catch(e){el('sharedInvitationStatus').textContent=e.message;buttons.forEach(b=>b.disabled=false);}
   }
+  async function openMoment(c,item,card){
+    const version=++momentVersion;
+    el('sharedInvitationStatus').textContent='Opening your moment…';
+    try{
+      const current=await context();
+      if(current.user.id!==c.user.id||current.hs!==c.hs)throw Error('Your account changed. Refresh invitations to continue.');
+      const result=await current.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs});
+      const verify=await current.sb.auth.getUser();
+      if(version!==momentVersion)return;
+      if(result.error||verify.error||verify.data?.user?.id!==c.user.id)throw Error('We couldn’t open this moment. Refresh invitations and try again.');
+      const latest=(result.data||[]).find(x=>x.id===item.id);
+      if(!latest||latest.status!=='accepted'||(latest.revision||0)!==(item.revision||0))throw Error('This invitation changed. Refresh invitations before opening it.');
+      if(momentDialog)momentDialog.close();
+      const dialog=node('dialog',undefined,'momentCinema');momentDialog=dialog;
+      dialog.setAttribute('aria-label','Our moment together');
+      const intro=node('div'),scene=node('div');scene.hidden=true;
+      intro.append(node('div','A new chapter','eyebrow'),node('div','♡','cinemaHeart'));
+      const heading=node('h2','We said yes.');heading.setAttribute('tabindex','-1');intro.append(heading);
+      intro.append(node('p','A little time chosen for each other. A memory waiting to happen.','cinemaLead'));
+      intro.append(node('div',latest.message,'quote'),node('div',planText(latest.plan),'quote'));
+      const sceneHeading=node('h2','Our moment begins');sceneHeading.setAttribute('tabindex','-1');
+      scene.append(node('div','Make room for us','eyebrow'),sceneHeading,node('h3',latest.title,'cinemaTitle'),node('p',latest.story,'cinemaLead'),node('div',planText(latest.plan),'quote'));
+      scene.append(node('p','Follow the moment. Make it yours. Put the phones aside when you can.','cinemaClosing'));
+      action(intro,'Step Into Our Moment ❤️',()=>{intro.hidden=true;scene.hidden=false;sceneHeading.focus();dialog.scrollTop=0;}).className='primary';
+      action(scene,'Back — Our Invitation',()=>{scene.hidden=true;intro.hidden=false;heading.focus();dialog.scrollTop=0;});
+      dialog.append(intro,scene);
+      const exits=node('div',undefined,'actions');
+      action(exits,'Back — Invitations',()=>dialog.close());
+      action(exits,'Stop This Invitation',()=>{if(confirm('Close this invitation for both of you?')){dialog.close();updateInvitation(c,latest,'cancelled','',card);}});
+      dialog.append(exits,node('p','You can leave this view without changing your invitation. You can also stop the invitation at any time.','helper'));
+      dialog.addEventListener('close',()=>{dialog.remove();if(momentDialog===dialog)momentDialog=null;});
+      document.body.append(dialog);dialog.showModal();heading.focus();
+      el('sharedInvitationStatus').textContent='Your accepted moment is ready to open.';
+    }catch(e){if(version===momentVersion)el('sharedInvitationStatus').textContent=e.message;}
+  }
   function revisedTimeForm(c,item,card){
     const panel=node('div');panel.hidden=true;
     const open=action(card,'Propose a New Time',()=>{panel.hidden=false;open.setAttribute('aria-expanded','true');day.focus();});
@@ -236,9 +273,8 @@
         card.append(node('p',item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
         card.append(node('div',item.message,'quote'));
         card.append(node('div',planText(item.plan),'quote'));
-        if(item.status==='accepted'&&incoming){
-          const reveal=node('div',undefined,'quote');reveal.hidden=true;
-          action(card,'Reveal Our Moment ❤️',()=>{reveal.textContent=item.title+'\n'+item.story;reveal.hidden=false;});card.append(reveal);
+        if(item.status==='accepted'){
+          action(card,'Reveal Our Moment ❤️',()=>openMoment(c,item,card)).className='primary';
           card.append(node('p','Saying yes to time together leaves room to change your mind or stop.','helper'));
         }else{card.append(node('p',item.story));}
         if(item.response_note)card.append(node('div','Suggested time: '+item.response_note,'quote'));

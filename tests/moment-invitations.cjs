@@ -12,10 +12,10 @@ function setup(){
  Object.assign(els.message,{value:'I miss you.'});els.experienceTitle.value='Our hideaway';els.experienceStory.value='A quiet moment';els.revealMode.value='surprise';
  const state={user:{id:'sender',email:'sender@example.test'},hs:'hs',partners:[{id:'partner-123456',name:'Partner'}],items:[],calls:[],failSend:false};
  const sb={auth:{getUser:async()=>({data:{user:state.user}}),onAuthStateChange:f=>{state.authListener=f;}},from:()=>({select(){return this},eq(){return this},limit:async()=>({data:[{heart_stone_id:state.hs}]})}),rpc:async(name,args)=>{state.calls.push({name,args});if(name==='my_moment_profile_picture')return {data:args.p_picture||'sun'};if(name==='get_moment_invitation_partners')return {data:state.partners};if(name==='list_moment_invitations')return {data:state.items};if(name==='send_checked_moment_invitation'&&state.failSend)return {error:{message:'network'}};return {data:'invitation-id'};}};
- const storage=new Map();const document={getElementById:id=>{assert(els[id],id);return els[id]},createTextNode:text=>Object.assign(new Element('text'),{textContent:text}),createElement:tag=>new Element(tag),head:{appendChild:s=>s.onload()}};
+ const storage=new Map();const document={body:new Element('body'),getElementById:id=>{assert(els[id],id);return els[id]},createTextNode:text=>Object.assign(new Element('text'),{textContent:text}),createElement:tag=>new Element(tag),head:{appendChild:s=>s.onload()}};
  const ctx=vm.createContext({document,window:{supabase:{createClient:()=>sb}},Option:function(t,v){const e=new Element('option');e.textContent=t;e.value=v;return e;},TextEncoder,crypto:webcrypto,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},confirm:()=>true,planDraft:()=>({whenMode:'together',length:'About 2 hours',meetMode:'home'}),kind:'date',screen:id=>{state.screen=id;}});
  vm.runInContext(fs.readFileSync('moment-invitations.js','utf8'),ctx);
- return {els,state};
+ return {els,state,body:document.body};
 }
 const texts=e=>[e.textContent,...e.children.map(texts)].join('\n');
 const tick=()=>new Promise(r=>setImmediate(r));
@@ -65,6 +65,14 @@ const tick=()=>new Promise(r=>setImmediate(r));
  await card.querySelectorAll('button').find(b=>b.textContent==='I’d love to ❤️').onclick();await tick();await tick();
  assert(state.calls.some(x=>x.name==='respond_moment_invitation_revision'&&x.args.p_expected_revision===4));
  console.log('PASS: revised-time form requires fields and explicit send; back never sends; recipients reply to the displayed revision.');
+ const cinema=setup();({els,state}=cinema);state.items=[{id:'cinema',sender_id:'partner-123456',recipient_id:'sender',status:'accepted',revision:1,title:'Our walk',story:'A quiet wander together',message:'I miss you.',plan:{}}];
+ await els.refreshSharedInvitations.onclick();card=els.sharedInvitationList.children[0];await card.querySelectorAll('button').find(b=>b.textContent==='Reveal Our Moment ❤️').onclick();
+ let dialog=cinema.body.children.at(-1);assert(dialog.open);assert(texts(dialog).includes('We said yes.'));assert(texts(dialog).includes('Our walk'));
+ dialog.querySelectorAll('button').find(b=>b.textContent==='Step Into Our Moment ❤️').onclick();assert(dialog.children[0].hidden);assert(!dialog.children[1].hidden);
+ dialog.querySelectorAll('button').find(b=>b.textContent==='Back — Our Invitation').onclick();assert(!dialog.children[0].hidden);
+ dialog.querySelectorAll('button').find(b=>b.textContent==='Back — Invitations').onclick();assert(!dialog.open);assert(!state.calls.some(x=>x.name==='cancel_moment_invitation'||x.name.startsWith('respond_')));
+ state.items[0].status='cancelled';await card.querySelectorAll('button').find(b=>b.textContent==='Reveal Our Moment ❤️').onclick();assert(els.sharedInvitationStatus.textContent.includes('changed'));assert.equal(cinema.body.children.length,1);
+ console.log('PASS: cinematic reveal checks current acceptance; scene and back do not mutate invitation; stale cancelled invitations cannot open.');
  const html=fs.readFileSync('invitation-opening.html','utf8');for(const [,s] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(s);new vm.Script(fs.readFileSync('moment-invitations.js','utf8'));
  for(const id of ['sharedInbox','prepareLiveSend','sendInvitationDialog','openSharedInvitations'])assert(html.includes('id="'+id+'"'));
  assert(html.includes('function screen(id){$("liveSendStatus").textContent="";'));
