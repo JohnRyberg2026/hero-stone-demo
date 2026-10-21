@@ -7,3 +7,5 @@
 @media(max-width:1000px){.local-layout{grid-template-columns:minmax(0,1fr) 310px}.local-results{grid-template-columns:1fr}}
 @media(max-width:760px){.local-layout{grid-template-columns:1fr}.local-results{grid-template-columns:repeat(2,minmax(0,1fr))}.local-plan{order:2}.local-heading h2{font-size:34px}.local-review pre{padding:15px}.local-categories button{font-size:13px}}
 @media(max-width:480px){.local-results{grid-template-columns:1fr}.local-filters .fields{grid-template-columns:1fr}.local-categories button{font-size:12px}.local-place{padding:20px}}
+
+.local-price{padding:12px;border:1px solid #8a6b28;border-radius:10px;background:#f5e8c5;color:#49380f;font-weight:750;line-height:1.6}
