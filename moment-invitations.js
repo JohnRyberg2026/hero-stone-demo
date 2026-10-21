@@ -226,8 +226,12 @@
       for(const item of items){
         const incoming=item.recipient_id===c.user.id;
         const other=c.partners.find(x=>x.id===(incoming?item.sender_id:item.recipient_id));
-        const card=node('article',undefined,'card');card.style.marginTop='16px';
+        const card=node('article',undefined,'card invitationLetter'+(item.status==='accepted'?' acceptedLetter':''));card.style.marginTop='16px';
         const identity=node('div',undefined,'person');person(identity,other?.name||'your connected partner',other?.picture,incoming?'From ':'To ');card.append(identity);
+        if(item.status==='accepted'){
+          card.append(node('h3',incoming?'It’s a date. ❤️':'They said yes. ❤️','letterOutcome'));
+          card.append(node('p','You have a little time together to look forward to.','letterAnticipation'));
+        }
         card.append(node('h2',item.status==='accepted'&&incoming?'A moment waiting for us':item.title));
         card.append(node('p',item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
         card.append(node('div',item.message,'quote'));
@@ -252,7 +256,7 @@
         if(['pending','accepted','reschedule'].includes(item.status))action(card,incoming?'Stop This Invitation':'Cancel This Invitation',()=>{if(confirm('Close this invitation for both of you?'))updateInvitation(c,item,'cancelled','',card);});
         el('sharedInvitationList').append(card);
       }
-      el('sharedInvitationStatus').textContent=items.length?'Showing your latest '+items.length+' invitation'+(items.length===1?'':'s')+'. Tap Refresh Invitations to see new replies.':'There isn’t an invitation waiting right now.';
+      el('sharedInvitationStatus').textContent=items.length?items.length+' invitation'+(items.length===1?'':'s')+' in your collection. Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
     }catch(e){el('sharedInvitationAccount').textContent='';el('sharedInvitationStatus').textContent=e.message;}
     finally{inboxBusy=false;el('refreshSharedInvitations').disabled=false;}
   }
