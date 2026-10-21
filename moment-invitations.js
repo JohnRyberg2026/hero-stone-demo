@@ -198,6 +198,14 @@
       if(result.error||verify.error||verify.data?.user?.id!==c.user.id)throw Error('We couldn’t open this moment. Refresh invitations and try again.');
       const latest=(result.data||[]).find(x=>x.id===item.id);
       if(!latest||latest.status!=='accepted'||(latest.revision||0)!==(item.revision||0))throw Error('This invitation changed. Refresh invitations before opening it.');
+      let memory='';
+      if(latest.completed_at){
+        const saved=await current.sb.rpc('my_shared_moment_memory',{p_invitation_id:latest.id,p_expected_user:c.user.id});
+        const checked=await current.sb.auth.getUser();
+        if(version!==momentVersion)return;
+        if(saved.error||checked.error||checked.data?.user?.id!==c.user.id)throw Error('We couldn’t load your private memory. Refresh and try again.');
+        memory=saved.data||'';
+      }
       if(momentDialog)momentDialog.close();
       const dialog=node('dialog',undefined,'momentCinema');momentDialog=dialog;
       dialog.setAttribute('aria-label','Our moment together');
@@ -206,12 +214,12 @@
       const heading=node('h2','We said yes.');heading.setAttribute('tabindex','-1');intro.append(heading);
       intro.append(node('p','A little time chosen for each other. A memory waiting to happen.','cinemaLead'));
       intro.append(node('div',latest.message,'quote'),node('div',planText(latest.plan),'quote'));
-      const sceneHeading=node('h2',latest.started_at?'Our moment is underway':'Our moment begins');sceneHeading.setAttribute('tabindex','-1');
+      const sceneHeading=node('h2',latest.completed_at?'A little time, now part of your story':latest.started_at?'Our moment is underway':'Our moment begins');sceneHeading.setAttribute('tabindex','-1');
       scene.append(node('div','Make room for us','eyebrow'),sceneHeading,node('h3',latest.title,'cinemaTitle'),node('p',latest.story,'cinemaLead'),node('div',planText(latest.plan),'quote'));
       scene.append(node('p','Follow the moment. Make it yours. Put the phones aside when you can.','cinemaClosing'));
       action(intro,'Step Into Our Moment ❤️',()=>{intro.hidden=true;scene.hidden=false;sceneHeading.focus();dialog.scrollTop=0;}).className='primary';
       const progress=node('p',latest.started_at?'Your shared moment is underway. You can return here whenever you need the details.':'When you are ready together, begin your shared moment. Both of you will see it as underway.','notice');progress.setAttribute('role','status');scene.append(progress);
-      let starting=false;
+      let starting=false,finishing=false,finish;
       const begin=action(scene,'Begin Our Moment Together ❤️',async()=>{
         if(starting)return;
         if(!confirm('Begin this shared moment? Both of you will see it as underway.'))return;
@@ -222,16 +230,50 @@
           const begun=await fresh.sb.rpc('begin_shared_moment',{p_invitation_id:latest.id,p_expected_user:c.user.id,p_expected_revision:latest.revision||0});
           const checked=await fresh.sb.auth.getUser();
           if(begun.error||!begun.data||checked.error||checked.data?.user?.id!==c.user.id)throw Error('We couldn’t confirm the start. Refresh invitations to check before trying again.');
-          latest.started_at=begun.data;begin.hidden=true;sceneHeading.textContent='Our moment is underway';progress.textContent='Your shared moment is underway. You can return here whenever you need the details.';
+          latest.started_at=begun.data;begin.hidden=true;if(finish)finish.hidden=false;sceneHeading.textContent='Our moment is underway';progress.textContent='Your shared moment is underway. You can return here whenever you need the details.';
           await refreshInbox();
         }catch(e){progress.textContent=e.message;}finally{starting=false;begin.disabled=false;}
       });begin.className='primary';begin.hidden=!!latest.started_at;
+      if(!latest.completed_at){
+        finish=action(scene,'Our Moment Has Come to a Close ❤️',async()=>{
+          if(finishing||!confirm('Close this shared moment for both of you? You can each add a private memory afterward.'))return;
+          finishing=true;finish.disabled=true;progress.textContent='Closing your shared moment…';
+          try{
+            const fresh=await context();
+            if(fresh.user.id!==c.user.id||fresh.hs!==c.hs)throw Error('Your account changed. Refresh invitations to continue.');
+            const done=await fresh.sb.rpc('finish_shared_moment',{p_invitation_id:latest.id,p_expected_user:c.user.id,p_expected_revision:latest.revision||0});
+            const checked=await fresh.sb.auth.getUser();
+            if(version!==momentVersion)return;
+            if(done.error||!done.data||checked.error||checked.data?.user?.id!==c.user.id)throw Error('We couldn’t confirm the close. Refresh invitations to check before trying again.');
+            if(!dialog.open)return;dialog.close();await refreshInbox();await openMoment(c,latest,card);
+          }catch(e){progress.textContent=e.message;}finally{finishing=false;finish.disabled=false;}
+        });finish.className='primary';finish.hidden=!latest.started_at;
+      }
+      if(latest.completed_at){
+        progress.textContent='Your shared moment has come to a close. Keep a little of it in your own words, whenever you are ready.';
+        const label=node('label','What would you like to remember? (optional)'),note=node('textarea');
+        note.maxLength=4000;note.value=memory;note.placeholder='A laugh, a discovery, a small detail…';label.append(note);scene.append(label);
+        scene.append(node('p','Only you can read these words. Your partner can save their own perspective.','helper'));
+        let saving=false;
+        const save=action(scene,'Save My Private Memory ❤️',async()=>{
+          if(saving)return;saving=true;save.disabled=true;progress.textContent='Saving your private memory…';
+          try{
+            const fresh=await context();
+            if(fresh.user.id!==c.user.id||fresh.hs!==c.hs)throw Error('Your account changed. Refresh invitations to continue.');
+            const result=await fresh.sb.rpc('my_shared_moment_memory',{p_invitation_id:latest.id,p_expected_user:c.user.id,p_note:note.value});
+            const checked=await fresh.sb.auth.getUser();
+            if(version!==momentVersion)return;
+            if(result.error||checked.error||checked.data?.user?.id!==c.user.id)throw Error('We couldn’t confirm the save. Your words are still here; try again or reopen to check.');
+            progress.textContent='Your memory is saved privately. You can return here to read or edit it.';
+          }catch(e){progress.textContent=e.message;}finally{saving=false;save.disabled=false;}
+        });save.className='primary';
+      }
       action(scene,'Back — Our Invitation',()=>{scene.hidden=true;intro.hidden=false;heading.focus();dialog.scrollTop=0;});
       dialog.append(intro,scene);
       const exits=node('div',undefined,'actions');
       action(exits,'Back — Invitations',()=>dialog.close());
-      action(exits,'Stop This Invitation',()=>{if(confirm('Close this invitation for both of you?')){dialog.close();updateInvitation(c,latest,'cancelled','',card);}});
-      dialog.append(exits,node('p','You can leave this view without changing your invitation. You can also stop the invitation at any time.','helper'));
+      if(!latest.completed_at)action(exits,'Stop This Invitation',()=>{if(confirm('Close this invitation for both of you?')){dialog.close();updateInvitation(c,latest,'cancelled','',card);}});
+      dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
       dialog.addEventListener('close',()=>{dialog.remove();if(momentDialog===dialog)momentDialog=null;});
       document.body.append(dialog);dialog.showModal();(latest.started_at?sceneHeading:heading).focus();
       el('sharedInvitationStatus').textContent='Your accepted moment is ready to open.';
@@ -282,16 +324,16 @@
         const card=node('article',undefined,'card invitationLetter'+(item.status==='accepted'?' acceptedLetter':''));card.style.marginTop='16px';
         const identity=node('div',undefined,'person');person(identity,other?.name||'your connected partner',other?.picture,incoming?'From ':'To ');card.append(identity);
         if(item.status==='accepted'){
-          card.append(node('h3',item.started_at?'Our moment is underway. ❤️':(incoming?'It’s a date. ❤️':'They said yes. ❤️'),'letterOutcome'));
-          card.append(node('p',item.started_at?'Come back to the moment you have begun together.':'You have a little time together to look forward to.','letterAnticipation'));
+          card.append(node('h3',item.completed_at?'A moment for your story. ❤️':item.started_at?'Our moment is underway. ❤️':(incoming?'It’s a date. ❤️':'They said yes. ❤️'),'letterOutcome'));
+          card.append(node('p',item.completed_at?'Your time together has come to a close. Your own words can keep a little of it.':item.started_at?'Come back to the moment you have begun together.':'You have a little time together to look forward to.','letterAnticipation'));
         }
-        card.append(node('h2',item.status==='accepted'&&incoming?'A moment waiting for us':item.title));
-        card.append(node('p',item.status==='accepted'&&item.started_at?'Your shared moment is underway.':item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
+        card.append(node('h2',item.status==='accepted'&&incoming&&!item.started_at?'A moment waiting for us':item.title));
+        card.append(node('p',item.completed_at?'This shared moment has come to a close.':item.status==='accepted'&&item.started_at?'Your shared moment is underway.':item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
         card.append(node('div',item.message,'quote'));
         card.append(node('div',planText(item.plan),'quote'));
         if(item.status==='accepted'){
-          action(card,item.started_at?'Return to Our Moment ❤️':'Reveal Our Moment ❤️',()=>openMoment(c,item,card)).className='primary';
-          card.append(node('p','Saying yes to time together leaves room to change your mind or stop.','helper'));
+          action(card,item.completed_at?'Revisit Our Moment ❤️':item.started_at?'Return to Our Moment ❤️':'Reveal Our Moment ❤️',()=>openMoment(c,item,card)).className='primary';
+          if(!item.completed_at)card.append(node('p','Saying yes to time together leaves room to change your mind or stop.','helper'));
         }else{card.append(node('p',item.story));}
         if(item.response_note)card.append(node('div','Suggested time: '+item.response_note,'quote'));
         if(!incoming&&item.status==='reschedule')revisedTimeForm(c,item,card);
@@ -305,7 +347,7 @@
           action(reschedule,'Back — Keep Deciding',()=>{reschedule.hidden=true;rescheduleButton.setAttribute('aria-expanded','false');rescheduleButton.focus();});card.append(reschedule);
           action(card,'Thank you for asking. I’ll pass this time.',()=>{if(confirm('Decline this invitation? Your partner will see that it is closed.'))updateInvitation(c,item,'declined','',card);});
         }
-        if(['pending','accepted','reschedule'].includes(item.status))action(card,incoming?'Stop This Invitation':'Cancel This Invitation',()=>{if(confirm('Close this invitation for both of you?'))updateInvitation(c,item,'cancelled','',card);});
+        if(!item.completed_at&&['pending','accepted','reschedule'].includes(item.status))action(card,incoming?'Stop This Invitation':'Cancel This Invitation',()=>{if(confirm('Close this invitation for both of you?'))updateInvitation(c,item,'cancelled','',card);});
         el('sharedInvitationList').append(card);
       }
       el('sharedInvitationStatus').textContent=items.length?items.length+' invitation'+(items.length===1?'':'s')+' in your collection. Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
