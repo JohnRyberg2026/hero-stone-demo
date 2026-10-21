@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict');
+const m=require('./date-store.js');
+const base={section:'closet',category:'Dresses',surprise:'together',wishName:'Evening dress',recipient:'me',purpose:'wishlist',budget:'40',likes:'Soft fabric',avoid:'Scratchy fabric',size:'Check brand sizing',comfort:'exact',area:'',ready:'',fulfillment:'decide',giftNote:'',source:'Amazon — my product link',productUrl:'https://www.amazon.com/dp/example'};
+assert.equal(m.validate(base,false).wishName,'Evening dress');
+assert.throws(()=>m.validate({...base,budget:'-1'},false));
+assert.throws(()=>m.validate({...base,productUrl:'javascript:alert(1)'},false));
+assert.throws(()=>m.validate({...base,productUrl:'https://amazon.com.evil.example/item'},false));
+assert.throws(()=>m.validate({...base,productUrl:'https://user:password@amazon.com/item'},false));
+assert.throws(()=>m.validate({...base,surprise:'auto-approved'},false));
+const intimate={...base,section:'intimate',category:'Adult toys',source:'I have something in mind',productUrl:''};
+assert.throws(()=>m.validate(intimate,false));assert(m.validate(intimate,true));
+assert.throws(()=>m.readDraft(JSON.stringify({version:1,items:[{...base,recipient:'unrecognized'}]})));
+assert.equal(m.readDraft(JSON.stringify({version:1,items:[base,intimate]})).items.length,2);
+assert.deepEqual(m.budgetSummary([base,{...base,budget:'',purpose:'date'},{...base,purpose:'owned'}]),{amount:40,unknown:1});
+const fs=require('fs'),html=fs.readFileSync('date-store.html','utf8');
+for(const id of ['adultGate','builder','wishForm','wishList','saveDraft','resumeDraft','deleteDraft','wineNotice'])assert(html.includes('id="'+id+'"'));
+console.log('PASS: category and adult entry validation; spending limits; safe retailer URLs; malformed drafts; no implied approval; form integration.');

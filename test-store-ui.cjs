@@ -1,0 +1,16 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+class E{constructor(){this.children=[];this.value='';this.textContent='';this.hidden=false;this.dataset={};this.listeners={};this.checked=false;}append(...x){this.children.push(...x)}replaceChildren(...x){this.children=x;if(x[0]?.tag==='option')this.value=x[0].value;}setAttribute(k,v){this[k]=v}addEventListener(k,v){this.listeners[k]=v}scrollIntoView(){}querySelector(){return submit}}
+const html=fs.readFileSync('date-store.html','utf8'),els=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(x=>[x[1],new E()])),submit=new E(),storage=new Map(),tabs=['closet','intimate','romance'].map(x=>{const e=new E();e.dataset.section=x;return e;});
+function defaults(){for(const x of ['wishName','budget','likes','avoid','size','area','ready','giftNote','productUrl'])els[x].value='';Object.assign(els.recipient,{value:'me'});els.purpose.value='wishlist';els.comfort.value='consider';els.fulfillment.value='decide';}
+els.wishForm.reset=defaults;defaults();let allow=true;
+const context=vm.createContext({URL,document:{getElementById:id=>els[id],querySelectorAll:()=>tabs,createElement:tag=>Object.assign(new E(),{tag})},window:{addEventListener(){}},confirm:()=>allow,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}});
+vm.runInContext(fs.readFileSync('date-store.js','utf8'),context);
+const text=e=>e.textContent+' '+e.children.map(text).join(' '),choose=(id,name)=>els[id].children.find(x=>x.textContent===name).onclick(),keep=()=>els.wishForm.onsubmit({preventDefault(){}});
+assert(!els.builder.hidden);choose('categories','Dresses');els.wishName.value='A soft dress';els.budget.value='50';keep();assert(text(els.wishList).includes('A soft dress'));
+tabs[1].onclick();assert(!els.adultGate.hidden&&els.builder.hidden);els.enterAdult.onclick();assert(els.gateStatus.textContent.includes('18'));els.adultConfirm.checked=true;els.enterAdult.onclick();assert(!els.builder.hidden);
+els.wishName.value='An adult wish';els.budget.value='30';keep();assert(text(els.wishList).includes('An adult wish'));
+allow=false;els.saveDraft.onclick();assert.equal(storage.size,0);allow=true;els.saveDraft.onclick();assert.equal(storage.size,1);
+els.clearAll.onclick();assert(!text(els.wishList).includes('A soft dress'));els.resumeDraft.onclick();assert(text(els.wishList).includes('A soft dress'));assert(!text(els.wishList).includes('An adult wish'));assert(text(els.wishList).includes('private intimate wish'));assert(els.total.textContent.includes('$50.00'));
+tabs[2].onclick();choose('categories','Wine');assert(!els.wineNotice.hidden);els.wishName.value='Wine from a local winery';keep();assert(!els.wishList.children.at(-1).children.some(x=>x.tag==='a'));
+els.deleteDraft.onclick();assert.equal(storage.size,0);assert(text(els.wishList).includes('A soft dress'));
+console.log('PASS: kept wishes, adult entry, save cancellation, explicit save/resume, masked adult details and budgets, wine planning, independent saved-draft deletion.');
