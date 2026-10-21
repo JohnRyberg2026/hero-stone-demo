@@ -198,5 +198,5 @@ $("stay").onclick=()=>$("exitDialog").close();
 $("saveExit").onclick=()=>{if(save())location.href="index.html";};
 $("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}location.href="index.html";};
 renderSelections();
-</script><script src="moment-invitations.js?v=cinematic-reveal"></script>
+</script><script src="moment-invitations.js?v=begin-shared-moment"></script>
 </body></html>
