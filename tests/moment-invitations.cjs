@@ -3,7 +3,7 @@ class Element{
  constructor(tag='div'){this.tagName=tag;this.children=[];this.value='';this.textContent='';this.style={};this.disabled=false;this.hidden=false;this.open=false;this.listeners={};this.dataset={};}
  append(...nodes){this.children.push(...nodes);} appendChild(n){this.children.push(n);return n;} add(n){this.children.push(n);}
  replaceChildren(...nodes){this.children=[...nodes];} setAttribute(k,v){this[k]=v;} addEventListener(k,f){this.listeners[k]=f;}
- showModal(){this.open=true;} close(){this.open=false;} remove(){}
+ showModal(){this.open=true;} close(){this.open=false;} remove(){} focus(){this.focused=true;}
  querySelectorAll(tag){return this.children.flatMap(n=>[...(n.tagName===tag?[n]:[]),...n.querySelectorAll(tag)]);}
 }
 function setup(){
@@ -48,10 +48,23 @@ const tick=()=>new Promise(r=>setImmediate(r));
    calls=state.calls.filter(x=>x.name==='send_checked_moment_invitation');assert.equal(calls.at(-1).args.p_client_request_id,fresh);
  }
  console.log('PASS: declined and cancelled invitations get fresh send keys; uncertain retries keep the fresh key.');
- ({els,state}=setup());state.items=[{id:'i',sender_id:'partner-123456',recipient_id:'sender',status:'pending',message:'<img src=x onerror=alert(1)>',title:'A little surprise for us',story:'A little surprise is waiting for us.',plan:{}}];await els.refreshSharedInvitations.onclick();assert(texts(els.sharedInvitationList).includes('I’d love to'));assert(!texts(els.sharedInvitationList).includes('SECRET'));const accept=els.sharedInvitationList.querySelectorAll('button').find(b=>b.textContent==='I’d love to ❤️');accept.onclick();await tick();await tick();assert(state.calls.some(x=>x.name==='respond_moment_invitation'&&x.args.p_response==='accepted'));
+ ({els,state}=setup());state.items=[{id:'i',sender_id:'partner-123456',recipient_id:'sender',status:'pending',message:'<img src=x onerror=alert(1)>',title:'A little surprise for us',story:'A little surprise is waiting for us.',plan:{}}];await els.refreshSharedInvitations.onclick();assert(texts(els.sharedInvitationList).includes('I’d love to'));assert(!texts(els.sharedInvitationList).includes('SECRET'));const accept=els.sharedInvitationList.querySelectorAll('button').find(b=>b.textContent==='I’d love to ❤️');accept.onclick();await tick();await tick();assert(state.calls.some(x=>x.name==='respond_moment_invitation_revision'&&x.args.p_response==='accepted'));
  console.log('PASS: recipient inbox renders safe text and acceptance calls the response API.');
  ({els,state}=setup());state.items=[{id:'i',sender_id:'sender',recipient_id:'partner-123456',status:'declined',title:'Our moment',story:'A quiet moment',plan:{}}];await els.refreshSharedInvitations.onclick();assert(texts(els.sharedInvitationList).includes('invitation is closed'));assert.equal(els.sharedInvitationList.querySelectorAll('button').length,0);state.authListener('SIGNED_OUT',null);assert.equal(els.sharedInvitationList.children.length,0);
  console.log('PASS: closed sender invitations have no response controls; sign-out clears shared content.');
+ ({els,state}=setup());state.items=[{id:'rev',sender_id:'sender',recipient_id:'partner-123456',status:'reschedule',revision:3,title:'Our moment',story:'Quiet time',response_note:'Saturday',plan:{momentZone:'America/New_York'}}];
+ await els.refreshSharedInvitations.onclick();let card=els.sharedInvitationList.children[0];
+ const findButton=label=>card.querySelectorAll('button').find(b=>b.textContent===label);
+ const propose=findButton('Propose a New Time');assert(propose);propose.onclick();assert.equal(propose['aria-expanded'],'true');
+ findButton('Back — Keep Deciding').onclick();assert.equal(propose['aria-expanded'],'false');assert(!state.calls.some(x=>x.name==='propose_moment_invitation_time'));
+ propose.onclick();const submit=findButton('Send Revised Invitation ❤️');await submit.onclick();assert(!state.calls.some(x=>x.name==='propose_moment_invitation_time'));
+ let fields=card.querySelectorAll('input');fields[0].value='2026-11-07';fields[1].value='14:00';await submit.onclick();
+ const proposal=state.calls.find(x=>x.name==='propose_moment_invitation_time');assert(proposal);assert.equal(proposal.args.p_expected_revision,3);assert.equal(proposal.args.p_expected_sender,'sender');assert.equal(proposal.args.p_date,'2026-11-07');assert.equal(proposal.args.p_zone,'America/New_York');
+ ({els,state}=setup());state.items=[{id:'rev',sender_id:'partner-123456',recipient_id:'sender',status:'pending',revision:4,title:'Our moment',story:'Quiet time',plan:{}}];await els.refreshSharedInvitations.onclick();
+ card=els.sharedInvitationList.children[0];assert(!card.querySelectorAll('button').some(b=>b.textContent==='Propose a New Time'));assert(texts(card).includes('Revised time proposed'));
+ await card.querySelectorAll('button').find(b=>b.textContent==='I’d love to ❤️').onclick();await tick();await tick();
+ assert(state.calls.some(x=>x.name==='respond_moment_invitation_revision'&&x.args.p_expected_revision===4));
+ console.log('PASS: revised-time form requires fields and explicit send; back never sends; recipients reply to the displayed revision.');
  const html=fs.readFileSync('invitation-opening.html','utf8');for(const [,s] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(s);new vm.Script(fs.readFileSync('moment-invitations.js','utf8'));
  for(const id of ['sharedInbox','prepareLiveSend','sendInvitationDialog','openSharedInvitations'])assert(html.includes('id="'+id+'"'));
  assert(html.includes('function screen(id){$("liveSendStatus").textContent="";'));
