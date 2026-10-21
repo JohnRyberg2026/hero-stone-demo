@@ -66,7 +66,7 @@ if(typeof document!=='undefined')(()=>{
   const shown=all.filter(p=>(!filter||p.category===filter)&&[p.name,p.brand,p.subcategory,p.photo].join(' ').toLowerCase().includes(search));
   $('catalogHeading').textContent='Explore '+all.length+' clothing finds · Photos, sizes & details';$('catalogGrid').replaceChildren();$('catalogCount').textContent=shown.length+' clothing find'+(shown.length===1?'':'s')+'. Personal fit details are kept separate.';
   for(const p of shown){const card=make('article');card.className='product-card';
-   const img=make('img');img.src=p.imageUrl;img.alt=p.photo;img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>{img.hidden=true;};card.append(img);
+   if(p.imageUrl){const img=make('img');img.src=p.imageUrl;img.alt=p.photo;img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>{img.hidden=true;};card.append(img);}else{const placeholder=make('p','Product image unavailable');placeholder.className='notice';card.append(placeholder);}
    card.append(make('small',p.brand+' · '+p.subcategory),make('h3',p.name),make('strong','$'+p.price.toFixed(2)+' USD · '+p.variant),make('p','Observed Oct 21, 2026 — confirm current price.'),make('p','Listed sizes: '+p.sizes.join(', ')));
    const d=make('details');d.append(make('summary','Fabric, fit & photo notes'),make('p',p.fabric||'Fabric composition not captured.'),make('p',p.note),make('p',p.photo));card.append(d);
    const a=make('a','View product & size chart on Amazon ↗');a.href=p.url;a.target='_blank';a.rel='noopener noreferrer';card.append(a);
