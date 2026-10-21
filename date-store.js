@@ -61,6 +61,7 @@ if(typeof document!=='undefined')(()=>{
  $('clearAll').onclick=()=>{if(!confirm('Discard your open list and unfinished idea? A saved draft remains until you delete it separately.'))return;items=[];adult=false;section='closet';reset();render();dirty=false;notify('draftStatus','Open list discarded. Nothing was ordered.');};
  window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 
+ window.addEventListener('heartstone:request-wishes',()=>{window.dispatchEvent(new CustomEvent('heartstone:kept-wishes',{detail:items.filter(i=>i.section!=='intimate').map(i=>({name:i.wishName,url:i.productUrl,amount:i.budget}))}));});
  function renderCatalog(){
   const all=typeof StoreCatalog==='undefined'?[]:StoreCatalog,filter=$('catalogCategory').value,search=$('catalogSearch').value.trim().toLowerCase();
   const shown=all.filter(p=>(!filter||p.category===filter)&&[p.name,p.brand,p.subcategory,p.photo].join(' ').toLowerCase().includes(search));
