@@ -35,11 +35,25 @@ const tick=()=>new Promise(r=>setImmediate(r));
  console.log('PASS: changed account and signed-out state prevent sending.');
  ({els,state}=setup());state.failSend=true;await els.prepareLiveSend.onclick();els.liveRecipient.value='partner-123456';await els.confirmLiveSend.onclick();assert(els.sendInvitationDialog.open);assert(els.sendDialogStatus.textContent.includes('couldn’t confirm'));assert(!els.liveSendStatus.textContent.includes('Invitation sent'));
  console.log('PASS: failed/uncertain sends do not claim success.');
+ for(const closed of ['declined','cancelled']){
+   ({els,state}=setup());
+   await els.prepareLiveSend.onclick();els.liveRecipient.value='partner-123456';await els.confirmLiveSend.onclick();
+   const original=state.calls.find(x=>x.name==='send_checked_moment_invitation').args.p_client_request_id;
+   state.items=[{id:'invitation-id',status:closed}];
+   await els.prepareLiveSend.onclick();els.liveRecipient.value='partner-123456';await els.confirmLiveSend.onclick();
+   let calls=state.calls.filter(x=>x.name==='send_checked_moment_invitation');
+   assert.equal(calls.length,3);assert.equal(calls[1].args.p_client_request_id,original);assert.notEqual(calls[2].args.p_client_request_id,original);
+   const fresh=calls[2].args.p_client_request_id;
+   state.failSend=true;await els.prepareLiveSend.onclick();els.liveRecipient.value='partner-123456';await els.confirmLiveSend.onclick();
+   calls=state.calls.filter(x=>x.name==='send_checked_moment_invitation');assert.equal(calls.at(-1).args.p_client_request_id,fresh);
+ }
+ console.log('PASS: declined and cancelled invitations get fresh send keys; uncertain retries keep the fresh key.');
  ({els,state}=setup());state.items=[{id:'i',sender_id:'partner-123456',recipient_id:'sender',status:'pending',message:'<img src=x onerror=alert(1)>',title:'A little surprise for us',story:'A little surprise is waiting for us.',plan:{}}];await els.refreshSharedInvitations.onclick();assert(texts(els.sharedInvitationList).includes('I’d love to'));assert(!texts(els.sharedInvitationList).includes('SECRET'));const accept=els.sharedInvitationList.querySelectorAll('button').find(b=>b.textContent==='I’d love to ❤️');accept.onclick();await tick();await tick();assert(state.calls.some(x=>x.name==='respond_moment_invitation'&&x.args.p_response==='accepted'));
  console.log('PASS: recipient inbox renders safe text and acceptance calls the response API.');
  ({els,state}=setup());state.items=[{id:'i',sender_id:'sender',recipient_id:'partner-123456',status:'declined',title:'Our moment',story:'A quiet moment',plan:{}}];await els.refreshSharedInvitations.onclick();assert(texts(els.sharedInvitationList).includes('invitation is closed'));assert.equal(els.sharedInvitationList.querySelectorAll('button').length,0);state.authListener('SIGNED_OUT',null);assert.equal(els.sharedInvitationList.children.length,0);
  console.log('PASS: closed sender invitations have no response controls; sign-out clears shared content.');
  const html=fs.readFileSync('invitation-opening.html','utf8');for(const [,s] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(s);new vm.Script(fs.readFileSync('moment-invitations.js','utf8'));
  for(const id of ['sharedInbox','prepareLiveSend','sendInvitationDialog','openSharedInvitations'])assert(html.includes('id="'+id+'"'));
- console.log('PASS: HTML integration and inline/external JavaScript syntax.');
+ assert(html.includes('function screen(id){$("liveSendStatus").textContent="";'));
+ console.log('PASS: navigation clears old send feedback; HTML integration and JavaScript syntax.');
 })().catch(e=>{console.error(e);process.exit(1);});
