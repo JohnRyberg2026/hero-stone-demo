@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   const el=id=>document.getElementById(id);
-  let momentDialog=null,momentVersion=0;
+  let momentDialog=null,momentVersion=0,selectedConnection=null;
   let client,loading,accountId=null,prepared=null,sendBusy=false,inboxBusy=false;
   const avatars={initials:'Initials',heart:'❤️',sun:'☀️',moon:'🌙',flower:'🌸',compass:'🧭'};
   let pictureOwner=null,pictureDraft='initials',pictureVersion=0;
@@ -65,7 +65,7 @@
         client.auth.onAuthStateChange((event,session)=>{
           const next=session?.user?.id||null;
           if(accountId!==null&&accountId!==next)clearShared();
-          accountId=next;
+          accountId=next;selectedConnection=null;el('datingConnection').replaceChildren(new Option('Check my connections first',''));
         });
       }
       return client;
@@ -76,22 +76,36 @@
     const {data,error}=await sb.auth.getUser();
     if(error||!data?.user)throw new Error('Please sign in through HEART STONE, then return here. Your local draft stays here.');
     const user=data.user;
-    const result=await sb.from('heart_stone_memberships').select('heart_stone_id').eq('user_id',user.id).eq('status','active').limit(2);
+    const result=await sb.from('heart_stone_memberships').select('heart_stone_id').eq('user_id',user.id).eq('status','active').limit(100);
     if(result.error)throw new Error('We couldn’t check your HEART STONE connection. Please try again.');
-    if(result.data?.length!==1)throw new Error(result.data?.length>1?'More than one HEART STONE connection was found. Sending is unavailable until a connection can be chosen.':'No active HEART STONE connection was found. Open HEART STONE to connect with your partner.');
-    const hs=result.data[0].heart_stone_id;
+    if(accountId!==null&&accountId!==user.id){clearShared();selectedConnection=null;}
+    accountId=user.id;
+    const connections=[...new Set((result.data||[]).map(row=>row.heart_stone_id))];
+    if(!connections.length)throw new Error('No active dating connection was found. Open HEART STONE to connect first.');
+    if(selectedConnection&&!connections.includes(selectedConnection)){selectedConnection=null;clearShared();}
+    if(connections.length===1&&!selectedConnection)selectedConnection=connections[0];
+    const selector=el('datingConnection');
+    selector.replaceChildren(new Option('Choose a dating connection',''),...connections.map((id,index)=>new Option('Connection '+(index+1)+' · '+id.slice(0,8),id)));
+    selector.value=selectedConnection||'';
+    if(!selectedConnection)throw new Error('Choose which dating connection this invitation or inbox is for. Each connection stays separate.');
+    const hs=selectedConnection;
     const partners=await sb.rpc('get_moment_invitation_partners',{p_heart_stone_id:hs});
     if(partners.error)throw new Error('We couldn’t load the connected partners. Please try again.');
     const verify=await sb.auth.getUser();
-    if(verify.error||verify.data?.user?.id!==user.id)throw new Error('Your account changed. Please check again.');
+    if(verify.error||verify.data?.user?.id!==user.id||selectedConnection!==hs)throw new Error('Your account or selected connection changed. Please check again.');
     if(accountId!==null&&accountId!==user.id)clearShared();
     accountId=user.id;
     return {sb,user,hs,partners:partners.data||[]};
   }
+  el('datingConnection').onchange=()=>{
+    const next=el('datingConnection').value||null;
+    clearShared();selectedConnection=next;
+    el('accountConnectionStatus').textContent='Connection changed. Check this connection before sending or refreshing its invitations. Your local draft has not been sent.';
+  };
   el('checkAccount').onclick=async()=>{
     const button=el('checkAccount');button.disabled=true;
     el('accountConnectionStatus').textContent='Checking your account connection…';
-    try{const c=await context();el('accountConnectionStatus').textContent='Signed in as '+(c.user.email||'your verified account')+'. One active HEART STONE connection found. '+c.partners.length+' connected partner'+(c.partners.length===1?'':'s')+'. Your draft stays local until you choose Send.';}
+    try{const c=await context();el('accountConnectionStatus').textContent='Signed in as '+(c.user.email||'your verified account')+'. Selected dating connection checked. '+c.partners.length+' connected partner'+(c.partners.length===1?'':'s')+'. Your draft stays local until you choose Send.';}
     catch(e){el('accountConnectionStatus').textContent=e.message;}
     finally{button.disabled=false;}
   };
@@ -315,7 +329,7 @@
       const result=await c.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs});
       if(result.error)throw new Error('We couldn’t load your shared invitations. Please try again.');
       const verify=await c.sb.auth.getUser();
-      if(verify.error||verify.data?.user?.id!==c.user.id)throw new Error('Your account changed. Refresh invitations to continue.');
+      if(verify.error||verify.data?.user?.id!==c.user.id||selectedConnection!==c.hs)throw new Error('Your account or selected connection changed. Refresh invitations to continue.');
       const items=Array.isArray(result.data)?result.data:[];
       el('sharedInvitationAccount').textContent='Signed in as '+(c.user.email||'your verified account');
       for(const item of items){
