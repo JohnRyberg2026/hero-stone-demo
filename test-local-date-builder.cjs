@@ -23,6 +23,12 @@ const context=vm.createContext({URL,console,Math,document:{getElementById:id=>el
 vm.runInContext(fs.readFileSync('local-date-catalog.js','utf8'),context);vm.runInContext(fs.readFileSync('local-date-builder.js','utf8'),context);
 const text=e=>e.textContent+' '+e.children.map(text).join(' '),btn=(e,name)=>e.children.find(x=>x.tag==='button'&&x.textContent===name);
 assert.equal(els.localResults.children.length,6);
+assert.equal(catalog.filter(b=>b.category==='meals'&&b.priceLevel>=1&&b.priceLevel<=5).length,6);
+assert(m.priceLabel(catalog[0]).includes('Estimated price:'));assert(m.priceLabel(catalog[0]).includes('$25–$39.99'));
+assert(m.select(catalog,{priceLevel:'2'}).every(b=>b.category==='meals'&&b.priceLevel===2));
+assert.equal(m.select(catalog,{priceLevel:'5'}).length,0);
+assert.equal(m.select(catalog,{category:'cafes',priceLevel:'2'}).length,0);
+els.localPrice.value='4';els.localPrice.onchange();assert.equal(els.localResults.children.length,1);assert(text(els.localResults).includes('Connors'));els.localResetFilters.onclick();assert.equal(els.localPrice.value,'');assert.equal(els.localResults.children.length,6);
 els.localResults.children[0].children.at(-1).children.at(-1).onclick();assert(text(els.localPlanStops).includes('Owen'));assert.equal(els.localResults.children[0].children.at(-1).children.at(-1).disabled,true);
 let inputs=els.localPlanStops.children[0].children.find(x=>x.className==='local-stop-fields');inputs.children[1].children[0].value='45';inputs.children[1].children[0].onchange();inputs.children[0].children[0].value='18:30';inputs.children[0].children[0].onchange();assert(els.planTotals.textContent.includes('$45.00'));
 allow=false;els.localSave.onclick();assert.equal(storage.size,0);allow=true;els.localSave.onclick();assert.equal(storage.size,1);
