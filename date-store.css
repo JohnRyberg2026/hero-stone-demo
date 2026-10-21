@@ -9,3 +9,5 @@
 @media(max-width:480px){.local-results{grid-template-columns:1fr}.local-filters .fields{grid-template-columns:1fr}.local-categories button{font-size:12px}.local-place{padding:20px}}
 
 .local-price{padding:12px;border:1px solid #8a6b28;border-radius:10px;background:#f5e8c5;color:#49380f;font-weight:750;line-height:1.6}
+
+.intimate-name-list{list-style:none;padding:0;margin:24px 0}.intimate-name-list li{padding:18px 12px;border-bottom:1px solid #d7cbbd;color:#244f43;font-weight:650;line-height:1.6;overflow-wrap:anywhere}
