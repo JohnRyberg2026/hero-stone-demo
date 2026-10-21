@@ -15,12 +15,15 @@ const LocalDateCatalog=[
     "effort": "seated",
     "minutes": 90,
     "hazards": [],
-    "priceNote": "Ask provider for current prices, fees and availability.",
+    "priceNote": "HEART STONE editorial estimate for a typical adult main course, not a live quote or a review rating. Lunch, premium dishes, specials and buffet choices may fall in another level. Drinks, extras, tax and tips are additional. Confirm the current menu with the restaurant.",
     "sourceUrl": "https://owensfishcamp.com/",
     "sourceType": "Official provider",
     "reviewedOn": "2026-10-21",
     "member": false,
-    "referred": false
+    "referred": false,
+    "priceLevel": 3,
+    "priceSourceUrl": "https://owensfishcamp.com/menu/",
+    "priceEstimateOn": "2026-10-21"
   },
   {
     "id": "columbia",
@@ -36,12 +39,15 @@ const LocalDateCatalog=[
     "effort": "seated",
     "minutes": 90,
     "hazards": [],
-    "priceNote": "Ask provider for current prices, fees and availability.",
+    "priceNote": "HEART STONE editorial estimate for a typical adult main course, not a live quote or a review rating. Lunch, premium dishes, specials and buffet choices may fall in another level. Drinks, extras, tax and tips are additional. Confirm the current menu with the restaurant.",
     "sourceUrl": "https://www.columbiarestaurant.com/st-armands-circle-sarasota",
     "sourceType": "Official provider",
     "reviewedOn": "2026-10-21",
     "member": false,
-    "referred": false
+    "referred": false,
+    "priceLevel": 3,
+    "priceSourceUrl": "https://www.columbiarestaurant.com/st-armands-circle-sarasota",
+    "priceEstimateOn": "2026-10-21"
   },
   {
     "id": "connors",
@@ -57,12 +63,15 @@ const LocalDateCatalog=[
     "effort": "seated",
     "minutes": 90,
     "hazards": [],
-    "priceNote": "Ask provider for current prices, fees and availability.",
+    "priceNote": "HEART STONE editorial estimate for a typical adult main course, not a live quote or a review rating. Lunch, premium dishes, specials and buffet choices may fall in another level. Drinks, extras, tax and tips are additional. Confirm the current menu with the restaurant.",
     "sourceUrl": "https://connorsrestaurant.com/sarasota-fl-steakhouse.html",
     "sourceType": "Official provider",
     "reviewedOn": "2026-10-21",
     "member": false,
-    "referred": false
+    "referred": false,
+    "priceLevel": 4,
+    "priceSourceUrl": "https://www.connorsrestaurant.com/menus.html",
+    "priceEstimateOn": "2026-10-21"
   },
   {
     "id": "geckos",
@@ -78,12 +87,15 @@ const LocalDateCatalog=[
     "effort": "seated",
     "minutes": 75,
     "hazards": [],
-    "priceNote": "Ask provider for current prices, fees and availability.",
+    "priceNote": "HEART STONE editorial estimate for a typical adult main course, not a live quote or a review rating. Lunch, premium dishes, specials and buffet choices may fall in another level. Drinks, extras, tax and tips are additional. Confirm the current menu with the restaurant.",
     "sourceUrl": "https://geckosgrill.com/locations/",
     "sourceType": "Official provider",
     "reviewedOn": "2026-10-21",
     "member": false,
-    "referred": false
+    "referred": false,
+    "priceLevel": 2,
+    "priceSourceUrl": "https://geckosgrill.com/menu/",
+    "priceEstimateOn": "2026-10-21"
   },
   {
     "id": "mipueblo",
@@ -99,12 +111,15 @@ const LocalDateCatalog=[
     "effort": "seated",
     "minutes": 75,
     "hazards": [],
-    "priceNote": "Ask provider for current prices, fees and availability.",
+    "priceNote": "HEART STONE editorial estimate for a typical adult main course, not a live quote or a review rating. Lunch, premium dishes, specials and buffet choices may fall in another level. Drinks, extras, tax and tips are additional. Confirm the current menu with the restaurant.",
     "sourceUrl": "https://www.mipueblomexican.com/contact-location",
     "sourceType": "Official provider",
     "reviewedOn": "2026-10-21",
     "member": false,
-    "referred": false
+    "referred": false,
+    "priceLevel": 2,
+    "priceSourceUrl": "https://www.mipueblomexican.com/sarasota-mexican-restauraunt",
+    "priceEstimateOn": "2026-10-21"
   },
   {
     "id": "derdutchman",
@@ -120,12 +135,15 @@ const LocalDateCatalog=[
     "effort": "seated",
     "minutes": 75,
     "hazards": [],
-    "priceNote": "Ask provider for current prices, fees and availability.",
+    "priceNote": "HEART STONE editorial estimate for a typical adult main course, not a live quote or a review rating. Lunch, premium dishes, specials and buffet choices may fall in another level. Drinks, extras, tax and tips are additional. Confirm the current menu with the restaurant.",
     "sourceUrl": "https://dhgroup.com/restaurants/der-dutchman-sarasota-fl/",
     "sourceType": "Official provider",
     "reviewedOn": "2026-10-21",
     "member": false,
-    "referred": false
+    "referred": false,
+    "priceLevel": 2,
+    "priceSourceUrl": "https://dhgroup.com/restaurants/der-dutchman-sarasota-fl/",
+    "priceEstimateOn": "2026-10-21"
   },
   {
     "id": "project-burns",
