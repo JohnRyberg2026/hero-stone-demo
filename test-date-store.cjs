@@ -4,8 +4,8 @@ const base={section:'closet',category:'Dresses',surprise:'together',wishName:'Ev
 assert.equal(m.validate(base,false).wishName,'Evening dress');
 assert(!Object.hasOwn(m.validate({...base,height:'170',weight:'65',braCup:'DD'},false),'size'));
 assert(!Object.hasOwn(m.validate({...base,height:'170',weight:'65',braCup:'DD'},false),'height'));
-const catalog=require('./store-catalog.js');assert.equal(catalog.length,42);assert.equal(new Set(catalog.map(p=>p.asin)).size,42);
-for(const p of catalog){assert(m.sections[p.section].categories.includes(p.category));assert(p.price>0);assert(p.sizes.length);assert(/^https:\/\/m\.media-amazon\.com\/images\/I\//.test(p.imageUrl));assert(/^https:\/\/www\.amazon\.com\/dp\/[A-Z0-9]{10}$/.test(p.url));}
+const catalog=require('./store-catalog.js');assert.equal(catalog.length,61);assert.equal(new Set(catalog.map(p=>p.asin)).size,61);
+for(const p of catalog){assert(m.sections[p.section].categories.includes(p.category));assert(p.price>0);assert(p.sizes.length);assert(/^https:\/\/m\.media-amazon\.com\/images\/I\//.test(p.imageUrl)||(!p.imageUrl&&p.imageStatus==='Image unavailable — placeholder shown'));assert(/^https:\/\/www\.amazon\.com\/dp\/[A-Z0-9]{10}$/.test(p.url));}
 assert.throws(()=>m.validate({...base,budget:'-1'},false));
 assert.throws(()=>m.validate({...base,productUrl:'javascript:alert(1)'},false));
 assert.throws(()=>m.validate({...base,productUrl:'https://amazon.com.evil.example/item'},false));
