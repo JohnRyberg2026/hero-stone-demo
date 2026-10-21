@@ -7,7 +7,7 @@ const context=vm.createContext({URL,document:{getElementById:id=>els[id],querySe
 vm.runInContext(fs.readFileSync('store-catalog.js','utf8'),context);
 vm.runInContext(fs.readFileSync('date-store.js','utf8'),context);
 const text=e=>e.textContent+' '+e.children.map(text).join(' '),choose=(id,name)=>els[id].children.find(x=>x.textContent===name).onclick(),keep=()=>els.wishForm.onsubmit({preventDefault(){}});
-assert.equal(els.catalogGrid.children.length,18);els.catalogSearch.value='tankini';els.catalogSearch.oninput();assert.equal(els.catalogGrid.children.length,1);els.catalogGrid.children[0].children.find(x=>x.textContent==='Make This a Little Wish ♡').onclick();assert(els.wishName.value.includes('tankini'));assert.equal(els.productUrl.value,'https://www.amazon.com/dp/B0GVF5ZXT1');els.resetIdea.onclick();
+assert.equal(els.catalogGrid.children.length,37);els.catalogSearch.value='tankini';els.catalogSearch.oninput();assert.equal(els.catalogGrid.children.length,1);els.catalogGrid.children[0].children.find(x=>x.textContent==='Make This a Little Wish ♡').onclick();assert(els.wishName.value.includes('tankini'));assert.equal(els.productUrl.value,'https://www.amazon.com/dp/B0GVF5ZXT1');els.resetIdea.onclick();
 assert(!els.builder.hidden);choose('categories','Dresses');els.wishName.value='A soft dress';els.budget.value='50';keep();assert(text(els.wishList).includes('A soft dress'));
 tabs[1].onclick();assert(!els.adultGate.hidden&&els.builder.hidden);els.enterAdult.onclick();assert(els.gateStatus.textContent.includes('18'));els.adultConfirm.checked=true;els.enterAdult.onclick();assert(!els.builder.hidden);
 els.wishName.value='An adult wish';els.budget.value='30';keep();assert(text(els.wishList).includes('An adult wish'));
