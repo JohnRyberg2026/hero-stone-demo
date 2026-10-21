@@ -1,7 +1,7 @@
 'use strict';
 const StoreModel=(()=>{
  const sections={
-  closet:{title:'What would feel like you?',copy:'A favorite look. Something new. Something already yours. Make a little room for what you would love to wear.',categories:['Tops','Bottoms','Dresses','Skirts & miniskirts','Shoes','Bras','Panties & underwear','Lingerie','Bathing suits','Pajamas & loungewear','Accessories'],sources:['Amazon — my product link','Something I already own','I have something in mind']},
+  closet:{title:'What would feel like you?',copy:'A favorite look. Something new. Something already yours. Make a little room for what you would love to wear.',categories:['Tops','Bottoms','Dresses','Skirts & miniskirts','Shoes','Bras','Panties & underwear','Lingerie','Bathing suits','Pajamas & loungewear','Jumpsuits & rompers','Accessories'],sources:['Amazon — my product link','Something I already own','I have something in mind']},
   intimate:{title:'A little curiosity. Your own boundaries.',copy:'An optional wish list for adult toys and intimate accessories. Keep the idea broad or choose an exact item. There is no expectation to buy or use anything.',categories:['Adult toys','Couples’ toys','Personal toys','Massage & intimate accessories','Lubricants & care','Storage & cleaning','I have something in mind'],sources:['I have something in mind','My chosen retailer — product link']},
   romance:{title:'Let the little things speak.',copy:'Flowers waiting at the table. A favorite sweet. A keepsake chosen with care. Give your moment a thoughtful little detail.',categories:['Flowers','Candy & chocolates','Wine','Alcohol-free drinks','Jewelry','Gift baskets','Cards & personal touches','I have something in mind'],sources:['HEART STONE Community Businesses','Recommended by DATE QUEST Members','Surprise Me — HEART STONE','I have something in mind']}
  };
@@ -64,7 +64,7 @@ if(typeof document!=='undefined')(()=>{
  function renderCatalog(){
   const all=typeof StoreCatalog==='undefined'?[]:StoreCatalog,filter=$('catalogCategory').value,search=$('catalogSearch').value.trim().toLowerCase();
   const shown=all.filter(p=>(!filter||p.category===filter)&&[p.name,p.brand,p.subcategory,p.photo].join(' ').toLowerCase().includes(search));
-  $('catalogGrid').replaceChildren();$('catalogCount').textContent=shown.length+' clothing finds. Personal fit details are kept separate.';
+  $('catalogHeading').textContent='Explore '+all.length+' clothing finds · Photos, sizes & details';$('catalogGrid').replaceChildren();$('catalogCount').textContent=shown.length+' clothing find'+(shown.length===1?'':'s')+'. Personal fit details are kept separate.';
   for(const p of shown){const card=make('article');card.className='product-card';
    const img=make('img');img.src=p.imageUrl;img.alt=p.photo;img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>{img.hidden=true;};card.append(img);
    card.append(make('small',p.brand+' · '+p.subcategory),make('h3',p.name),make('strong','$'+p.price.toFixed(2)+' USD · '+p.variant),make('p','Observed Oct 21, 2026 — confirm current price.'),make('p','Listed sizes: '+p.sizes.join(', ')));
