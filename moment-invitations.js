@@ -213,7 +213,9 @@
         if(item.response_note)card.append(node('div','Suggested time: '+item.response_note,'quote'));
         if(incoming&&item.status==='pending'){
           action(card,'I’d love to ❤️',()=>{if(confirm('Accept this invitation? Your partner will see your response.'))updateInvitation(c,item,'accepted','',card);});
-          const reschedule=node('details');reschedule.append(node('summary','Could we find another time?'));
+          const reschedule=node('div');reschedule.hidden=true;
+          const rescheduleButton=action(card,'Could we find another time?',()=>{reschedule.hidden=!reschedule.hidden;rescheduleButton.setAttribute('aria-expanded',String(!reschedule.hidden));});
+          rescheduleButton.setAttribute('aria-expanded','false');
           const note=node('textarea');note.maxLength=400;note.setAttribute('aria-label','A time that might work (optional)');note.placeholder='A time that might work (optional)';reschedule.append(note);
           action(reschedule,'Ask for Another Time',()=>{if(confirm('Ask for another time? The original time will remain unconfirmed.'))updateInvitation(c,item,'reschedule',note.value.trim(),card);});card.append(reschedule);
           action(card,'Thank you for asking. I’ll pass this time.',()=>{if(confirm('Decline this invitation? Your partner will see that it is closed.'))updateInvitation(c,item,'declined','',card);});
