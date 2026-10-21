@@ -99,7 +99,7 @@ try{const raw=JSON.parse(localStorage.getItem(draftKey));if(raw&&Array.isArray(r
 function status(s){$("status").textContent=s;}
 function setPressed(button,on){button.setAttribute("aria-pressed",String(on));button.querySelector(".mark").textContent=on?"✓ Selected":"";}
 function renderSelections(){document.querySelectorAll("[data-feeling]").forEach(b=>setPressed(b,selected.has(b.dataset.feeling)));document.querySelectorAll("[data-kind]").forEach(b=>setPressed(b,b.dataset.kind===kind));$("review").disabled=!kind;}
-function screen(id){["feelings","moments","details","reviewScreen","experience","invitation","responseScreen","responseResult","sharedInbox"].forEach(s=>$(s).classList.toggle("hidden",s!==id));$("suggestionBox").classList.add("hidden");status("");$(id).querySelector("h1").focus();window.scrollTo({top:0,behavior:"smooth"});}
+function screen(id){$("liveSendStatus").textContent="";["feelings","moments","details","reviewScreen","experience","invitation","responseScreen","responseResult","sharedInbox"].forEach(s=>$(s).classList.toggle("hidden",s!==id));$("suggestionBox").classList.add("hidden");status("");$(id).querySelector("h1").focus();window.scrollTo({top:0,behavior:"smooth"});}
 function updateStart(){if(!edited)$("message").value=[...selected].map(k=>starts[k]).join(" ");renderSelections();}
 document.querySelectorAll("[data-feeling]").forEach(b=>b.onclick=()=>{const k=b.dataset.feeling;selected.has(k)?selected.delete(k):selected.add(k);updateStart();});
 $("message").oninput=()=>{edited=true;};
@@ -198,5 +198,5 @@ $("stay").onclick=()=>$("exitDialog").close();
 $("saveExit").onclick=()=>{if(save())location.href="index.html";};
 $("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}location.href="index.html";};
 renderSelections();
-</script><script src="moment-invitations.js?v=profile-pictures"></script>
+</script><script src="moment-invitations.js?v=closed-invitation-retry"></script>
 </body></html>
