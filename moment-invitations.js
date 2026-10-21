@@ -136,7 +136,7 @@
     const key='hs_moment_send_v1_'+userId+'_'+hash;
     let id=localStorage.getItem(key);
     if(!id){id=crypto.randomUUID();localStorage.setItem(key,id);}
-    return id;
+    return {id,key};
   }
   el('confirmLiveSend').onclick=async()=>{
     if(sendBusy||!prepared)return;
@@ -148,8 +148,18 @@
       const c=await context();
       if(c.user.id!==p.user.id||c.hs!==p.hs||!c.partners.some(x=>x.id===recipient))throw new Error('Your account or connection changed. Close this window and review the recipient again.');
       const body={p_expected_sender_id:c.user.id,p_heart_stone_id:c.hs,p_recipient_id:recipient,...p.draft};
-      const id=await requestId(c.user.id,body);
-      const result=await c.sb.rpc('send_checked_moment_invitation',{...body,p_client_request_id:id});
+      const request=await requestId(c.user.id,body);
+      let result=await c.sb.rpc('send_checked_moment_invitation',{...body,p_client_request_id:request.id});
+      if(!result.error){
+        const listed=await c.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs});
+        if(listed.error)throw new Error('Check Shared Invitations before retrying. We couldn’t confirm the invitation status.');
+        const existing=(listed.data||[]).find(item=>item.id===result.data);
+        if(existing&&['declined','cancelled'].includes(existing.status)){
+          // Persist before sending so an uncertain retry uses this same new request.
+          request.id=crypto.randomUUID();localStorage.setItem(request.key,request.id);
+          result=await c.sb.rpc('send_checked_moment_invitation',{...body,p_client_request_id:request.id});
+        }
+      }
       if(result.error)throw new Error('We couldn’t confirm the send. Retry without changing this invitation to avoid a duplicate, or check Shared Invitations.');
       const verify=await c.sb.auth.getUser();
       if(verify.error||verify.data?.user?.id!==c.user.id)throw new Error('The request finished, but your account changed. Check Shared Invitations from the sending account.');
