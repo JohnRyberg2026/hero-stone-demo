@@ -179,10 +179,37 @@
     try{
       const current=await context();
       if(current.user.id!==c.user.id||current.hs!==c.hs)throw new Error('Your account changed. Refresh invitations before responding.');
-      const result=await current.sb.rpc(response==='cancelled'?'cancel_moment_invitation':'respond_moment_invitation',response==='cancelled'?{p_invitation_id:item.id}:{p_invitation_id:item.id,p_response:response,p_note:note||''});
+      const result=await current.sb.rpc(response==='cancelled'?'cancel_moment_invitation':'respond_moment_invitation_revision',response==='cancelled'?{p_invitation_id:item.id}:{p_invitation_id:item.id,p_expected_revision:item.revision||0,p_response:response,p_note:note||''});
       if(result.error)throw new Error('We couldn’t save this response. It may already have been answered or closed. Refresh invitations before trying again.');
       await refreshInbox();
     }catch(e){el('sharedInvitationStatus').textContent=e.message;buttons.forEach(b=>b.disabled=false);}
+  }
+  function revisedTimeForm(c,item,card){
+    const panel=node('div');panel.hidden=true;
+    const open=action(card,'Propose a New Time',()=>{panel.hidden=false;open.setAttribute('aria-expanded','true');day.focus();});
+    open.className='primary';open.setAttribute('aria-expanded','false');
+    panel.append(node('p','Choose a new time for this same moment. Your partner will need to accept it.','helper'));
+    const field=(label,type,value)=>{const wrap=node('label',label),input=node('input');input.type=type;input.value=value||'';wrap.append(input);panel.append(wrap);return input;};
+    const day=field('Our new day','date',''),time=field('Our new time','time',''),zone=field('Time zone','text',item.plan?.momentZone||Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const feedback=node('p','','notice');feedback.setAttribute('role','status');panel.append(feedback);
+    let busy=false;const requestId=crypto.randomUUID();
+    action(panel,'Send Revised Invitation ❤️',async()=>{
+      if(busy)return;
+      if(!day.value||!time.value||!zone.value.trim()){feedback.textContent='Choose a day, time, and time zone first.';return;}
+      try{new Intl.DateTimeFormat('en',{timeZone:zone.value.trim()});}catch{feedback.textContent='Enter a valid time zone, such as America/New_York.';return;}
+      const proposal={p_invitation_id:item.id,p_expected_sender:c.user.id,p_expected_revision:item.revision||0,p_request_id:requestId,p_date:day.value,p_time:time.value,p_zone:zone.value.trim()};
+      if(!confirm('Send this revised time: '+day.value+' at '+time.value+' ('+proposal.p_zone+')? Your partner must accept before it is confirmed.'))return;
+      busy=true;const controls=[...card.querySelectorAll('button'),day,time,zone];controls.forEach(b=>b.disabled=true);feedback.textContent='Sending the revised time…';
+      try{
+        const current=await context();
+        if(current.user.id!==c.user.id||current.hs!==c.hs)throw Error('Your account changed. Refresh invitations before continuing.');
+        const result=await current.sb.rpc('propose_moment_invitation_time',proposal);
+        if(result.error)throw Error('We couldn’t confirm the revised time. Choose a future day and time, or refresh invitations to check whether it was sent.');
+        await refreshInbox();
+      }catch(e){feedback.textContent=e.message;}finally{busy=false;controls.forEach(b=>b.disabled=false);}
+    }).className='primary';
+    action(panel,'Back — Keep Deciding',()=>{panel.hidden=true;open.setAttribute('aria-expanded','false');open.focus();});
+    card.append(panel);
   }
   async function refreshInbox(){
     if(inboxBusy)return;inboxBusy=true;el('refreshSharedInvitations').disabled=true;
@@ -202,7 +229,7 @@
         const card=node('article',undefined,'card');card.style.marginTop='16px';
         const identity=node('div',undefined,'person');person(identity,other?.name||'your connected partner',other?.picture,incoming?'From ':'To ');card.append(identity);
         card.append(node('h2',item.status==='accepted'&&incoming?'A moment waiting for us':item.title));
-        card.append(node('p',statuses[item.status]||item.status,'notice'));
+        card.append(node('p',item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
         card.append(node('div',item.message,'quote'));
         card.append(node('div',planText(item.plan),'quote'));
         if(item.status==='accepted'&&incoming){
@@ -211,6 +238,7 @@
           card.append(node('p','Saying yes to time together leaves room to change your mind or stop.','helper'));
         }else{card.append(node('p',item.story));}
         if(item.response_note)card.append(node('div','Suggested time: '+item.response_note,'quote'));
+        if(!incoming&&item.status==='reschedule')revisedTimeForm(c,item,card);
         if(incoming&&item.status==='pending'){
           action(card,'I’d love to ❤️',()=>{if(confirm('Accept this invitation? Your partner will see your response.'))updateInvitation(c,item,'accepted','',card);});
           const reschedule=node('div');reschedule.hidden=true;
