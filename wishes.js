@@ -33,7 +33,7 @@ if(typeof document!=='undefined')(()=>{
   for(const w of shown){const card=el('article');card.className='wish';card.append(el('h3',w.name),el('p',M.destinations[w.destination]+(w.connection?' · '+w.connection:'')),el('p',M.preferences[w.preference]+(w.favorite?' · Favorite ♥':'')));
    if(w.notes){const details=el('details');details.append(el('summary','My notes'),el('p',w.notes));card.append(details);}
    if(w.url){const a=el('a','Open original listing ↗');a.href=w.url;a.target='_blank';a.rel='noopener noreferrer';card.append(a);}
-   card.append(button('Edit',()=>open(w)),button('Plan From This',()=>{window.dispatchEvent(new CustomEvent('heartstone:plan-wish',{detail:{stop:M.stop(w),respond:status}}));}),button('Remove',()=>{try{const next=items.filter(i=>i.id!==w.id);persist(next);undo=w;$('undoWish').hidden=false;render();status('Removed. Undo is available.');}catch{status('Could not save the removal. Your wish is still here.');}}));$('savedWishList').append(card);
+   card.append(button('Save to My Account',()=>window.QuestAccountWishes?.save(w)),button('Edit',()=>open(w)),button('Plan From This',()=>{window.dispatchEvent(new CustomEvent('heartstone:plan-wish',{detail:{stop:M.stop(w),respond:status}}));}),button('Remove',()=>{try{const next=items.filter(i=>i.id!==w.id);persist(next);undo=w;$('undoWish').hidden=false;render();status('Removed. Undo is available.');}catch{status('Could not save the removal. Your wish is still here.');}}));$('savedWishList').append(card);
   }
   document.querySelectorAll('[data-wish-id]').forEach(b=>{b.textContent=items.some(w=>w.id===b.dataset.wishId)?'Saved ✓':'Save for Later ♡';});
  }
