@@ -9,7 +9,9 @@ vm.runInContext(fs.readFileSync('date-store.js','utf8'),context);
 const text=e=>e.textContent+' '+e.children.map(text).join(' '),choose=(id,name)=>els[id].children.find(x=>x.textContent===name).onclick(),keep=()=>els.wishForm.onsubmit({preventDefault(){}});
 assert.equal(els.catalogGrid.children.length,99);els.catalogSearch.value='halter lace bra';els.catalogSearch.oninput();assert.equal(els.catalogGrid.children.length,1);assert(text(els.catalogGrid).includes('Product image unavailable'));els.catalogSearch.value='tankini';els.catalogSearch.oninput();assert.equal(els.catalogGrid.children.length,1);els.catalogGrid.children[0].children.find(x=>x.textContent==='Make This a Little Wish ♡').onclick();assert(els.wishName.value.includes('tankini'));assert.equal(els.productUrl.value,'https://www.amazon.com/dp/B0GVF5ZXT1');els.resetIdea.onclick();
 assert(!els.builder.hidden);choose('categories','Dresses');els.wishName.value='A soft dress';els.budget.value='50';keep();assert(text(els.wishList).includes('A soft dress'));
-assert(els.intimateGuide.hidden);tabs[1].onclick();assert(els.adultGate.hidden&&els.builder.hidden&&!els.intimateGuide.hidden&&els.storeCollection.hidden);
+assert(els.intimateGuide.hidden);tabs[1].onclick();assert(!els.adultGate.hidden&&els.builder.hidden&&els.intimateGuide.hidden&&els.storeCollection.hidden);
+// A tab click alone must never reveal the adult guide.
+assert(!text(els.wishList).includes('Blocked intimate wish'));
 const reference=html.match(/<ul class="intimate-name-list" id="intimateNames">([\s\S]*?)<\/ul>/)[1];assert.equal((reference.match(/<li>/g)||[]).length,17);assert(reference.includes('Anal beads'));assert(!/<(?:a|img|input|button|select)\b/i.test(reference));
 els.wishName.value='Blocked intimate wish';keep();assert(!text(els.wishList).includes('Blocked intimate wish'));els.wishName.value='';els.closeIntimateGuide.onclick();assert(els.intimateGuide.hidden&&!els.builder.hidden&&!els.storeCollection.hidden);
 allow=false;els.saveDraft.onclick();assert.equal(storage.size,0);allow=true;els.saveDraft.onclick();assert.equal(storage.size,1);
