@@ -1,7 +1,7 @@
 {
   "candidate": "adult-connections-2026-10-22",
   "status": "review-only",
-  "base_main": "50da58ce16ba54b8b50bca620e085b50de0b8d6c",
+  "base_main": "b9037cd42ae2dbb75ccfa0c7ff678e09c639a628",
   "source_prs": [
     45,
     47,
@@ -9,7 +9,7 @@
     52,
     54
   ],
-  "local_node_suites_passed": 14,
+  "local_node_suites_passed": 15,
   "database_tests": "combined-rollback-passed",
   "installed": false,
   "deployed": false,
@@ -33,5 +33,6 @@
     "browser, accessibility, separate-device and concurrent-session validation",
     "deployment approval"
   ],
-  "archived_entries_redirected": 30
+  "archived_entries_redirected": 30,
+  "wishes_browser_suites": "blocked: browser executable unavailable"
 }

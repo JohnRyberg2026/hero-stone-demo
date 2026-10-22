@@ -2,7 +2,7 @@
 
 Status: **review candidate only; live release blocked**.
 
-This candidate combines PRs #45, #47, #49, #52 and #54 with `main` at `50da58ce16ba54b8b50bca620e085b50de0b8d6c`. The integration preserves the three-part home-first DATE QUEST entry and calendar feedback fixes from PRs #48, #50 and #51. It adds a direct shared-dates link to the home page. Earlier review branches are left intact.
+This candidate combines PRs #45, #47, #49, #52 and #54 with `main` at `b9037cd42ae2dbb75ccfa0c7ff678e09c639a628`. The integration preserves the three-part home-first DATE QUEST entry and calendar feedback fixes from PRs #48, #50 and #51. It adds a direct shared-dates link to the home page. The merged store/account-wishes work from PR #53 is also preserved, including private account saves and explicit partner sharing. Earlier review branches are left intact.
 
 ## Included behavior
 
@@ -15,7 +15,7 @@ One account can select among independent dating connections in the reviewed migr
 | Check | Result |
 | --- | --- |
 | Current home-first entry / calendar tests | Passed with all adult/connection changes included |
-| Complete local Node runner | 14 of 14 suites passed |
+| Complete local Node runner | 15 of 15 suites passed |
 | Combined authenticated/anonymous database tests | Passed in a rollback-only transaction |
 | Database cleanup | Shared-date schema absent; connection schema absent; original unique index restored; all eight fictional accounts absent |
 | Frozen server checkpoint | Original files retained; response-privacy update is additive |
@@ -23,7 +23,7 @@ One account can select among independent dating connections in the reviewed migr
 | Concurrent multi-session database stress | Not completed |
 | Live installation / verification / deployment | Not performed |
 
-Reproduce local checks: `node tools/check-date-release.cjs`.
+Reproduce local checks: `node tools/check-date-release.cjs`. The two account/store-wishes browser suites were attempted but blocked by the unavailable browser executable. Run `node tools/check-date-release.cjs --browser` with a running local/staging server and the configured browser runtime to include them.
 
 Reproduce the complete database test: run `database/date-connection-release-rollback-test.sql` with psql and `ON_ERROR_STOP=1` against a disposable/staging Supabase database. It combines the installation candidates with all three server test sets and always rolls back. This script does not install production features.
 
