@@ -4,6 +4,7 @@
  'use strict';
  function create({client,storage,crypto,onAccountChange=()=>{}}){
   let owner=null,epoch=0;
+  const retries=new Map();
   function clear(){owner=null;epoch++;onAccountChange();}
   const subscription=client.auth.onAuthStateChange((event,session)=>{if(owner&&session?.user?.id!==owner)clear();});
   function failure(error){
@@ -23,7 +24,11 @@
    const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(args)));
    const hash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
    const key='hs_shared_date_retry_'+owner+'_'+hash;
-   let id=storage.getItem(key);if(!id){id=crypto.randomUUID();storage.setItem(key,id);}
+   let id=retries.get(key);
+   if(!id){try{id=storage.getItem(key);}catch{ /* Browser storage may be unavailable. */ }}
+   if(!id)id=crypto.randomUUID();
+   retries.set(key,id);
+   try{storage.setItem(key,id);}catch{ /* Retain the opaque retry identity for this page session. */ }
    return {key,id};
   }
   async function action(operation,{date=null,payload={}}={}){
@@ -35,7 +40,7 @@
    let r;try{r=await client.rpc('shared_date_action',args);}catch{await guard(expected,version);throw Error(write?'The request could not be confirmed. Refresh your shared dates before retrying; it may have completed.':'The shared-date service could not be reached. Please try again.');}
    await guard(expected,version);
    if(r.error){const e=failure(r.error);if(write)e.message+=' Refresh your shared dates before retrying; an uncertain request may have completed.';throw e;}
-   if(write){try{storage.removeItem(retry.key);}catch{ /* Safe to retain an opaque completed request key. */ }}
+   if(write){retries.delete(retry.key);try{storage.removeItem(retry.key);}catch{ /* Safe to retain an opaque completed request key. */ }}
    return r.data;
   }
   return Object.freeze({connect,action,clear,dispose:()=>{subscription?.data?.subscription?.unsubscribe?.();clear();}});

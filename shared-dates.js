@@ -20,7 +20,8 @@
    script.onload=()=>resolve();script.onerror=()=>{script.remove();loading=null;reject(Error('The account connection could not load. Please try again.'));};document.head.append(script);
   }).then(()=>{
    const sb=window.supabase.createClient('https://iqxhqxlcraatdheslqeo.supabase.co','sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h');
-   service=window.SharedDateService.create({client:sb,storage:localStorage,crypto,onAccountChange:clear});return service;
+   let retryStorage;try{retryStorage=localStorage;}catch{ /* Storage access may be blocked by the browser. */ }
+   service=window.SharedDateService.create({client:sb,storage:retryStorage,crypto,onAccountChange:clear});return service;
   });
   return loading;
  }
