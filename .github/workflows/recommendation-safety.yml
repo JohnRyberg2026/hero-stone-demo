@@ -6,6 +6,8 @@ on:
       - 'recommendation-inputs.js'
       - 'test-recommendation-safety.cjs'
       - 'test-recommendation-inputs.cjs'
+      - 'safe-adventure-discovery.js'
+      - 'test-safe-adventure-discovery.cjs'
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
@@ -24,3 +26,4 @@ jobs:
           node-version: '22'
       - run: node test-recommendation-safety.cjs
       - run: node test-recommendation-inputs.cjs
+      - run: node test-safe-adventure-discovery.cjs
