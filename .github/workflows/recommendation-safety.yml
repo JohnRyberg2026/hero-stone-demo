@@ -16,6 +16,8 @@ on:
       - 'test-adventure-preferences-setup.cjs'
       - 'adventure-profile-flow.js'
       - 'test-adventure-profile-flow.cjs'
+      - 'adventure-profile-view.js'
+      - 'test-adventure-profile-view.cjs'
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
@@ -39,3 +41,4 @@ jobs:
       - run: node test-adventure-preferences-store.cjs
       - run: node test-adventure-preferences-setup.cjs
       - run: node test-adventure-profile-flow.cjs
+      - run: node test-adventure-profile-view.cjs
