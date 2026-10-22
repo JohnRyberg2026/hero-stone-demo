@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict');
+const S=require('./recommendation-safety.js');
+const old={loaded:true,boundariesVerified:true,accepted:true,boundaries:{}};
+const updated={...old,boundaries:{minimalWalking:true}};
+const trail={category:'outdoors',walkingLevel:'long',accessibilityVerified:true,cost:0};
+const drive={category:'outdoors',walkingLevel:'minimal',accessibilityVerified:true,cost:0};
+assert.equal(S.evaluate(trail,[old]).eligible,true);
+assert.equal(S.evaluate(trail,[updated]).reason,'not_suitable');
+assert.deepEqual(S.rank([trail,drive],[updated]),[drive]);
+assert.deepEqual(S.rank([trail,drive],[old,updated]),[drive]);
+assert.equal(S.evaluate(drive,[{...updated,loaded:false}]).reason,'needs_confirmation');
+assert.equal(S.evaluate(drive,[{...updated,accepted:false}]).reason,'needs_consent');
+assert.equal(S.evaluate({...drive,accessibilityVerified:false},[updated]).reason,'needs_confirmation');
+assert.equal(S.evaluate({...drive,cost:60},[{...old,boundaries:{maxBudget:50}}]).reason,'not_suitable');
+assert.deepEqual(S.rank([drive],[updated],[{category:'outdoors',permitted:false}]),[drive]);
+assert.equal('privateNotes' in S.evaluate(trail,[updated]),false);
+console.log('PASS: updated boundaries, shared conflicts, missing data, consent, verification, budget and privacy.');
