@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Adventure Profile — Development Preview</title>
+<style>body{font:16px system-ui,sans-serif;max-width:42rem;margin:2rem auto;padding:0 1rem;color:#252525}section{border:1px solid #aaa;border-radius:12px;padding:1.2rem}p{line-height:1.5}.note{font-size:.9rem;color:#555}button{padding:.6rem 1rem}</style></head>
+<body><main><h1>Adventure preferences</h1><p class="note">Development preview only. No account data is loaded, saved, or shared on this page.</p><section aria-live="polite"><h2 id="statusHeading">Unavailable</h2><p id="statusMessage">Preferences cannot be confirmed right now.</p><p id="statusRevision"></p><button id="refresh" type="button" hidden>Reload application</button></section></main>
+<script src="adventure-profile-view.js"></script><script>
+'use strict';
+(function(){
+ const params=new URLSearchParams(location.search);
+ // Static preview only: query strings cannot inject account or private profile data.
+ const allowed=new Set(['signed_out','needs_confirmation','revision_conflict']);
+ const state=allowed.has(params.get('preview'))?params.get('preview'):'needs_confirmation';
+ const model=AdventureProfileView.model({state});
+ document.getElementById('statusHeading').textContent=model.screen==='sign_in'?'Sign in required':model.screen==='refresh'?'Refresh required':'Unavailable';
+ document.getElementById('statusMessage').textContent=model.message;
+ const button=document.getElementById('refresh');
+ if(model.screen==='refresh'){button.hidden=false;button.addEventListener('click',()=>location.reload());}
+})();
+</script></body></html>
