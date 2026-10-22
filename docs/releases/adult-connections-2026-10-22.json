@@ -1,0 +1,38 @@
+{
+  "candidate": "adult-connections-2026-10-22",
+  "status": "review-only",
+  "base_main": "b9037cd42ae2dbb75ccfa0c7ff678e09c639a628",
+  "source_prs": [
+    45,
+    47,
+    49,
+    52,
+    54
+  ],
+  "local_node_suites_passed": 15,
+  "database_tests": "combined-rollback-passed",
+  "installed": false,
+  "deployed": false,
+  "installation_candidates": [
+    {
+      "path": "database/shared-date-server.sql",
+      "sha256": "5eec37976663cd91cb67e0d7254adbe59061751b613f7aee9e531596771e7109"
+    },
+    {
+      "path": "database/multiple-dating-connections.sql",
+      "sha256": "8ee8f13d157e8dae845f0de2aeb7f6ed4aae02e3e3da411458f322cafd0e78c8"
+    },
+    {
+      "path": "database/shared-date-candidates.sql",
+      "sha256": "7d0a20aa9a39fca4c7dc777dcd0226def9e7f65a6497669f6db9ef4998cd5471"
+    }
+  ],
+  "release_blockers": [
+    "trusted adult verification integration",
+    "reviewed recorded backend installation",
+    "browser, accessibility, separate-device and concurrent-session validation",
+    "deployment approval"
+  ],
+  "archived_entries_redirected": 30,
+  "wishes_browser_suites": "blocked: browser executable unavailable"
+}

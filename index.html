@@ -280,6 +280,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 }
 
 </style>
+<script src="quest-access.js?v=1"></script>
 </head>
 <body>
 <section class="gateway" id="platformGateway">
@@ -293,13 +294,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <article class="quest-choice">
         <img class="quest-choice-logo" id="gatewayDateLogo" alt="DATE QUEST official logo"/>
         <div class="choice-title">DATE QUEST™</div>
-        <div class="choice-copy">Private, personalized adventures created for you and your partner.</div>
+        <div class="choice-copy">Adults only · 18+. Romantic adventures for consenting adults, with optional R-rated intimacy.</div>
         <button id="enterDateQuestBtn">ENTER DATE QUEST</button>
       </article>
       <article class="quest-choice">
         <img class="world-choice-logo" src="images/world-choice-logo.png" alt="WORLD QUEST official logo"/>
         <div class="choice-title">WORLD QUEST™</div>
-        <div class="choice-copy">Real-world adventures for individuals, couples, friends, families and teams.</div>
+        <div class="choice-copy">Family-safe adventures for friends, families and teams. Adult features are off unless specifically added and individually opted into.</div>
         <button id="enterWorldQuestBtn">ENTER WORLD QUEST</button>
       </article>
     </div>
@@ -313,6 +314,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <img class="world-choice-logo" src="images/world-choice-logo.png" alt="WORLD QUEST official logo"/>
       <h2>ENTER WORLD QUEST™</h2>
       <p class="world-entry-intro">Your city is the game board. The world is the community. HEART STONE™ is the referee.</p>
+      <p>Family-safe mode is active. Adult preferences and intimate content are excluded.</p>
+      <button type="button" id="addWorldAdultOption">Add an adults-only option</button>
+      <section id="worldAdultOption" hidden aria-label="Optional adult settings">
+        <h3>Optional adults-only setting · 18+</h3>
+        <p>Every participant must be a verified adult and separately opt in. Family and mixed-age experiences remain family-safe. You may remove this option at any time.</p>
+        <label><input type="checkbox"> I am 18+ and want to request the adult option for myself.</label>
+        <p id="worldAdultStatus" role="status">Family-safe mode is active. Adult content remains off.</p>
+        <button type="button" id="removeWorldAdultOption">Remove adult option</button>
+      </section>
+
 
       <div class="world-identity-bar hidden" id="worldIdentityBar" aria-live="polite">
         <div class="world-identity-item"><span class="world-identity-label">SIGNED-IN ACCOUNT</span><span class="world-identity-value" id="worldIdentityAccount">—</span></div>
@@ -580,6 +591,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="dot" id="p4"></div><div class="dot" id="p5"></div><div class="dot" id="p6"></div>
   </div>
 
+  <details class="card hidden" id="connectionManager"><summary>My dating connections</summary><p>Choose the connection for this page. Each connection keeps its own dates, history and shared choices.</p><div id="connectionLinks"></div><button type="button" id="addDatingConnectionBtn" class="secondary">Connect with another person</button><button type="button" id="refreshDatingConnectionsBtn" class="secondary">Refresh my connections</button><p id="connectionSelectionStatus" role="status"></p></details>
   <section class="card" id="authCard">
     <h2>1. Sign in</h2>
     <input id="email" type="email" placeholder="Email"/>
@@ -650,8 +662,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </section>
 
   <section class="card" id="inviteCard">
-    <h2>2. Connect the couple</h2>
-    <p>Phone 1 creates an invitation. Phone 2 enters the invitation token and accepts.</p>
+    <h2>Connect with someone</h2>
+    <p>Create a separate connection with this person, or accept the token they shared with you. Each person accepts from their own account. Existing connections stay separate.</p>
     <input id="partnerEmail" type="email" placeholder="Partner email"/>
     <input id="partnerName" placeholder="Partner first name"/>
     <button id="createInviteBtn">Create Invitation</button>
@@ -666,7 +678,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button class="secondary" id="homeProfileBtn">Profile & Settings</button>
     </div>
     <section class="dq-home-part dq-welcome" aria-labelledby="dqGreeting"><p class="dq-eyebrow">01 · HEART STONE welcomes you</p><div class="dq-stone" aria-hidden="true">♡</div><h1 id="dqGreeting">Welcome back.</h1><p class="dq-lead">A little time can become something treasured. What would you like to make room for today?</p><div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div></section>
-    <section class="dq-home-part" aria-labelledby="dqMomentsTitle"><p class="dq-eyebrow">02 · Your DATE QUEST moments</p><h2 id="dqMomentsTitle">Something to look forward to.</h2><p>Time chosen for each other. A WILD ADVENTURE™ with as much surprise as you choose.</p><div id="dqMoments"></div><p id="dqMomentsStatus" role="status"></p><button type="button" class="secondary" id="dqRefreshMoments">Refresh my moments</button><a class="dq-main-link" href="invitation-opening.html">Create a moment ♡</a><a class="dq-main-link dq-green" href="invitation-opening.html#shared-invitations">💌 A Moment Is Calling</a><p class="small">Open your invitations and replies. Nothing is accepted automatically.</p>
+    <section class="dq-home-part" aria-labelledby="dqMomentsTitle"><p class="dq-eyebrow">02 · Your DATE QUEST moments</p><h2 id="dqMomentsTitle">Something to look forward to.</h2><p>Time chosen for each other. A WILD ADVENTURE™ with as much surprise as you choose.</p><div id="dqMoments"></div><p id="dqMomentsStatus" role="status"></p><button type="button" class="secondary" id="dqRefreshMoments">Refresh my moments</button><a class="dq-main-link" href="invitation-opening.html">Create a moment ♡</a><a class="dq-main-link" href="shared-dates.html">My shared dates · One-on-one or together</a><a class="dq-main-link dq-green" href="invitation-opening.html#shared-invitations">💌 A Moment Is Calling</a><p class="small">Open your invitations and replies. Nothing is accepted automatically.</p>
     <div class="status hidden" id="invitationResponseNotice" role="status" aria-live="polite" style="border:2px solid var(--accent2);padding:16px">
       <h2>Not tonight ❤️</h2>
       <p id="invitationResponseMessage" style="color:var(--ink);margin:0 0 10px"></p>
@@ -844,7 +856,8 @@ const SUPABASE_URL = "https://iqxhqxlcraatdheslqeo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let heartStoneId = localStorage.getItem("hs_heart_stone_id") || "";
+let heartStoneId = ""; // A remembered ID never chooses a relationship for a new account.
+const requestedConnection = new URLSearchParams(location.search).get("connection");
 let requestId = null;
 let adventureId = null;
 let stepId = null;
@@ -1124,31 +1137,37 @@ $("firstJourneyDownloadBtn").onclick=async()=>{
 async function loadExistingHeartStone(){
   const u = await currentUser();
   if(!u) return null;
-  const {data,error} = await sb
-    .from("heart_stone_memberships")
-    .select("heart_stone_id,status,joined_at")
-    .eq("user_id",u.id)
-    .eq("status","active")
-    .order("joined_at",{ascending:false})
-    .limit(1);
-  if(error) {
-    status("connectionInviteStatus","Could not load existing HEART STONE: "+error.message);
-    return null;
-  }
+  const {data,error}=await sb.from("heart_stone_memberships")
+    .select("heart_stone_id,status,joined_at").eq("user_id",u.id).eq("status","active")
+    .order("joined_at",{ascending:false}).limit(100);
+  if(error){status("connectionInviteStatus","Could not load your connections: "+error.message);return null;}
   if((await currentUser())?.id!==u.id) return null;
-  const id=data?.[0]?.heart_stone_id||null;
-  if(id){
-    heartStoneId=id;
-    localStorage.setItem("hs_heart_stone_id",id);
-    setConnectedUI(true);
-    step(3);
-    startAutomaticPartnerSync();
-    // Recover the full shared demo state on page load, including a pending
-    // Invitation Ritual. This must run before falling back to a plain active adventure.
-    await loadSharedDemoState();
-  }
-  return id;
+  const connections=data||[];
+  const labels=await Promise.all(connections.map(async c=>{
+    const result=await sb.rpc("get_moment_invitation_partners",{p_heart_stone_id:c.heart_stone_id});
+    return !result.error&&Array.isArray(result.data)?result.data.map(p=>p.name).filter(Boolean).join(", "):"";
+  }));
+  if((await currentUser())?.id!==u.id) return null;
+  const selected=requestedConnection?connections.find(c=>c.heart_stone_id===requestedConnection):connections.length===1?connections[0]:null;
+  const box=$("connectionLinks");box.replaceChildren();
+  connections.forEach((c,index)=>{
+    const link=document.createElement("a");link.className="secondary";
+    link.style.cssText="display:block;padding:12px;margin:8px 0";
+    link.href="index.html?connection="+encodeURIComponent(c.heart_stone_id);
+    link.textContent=(labels[index]?"With "+labels[index]:"Connection "+(index+1))+(selected?.heart_stone_id===c.heart_stone_id?" · Selected":"");
+    box.append(link);
+  });
+  show("connectionManager",true);
+  status("connectionSelectionStatus",selected?"This page belongs to your selected connection.":connections.length>1?"Choose a connection to continue. None is selected automatically.":requestedConnection?"That connection is no longer available to this account.":"No active connections yet.");
+  if(!selected){heartStoneId="";return null;}
+  heartStoneId=selected.heart_stone_id;
+  document.querySelectorAll('a[href="./heart-stone-first-journey.html"]').forEach(a=>a.href="./heart-stone-first-journey.html?connection="+encodeURIComponent(heartStoneId));
+  setConnectedUI(true);step(3);startAutomaticPartnerSync();
+  await loadSharedDemoState();
+  return heartStoneId;
 }
+$("addDatingConnectionBtn").onclick=()=>{show("inviteCard",true);$("inviteCard").scrollIntoView({behavior:"smooth"});};
+$("refreshDatingConnectionsBtn").onclick=()=>location.assign("index.html");
 
 $("signInBtn").onclick = async()=>{
   status("authStatus","Signing in...");
@@ -1167,6 +1186,7 @@ async function signOutUser(){
   if(error) return status("authStatus","Sign-out error: "+error.message);
   if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; }
   heartStoneId="";
+  show("connectionManager",false);$("connectionLinks").replaceChildren();
   localStorage.removeItem("hs_heart_stone_id");
   setConnectedUI(false);
   status("authStatus","Signed out.");
@@ -1184,21 +1204,16 @@ $("createInviteBtn").onclick = async()=>{
   });
   if(error) return status("connectionInviteStatus","Invitation error: "+error.message);
   const row=Array.isArray(data)?data[0]:data;
-  heartStoneId=row?.heart_stone_id || heartStoneId;
-  if(heartStoneId){ localStorage.setItem("hs_heart_stone_id",heartStoneId); startAutomaticPartnerSync(); }
+  // Pending invitations never replace the currently selected relationship.
   $("inviteToken").value=row?.invitation_token||"";
-  status("connectionInviteStatus","Invitation created.\nHEART STONE ID: "+heartStoneId+"\nCopy the token to Phone 2.");
+  status("connectionInviteStatus","Invitation created for this person. Your selected connection has not changed.\nCopy the token to the invited person’s device.");
 };
 
 $("acceptInviteBtn").onclick = async()=>{
   status("connectionInviteStatus","Accepting invitation...");
   const {data,error}=await sb.rpc("accept_heart_stone_invitation",{p_token:$("inviteToken").value.trim()});
   if(error) return status("connectionInviteStatus","Accept error: "+error.message);
-  heartStoneId=data;
-  localStorage.setItem("hs_heart_stone_id",heartStoneId);
-  status("connectionInviteStatus","Connected. HEART STONE ID: "+heartStoneId);
-  step(3);
-  startAutomaticPartnerSync();
+  location.assign("index.html?connection="+encodeURIComponent(data));
 };
 
 $("questBtn").onclick = async()=>{
