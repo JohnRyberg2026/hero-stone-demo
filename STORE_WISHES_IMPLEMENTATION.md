@@ -35,3 +35,7 @@ Verification: migration plus `database/test-store-wishes-account.sql` ran in a s
 `test-account-wishes-browser.cjs` passed in Chromium with mocked account transport: explicit import (no automatic sharing), edit/device separation, named recipient selection, shared-note-only disclosure, revocation, stale-edit rejection and clearing account content on account changes. SQL access-rule tests exercise the real database roles separately. This does not claim a real John/Jessica two-account end-to-end browser pass.
 
 Deployment remains outstanding: review and apply the migration, publish the branch frontend, then run the real two-account walkthrough. The original device-only first-stage scope remains available. Shared snapshots are explicitly historical; source edits do not silently republish. Recipients recheck server access before adding a shared snapshot to a date draft; loaded views refresh on focus or the refresh button. Revocation stops future server reads and does not erase copies someone already saw.
+
+
+## Release update — October 22, 2026
+The account migration has now been applied to The Heart Stone Brain, and PR #53 was merged into main at d3d734df57aed5d52719605c08c3a16fdc7ba436. The rollback-only access-rule tests passed again against the deployed tables. The security advisor returned no findings for the new wish objects. The earlier not-deployed statements above describe the pre-release review checkpoint. GitHub Pages publishing is being checked separately; the real John/Jessica two-account browser walkthrough remains outstanding.
