@@ -20,4 +20,6 @@ Before the full locked acceptance journey is complete, implement authenticated o
 - `node --check date-store.js`
 - `node --check local-date-builder.js`
 
-These checks passed. Browser/mobile verification remains pending: Playwright was available but the Chromium executable was missing and its download failed. No visual/browser pass is claimed.
+These checks passed. A Playwright Chromium walkthrough at 390 × 844 also passed: save/reload, local-business save/edit preservation, date-draft handoff, private-note exclusion, remove/undo, intimate display-only behavior, no JavaScript page errors and no horizontal overflow. This is functional verification, not a complete accessibility or visual review.
+
+Run the browser test with a local server on port 8765: `node test-wishes-browser.cjs`. Requires Playwright and its Chromium browser. Optional `QUEST_CHROMIUM_PATH` selects another Chromium executable; `QUEST_STORE_URL` selects the tested store URL. The test uses a fresh temporary browser context and does not touch real user accounts.
