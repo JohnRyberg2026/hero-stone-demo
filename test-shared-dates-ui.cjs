@@ -11,7 +11,8 @@ function setup(){
  const responses=['accepted','declined','reschedule','withdrawn'].map(x=>{const e=new E('button');e.dataset.accountResponse=x;return e;});
  const state={calls:[],user:'one',allow:true,date:null,changed:null,windowHandlers:{}};
  const self={id:'one',name:'One'},people=[{id:'two',name:'Two'},{id:'three',name:'Three'}];
- const api={connect:async()=>({account:{id:state.user,email:'one@example.invalid'},self,people}),action:async(op,args={})=>{
+ state.people=people;state.connects=0;
+ const api={connect:async()=>{state.connects++;if(state.connectFailure)throw Error('Connections could not refresh');return {account:{id:state.user,email:'one@example.invalid'},self,people:state.people};},action:async(op,args={})=>{
   state.calls.push({op,args:structuredClone(args)});if(state.fail)throw Error('Could not confirm this change');
   if(op==='list')return state.date?[state.date]:[];
   if(op==='view')return state.date;
@@ -42,6 +43,14 @@ function setup(){
  prevented=false;state.windowHandlers.beforeunload({preventDefault(){prevented=true;}});assert(!prevented);
  els.newAccountDate.onclick();els.accountDateTitle.value='Unsent';els.accountDateTitle.oninput();els.cancelAccountEdit.onclick();assert(els.accountDateEditor.hidden);assert.equal(state.calls.filter(c=>c.op==='create').length,1);
  state.changed();assert(els.accountDateDetail.hidden);assert(els.accountDateEditor.hidden);assert.equal(els.accountRoster.children.length,0);assert.equal(els.accountDateTitle.value,'');
+ // Refresh connection eligibility without silently shrinking an existing roster.
+ const again=setup(),ui=again.els,st=again.state;await ui.connectSharedAccount.onclick();ui.newAccountDate.onclick();
+ ui.accountPeople.querySelectorAll('input').forEach(p=>p.checked=true);ui.accountDateTitle.value='Together';await ui.saveAccountDate.onclick();
+ st.people=[{id:'two',name:'Two'},{id:'four',name:'Four'}];await ui.refreshAccountDates.onclick();assert.equal(st.connects,2);assert.equal(st.date.participants.length,3);
+ ui.editAccountDate.onclick();const updated=ui.accountPeople.querySelectorAll('input');assert(updated.some(p=>p.value==='four'));const removed=updated.find(p=>p.value==='three');assert(removed.checked);assert.equal(removed.dataset.available,'false');
+ await ui.saveAccountDate.onclick();assert.match(ui.sharedAccountFeedback.textContent,/explicitly remove/);assert(!st.calls.some(c=>c.op==='revise'));
+ st.connectFailure=true;ui.accountDateTitle.value='Keep my unsaved edits';ui.accountDateTitle.oninput();await ui.refreshAccountDates.onclick();assert(!ui.accountDateEditor.hidden);assert.equal(ui.accountDateTitle.value,'Keep my unsaved edits');assert.match(ui.sharedAccountFeedback.textContent,/could not refresh/);
+ st.connectFailure=false;await ui.refreshAccountDates.onclick();assert(ui.accountDateEditor.hidden);ui.newAccountDate.onclick();assert(!ui.accountPeople.querySelectorAll('input').some(p=>p.value==='three'));
  assert(html.includes('data-quest-audience="date"'));assert(!html.includes('sharedActor'));assert(html.includes('current adult verification'));
  console.log('PASS: own-account UI, private drafts, three-person roster, explicit review/send/cancel, no impersonation picker, private responses, failed writes and account-change clearing.');
 })().catch(e=>{console.error(e);process.exitCode=1});

@@ -86,9 +86,13 @@
   await refresh();$('sharedAccountFeedback').textContent='Your account is connected. Choose a date or make a new one.';
  });
  $('refreshAccountDates').onclick=()=>run(async()=>{
-  if(!discard())return;await refresh();
+  if(!discard())return;
+  const context=await service.connect();account=context.account;self=context.self;people=context.people;
+  $('sharedAccountIdentity').textContent='Signed in as '+(account.email||self.name||'your account');
+  await refresh();
+  $('accountDateEditor').hidden=true;dirty=false;
   if(current){try{detail(await service.action('view',{date:current}));}catch(e){$('accountDateDetail').hidden=true;current=null;throw e;}}
-  $('sharedAccountFeedback').textContent='Dates and responses refreshed.';
+  $('sharedAccountFeedback').textContent='Connections, dates and responses refreshed.';
  });
  $('newAccountDate').onclick=()=>{if(busy||!account||!discard())return;current=null;$('accountDateDetail').hidden=true;editor(null);};
  ['accountDateTitle','accountDateWhen','accountDateMeeting'].forEach(id=>$(id).oninput=()=>{dirty=true;});
