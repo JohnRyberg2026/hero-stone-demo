@@ -538,7 +538,1834 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
         <div class="challenge-result hidden" id="worldChallengeResult">
           <div class="result-icon" id="worldResultIcon">🏆</div>
-  …25276 tokens truncated…st number=worldChallengeIndex+1;
+          <div class="launch-kicker" id="worldResultKicker">CHALLENGE 1 COMPLETE</div>
+          <div class="result-title" id="worldResultTitle">Evidence Captured</div>
+          <div class="result-points" id="worldResultPoints">+100</div>
+          <p class="result-summary" id="worldResultSummary">HEART STONE has received your team’s photo for verification. Your adventure continues.</p>
+          <button id="worldNextChallengeBtn">OPEN THE NEXT ENVELOPE</button>
+        </div>
+
+        <div class="next-envelope-card hidden" id="worldNextEnvelope">
+          <div class="launch-kicker" id="worldNextEnvelopeNumber">ENVELOPE TWO IS WAITING</div>
+          <div class="mini-envelope" id="worldMiniEnvelope"><div class="mini-flap"></div><div class="mini-seal">🌎</div></div>
+          <div class="challenge-title">Your Next Challenge Is Sealed</div>
+          <p>The score is locked. Take a breath, keep your team together, and break the next seal when everyone is ready.</p>
+          <button id="worldBreakNextSealBtn">BREAK THE NEXT SEAL</button>
+        </div>
+
+        <div class="ceremony hidden" id="worldQuestCeremony">
+          <div class="ceremony-glow">🌎</div>
+          <div class="launch-kicker">WORLD QUEST COMPLETE</div>
+          <div class="ceremony-title">Your Team Finished the World</div>
+          <div class="final-score" id="worldFinalScore">0</div>
+          <div class="final-score-label">TOTAL QUEST POINTS</div>
+          <div class="ceremony-stats">
+            <div class="ceremony-stat"><strong id="worldFinalCompleted">0</strong>Completed</div>
+            <div class="ceremony-stat"><strong id="worldFinalSkipped">0</strong>Skipped</div>
+            <div class="ceremony-stat"><strong id="worldFinalTime">0m</strong>Quest Time</div>
+          </div>
+          <div class="standing-list">
+            <div class="standing-row"><div class="standing-icon">🏙️</div><div><div class="standing-label">City Standing</div><div class="standing-sub">Local teams today</div></div><div class="standing-rank">#12</div></div>
+            <div class="standing-row"><div class="standing-icon">🏳️</div><div><div class="standing-label">Country Standing</div><div class="standing-sub">National teams today</div></div><div class="standing-rank">#148</div></div>
+            <div class="standing-row"><div class="standing-icon">🌎</div><div><div class="standing-label">World Standing</div><div class="standing-sub">Global teams today</div></div><div class="standing-rank">#1,204</div></div>
+          </div>
+          <div class="ceremony-motto">FIVE ENVELOPES · ONE TEAM · ONE WORLD</div>
+          <button id="worldRestartQuestBtn">PLAY WORLD QUEST AGAIN</button>
+        </div>
+      </div>
+
+      <button class="secondary" id="worldQuestBackBtn">← CHOOSE ANOTHER EXPERIENCE</button>
+    </div>
+  </div>
+</section>
+
+<div class="wrap hidden signed-out" id="dateQuestApp">
+  <div class="brand">
+    <img class="official-logo" src="images/official-logo.png" alt="DATE QUEST official logo"/>
+    <div class="tag">Where We Create the Timeless Story of Our Love.</div>
+    <div class="demo">KICKSTARTER DEMO MODE</div>
+  </div>
+
+  <div class="progress">
+    <div class="dot on" id="p1"></div><div class="dot" id="p2"></div><div class="dot" id="p3"></div>
+    <div class="dot" id="p4"></div><div class="dot" id="p5"></div><div class="dot" id="p6"></div>
+  </div>
+
+  <details class="card hidden" id="connectionManager"><summary>My dating connections</summary><p>Choose the connection for this page. Each connection keeps its own dates, history and shared choices.</p><div id="connectionLinks"></div><button type="button" id="addDatingConnectionBtn" class="secondary">Connect with another person</button><button type="button" id="refreshDatingConnectionsBtn" class="secondary">Refresh my connections</button><p id="connectionSelectionStatus" role="status"></p></details>
+  <section class="card" id="authCard">
+    <h2>1. Sign in</h2>
+    <input id="email" type="email" placeholder="Email"/>
+    <input id="password" type="password" placeholder="Password"/>
+    <button id="signInBtn">Sign In</button>
+    <button class="secondary hidden" id="signOutBtn">Sign Out</button>
+    <div class="status" id="authStatus">Not signed in.</div>
+    <div class="hidden" id="connectedState">
+      <div class="hero">❤️ HEART STONE Connected</div>
+      <p>You’re signed in and connected to your partner.</p>
+<p id="signedInEmail" style="font-size:12px;opacity:.72;margin-top:-2px;"></p>
+
+      <div id="profilePanel" style="margin-top:18px;padding-top:16px;border-top:1px solid #eadfd5;text-align:left;">
+        <div style="font-weight:900;font-size:18px;margin-bottom:4px;">Your Profile</div>
+        <div style="font-size:13px;opacity:.72;margin-bottom:12px;">Help HEART STONE speak to you naturally and respectfully.</div>
+
+        <label class="field-label" for="profileFirstName">First name</label>
+        <input id="profileFirstName" type="text" placeholder="Your first name" autocomplete="given-name"/>
+
+        <label class="field-label" for="profileGender">Gender</label>
+        <select id="profileGender">
+          <option value="">Choose if you’d like</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="nonbinary">Nonbinary</option>
+          <option value="self_described">Self-described</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
+        </select>
+
+        <label class="field-label" for="profilePronouns">How should HEART STONE refer to you?</label>
+        <select id="profilePronouns">
+          <option value="">Use neutral language</option>
+          <option value="she_her">She / Her</option>
+          <option value="he_him">He / Him</option>
+          <option value="they_them">They / Them</option>
+          <option value="name_only">Use my name</option>
+          <option value="self_described">Self-described</option>
+        </select>
+
+        <label class="field-label" for="sharePronounsWithPartner">
+          <input id="sharePronounsWithPartner" type="checkbox" style="width:auto;margin-right:8px"/>
+          Use my pronouns in messages shown to my linked partner
+        </label>
+        <p class="small">Off by default. Your gender stays private; you can change this choice anytime.</p>
+
+        <button id="saveProfileBtn" class="gold" type="button">Save My Profile ❤️</button>
+        <div class="status" id="profileStatus">Your choices stay attached to your private profile.</div>
+        <div style="margin-top:14px;padding:14px;border:1px solid #eadfd5;border-radius:12px;">
+          <strong>Explore Getting to Know You</strong>
+          <p class="small">Try the first journey prototype: broad interests, today's limits, an adventure, and a reflection. Your answers and memories save privately to your account. You choose each interest answer to show your linked partner. Today's temporary limits stay on this device.</p>
+          <p class="small" id="firstJourneyProgress" role="status" aria-live="polite">Checking your private interest answers...</p>
+          <a href="./heart-stone-first-journey.html" style="display:inline-block;padding:10px 14px;border-radius:8px;background:#173f38;color:#fff;text-decoration:none;">Open first journey preview</a>
+
+        <div style="margin-top:18px;padding-top:16px;border-top:1px solid #eadfd5;">
+          <strong>First Journey backup</strong>
+          <p style="font-size:13px;line-height:1.5;">Bring the answers you downloaded from the First Journey prototype into this private account. Importing replaces any earlier First Journey backup in this account. Invitations are not enabled by this setting.</p>
+          <label class="field-label" for="firstJourneyImport">Choose your First Journey JSON file</label>
+          <input id="firstJourneyImport" type="file" accept=".json,application/json"/>
+          <button id="firstJourneySaveBtn" class="secondary" type="button">Save backup to my account</button>
+          <button id="firstJourneyDownloadBtn" class="secondary" type="button">Download my account backup</button>
+          <div class="status" id="firstJourneyStatus" role="status" aria-live="polite">Nothing imported yet.</div>
+
+        </div>
+      </div>
+
+      <button class="secondary" id="connectedSignOutBtn">Sign Out</button>
+    </div>
+  </section>
+
+  <section class="card" id="inviteCard">
+    <h2>Connect with someone</h2>
+    <p>Create a separate connection with this person, or accept the token they shared with you. Each person accepts from their own account. Existing connections stay separate.</p>
+    <input id="partnerEmail" type="email" placeholder="Partner email"/>
+    <input id="partnerName" placeholder="Partner first name"/>
+    <button id="createInviteBtn">Create Invitation</button>
+    <textarea id="inviteToken" rows="3" placeholder="Invitation token"></textarea>
+    <button class="gold" id="acceptInviteBtn">Accept Invitation</button>
+    <div class="status" id="connectionInviteStatus">Waiting for invitation step.</div>
+  </section>
+
+  
+  <section class="card hidden" id="homeCard">
+    <div class="home-topbar">
+      <button class="secondary" id="homeProfileBtn">Profile & Settings</button>
+    </div>
+    <section class="dq-home-part dq-welcome" aria-labelledby="dqGreeting"><p class="dq-eyebrow">01 · HEART STONE welcomes you</p><div class="dq-stone" aria-hidden="true">♡</div><h1 id="dqGreeting">Welcome back.</h1><p class="dq-lead">A little time can become something treasured. What would you like to make room for today?</p><div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div></section>
+    <section class="dq-home-part" aria-labelledby="dqMomentsTitle"><p class="dq-eyebrow">02 · Your DATE QUEST moments</p><h2 id="dqMomentsTitle">Something to look forward to.</h2><p>Time chosen for each other. A WILD ADVENTURE™ with as much surprise as you choose.</p><div id="dqMoments"></div><p id="dqMomentsStatus" role="status"></p><button type="button" class="secondary" id="dqRefreshMoments">Refresh my moments</button><a class="dq-main-link" href="invitation-opening.html">Create a moment ♡</a><a class="dq-main-link" href="shared-dates.html">My shared dates · One-on-one or together</a><a class="dq-main-link dq-green" href="invitation-opening.html#shared-invitations">💌 A Moment Is Calling</a><p class="small">Open your invitations and replies. Nothing is accepted automatically.</p>
+    <div class="status hidden" id="invitationResponseNotice" role="status" aria-live="polite" style="border:2px solid var(--accent2);padding:16px">
+      <h2>Not tonight ❤️</h2>
+      <p id="invitationResponseMessage" style="color:var(--ink);margin:0 0 10px"></p>
+      <button class="secondary" id="dismissInvitationResponseBtn">Okay</button>
+    </div>
+    <details><summary>More ways to continue</summary><div class="home-actions">
+      <button class="good" id="homeCreateBtn">Explore WILD ADVENTURES™ ❤️</button>
+      <button class="gold" id="homeContinueBtn">Continue Our WILD ADVENTURE™ 🧭</button>
+    </div>
+    <div class="home-secondary">
+      <button class="secondary" id="homeMemoriesBtn">Our Memories</button>
+      <button class="secondary" id="homeStoryBtn">Our Story</button>
+    </div>
+    </details><div class="status" id="homeStatus" role="status" aria-live="polite" aria-atomic="true">Your HEART STONE is ready.</div></section>
+    <section class="dq-home-part" aria-labelledby="dqCalendarTitle"><p class="dq-eyebrow">03 · Your calendar</p><h2 id="dqCalendarTitle">Make room for what matters.</h2><p>Birthdays, anniversaries, traditions, milestones and wishes for the years ahead.</p><p class="dq-device-note">Demo calendar: personal entries save only in this browser for the signed-in account. They are not shared or synced. Anyone with access to this browser may be able to read saved data. Selective sharing and shared availability hearts are not connected yet.</p><div class="dq-calendar-nav"><button id="dqPreviousMonth" type="button" class="secondary" aria-label="Previous month">←</button><label>Month<select id="dqMonth"></select></label><label>Year<input id="dqYear" type="number" min="1900" max="2199"></label><button id="dqNextMonth" type="button" class="secondary" aria-label="Next month">→</button></div><button id="dqToday" type="button" class="secondary">Return to today</button><h3 id="dqMonthTitle"></h3><div class="dq-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="dq-calendar-grid" id="dqDays" aria-label="Choose a calendar day"></div><h3 id="dqDayTitle"></h3><div id="dqDayEvents"></div><button id="dqAddEvent" type="button">Add something that matters</button><button id="dqAvailability" type="button" class="secondary">♡ Mark my availability for this day</button><p class="small">Your heart is a personal availability note for that day, never an invitation or an obligation. No one is notified. It expires after that day.</p><details><summary>Future wishes & bucket list</summary><div id="dqFutureWishes"></div></details><p id="dqCalendarStatus" role="status" aria-live="polite"></p><form id="dqEventForm" hidden><h3 id="dqEventHeading">A little place on your calendar</h3><label>Name<input id="dqEventName" maxlength="120" required></label><label>Day<input id="dqEventDay" type="date" required></label><label>What does it mean?<select id="dqEventKind"><option value="birthday">Birthday</option><option value="anniversary">Anniversary</option><option value="holiday">Holiday</option><option value="tradition">Tradition</option><option value="milestone">Milestone</option><option value="reminder">Reminder</option><option value="wish">Future wish / bucket list</option><option value="personal">Personal plan</option></select></label><p class="small">A reminder is a calendar label in this demo; notifications are not scheduled. Entries do not repeat automatically.</p><button type="submit">Save on this device</button><button id="dqCancelEvent" type="button" class="secondary">Cancel — keep my calendar</button></form></section>
+
+  </section>
+
+<section class="card" id="questCard">
+    <div style="margin-bottom:10px">
+      <button class="secondary" id="backHomeBtn" style="width:auto;margin:0;padding:8px 12px">← Back to Our HEART STONE</button>
+    </div>
+    <h2>3. Ask HEART STONE</h2>
+    <div class="hero">What should we do together?</div>
+
+    <label class="field-label" for="adventureType">What kind of experience sounds good?</label>
+    <select id="adventureType">
+      <option value="date_quest">Date Quest</option>
+      <option value="wild_adventure">Wild Adventure</option>
+      <option value="surprise">Surprise Us</option>
+    </select>
+
+    <span class="field-label">How much time do we have?</span>
+    <div class="choice-grid" data-choice-for="minutes">
+      <button type="button" class="choice" data-value="45">Quick date<small>About 45 minutes</small></button>
+      <button type="button" class="choice selected" data-value="120">A couple hours<small>About 2 hours</small></button>
+      <button type="button" class="choice" data-value="240">Half a day<small>About 4 hours</small></button>
+      <button type="button" class="choice" data-value="360">Make a day of it<small>About 6 hours</small></button>
+    </div>
+
+    <span class="field-label">How far do we feel like going?</span>
+    <div class="choice-grid" data-choice-for="distance">
+      <button type="button" class="choice" data-value="10">Stay close<small>Within 10 minutes</small></button>
+      <button type="button" class="choice" data-value="20">Nearby<small>Within 20 minutes</small></button>
+      <button type="button" class="choice selected" data-value="30">A little exploring<small>Within 30 minutes</small></button>
+      <button type="button" class="choice" data-value="60">Worth the drive<small>Up to an hour</small></button>
+    </div>
+
+    <span class="field-label">What feels comfortable for spending?</span>
+    <div class="choice-grid three" data-choice-for="budget">
+      <button type="button" class="choice" data-value="simple">$<small>Keep it simple</small></button>
+      <button type="button" class="choice selected" data-value="moderate">$$<small>A little treat</small></button>
+      <button type="button" class="choice" data-value="special">$$$<small>Make it special</small></button>
+    </div>
+
+    <span class="field-label">When are we going?</span>
+    <div class="choice-grid three" data-choice-for="whenLabel">
+      <button type="button" class="choice selected" data-value="today">Tonight</button>
+      <button type="button" class="choice" data-value="weekend">This weekend</button>
+      <button type="button" class="choice" data-value="later">Another day</button>
+    </div>
+
+    <span class="field-label">What kind of mood are we in?</span>
+    <p class="helper">Choose as many as you like.</p>
+    <div class="choice-grid three" id="moodChoices">
+      <button type="button" class="choice selected" data-mood="fun">Fun</button>
+      <button type="button" class="choice" data-mood="romantic">Romantic</button>
+      <button type="button" class="choice" data-mood="relaxed">Relaxed</button>
+      <button type="button" class="choice" data-mood="adventurous">Adventurous</button>
+      <button type="button" class="choice selected" data-mood="spontaneous">Spontaneous</button>
+      <button type="button" class="choice" data-mood="surprise">Surprise us</button>
+    </div>
+
+    <label class="field-label" for="requestNote">Anything you'd love HEART STONE to know?</label>
+    <textarea id="requestNote" rows="2" placeholder="For example: somewhere outside, dessert sounds good, or nothing too crowded..."></textarea>
+
+    <input id="minutes" type="hidden" value="120"/>
+    <input id="distance" type="hidden" value="30"/>
+    <input id="budget" type="hidden" value="moderate"/>
+    <input id="whenLabel" type="hidden" value="today"/>
+    <input id="mood" type="hidden" value="fun,spontaneous"/>
+
+    <button id="questBtn">Find Our Adventure</button>
+    <button class="secondary hidden" id="syncPartnerBtn">Load Partner’s Adventure</button>
+    <div class="status" id="questStatus">Your demo choices stay separate from your real HEART STONE history.</div>
+  </section>
+
+  <section class="card hidden" id="recommendationsCard">
+    <h2>4. Choose an adventure</h2>
+    <p class="small">These choices are private to you. Your partner won’t see anything until you send the invitation.</p>
+    <div id="recommendations"></div>
+    <button class="secondary" id="moreRecommendationsBtn">Show Me 3 More ↻</button>
+    <button class="secondary hidden" id="refreshPartnerBtn">Refresh Partner Sync</button>
+  </section>
+
+  <section class="card hidden" id="dateInvitationCard">
+    <div id="invitationHomeNav" style="margin-bottom:10px">
+      <button class="secondary" id="invitationBackHomeBtn" style="width:auto;margin:0;padding:8px 12px">← Back to Our HEART STONE</button>
+    </div>
+    <div id="senderStylePanel" class="hidden">
+      <h2>❤️ Make it an invitation</h2>
+      <p class="small">How should HEART STONE invite your partner?</p>
+      <div class="style-grid" id="styleGrid">
+        <button data-style="romantic">❤️ Romantic</button><button data-style="playful">😏 Playful</button>
+        <button data-style="mysterious">✨ Mysterious</button><button data-style="adventurous">🧭 Adventurous</button>
+        <button data-style="surprise" style="grid-column:1/-1">💎 Surprise Me</button>
+      </div>
+      <button class="good" id="sendInvitationBtn">Send My Invitation ❤️</button>
+    </div>
+    <div id="sealedEnvelopePanel" class="invite-stage hidden">
+      <h2>❤️ For You</h2><p>A HEART STONE invitation is waiting...</p>
+      <div class="envelope" id="envelope"><div class="envelope-flap"></div><div class="wax">♥</div></div>
+      <button class="gold" id="openInvitationBtn">Open My Invitation ❤️</button>
+    </div>
+    <div id="openedInvitationPanel" class="hidden">
+      <div class="invitation-paper"><div class="heartpulse">❤️</div><h2>A Date Invitation</h2>
+        <p id="invitationMessage">Someone special wants some time with you.</p>
+        <p><strong>The adventure stays a surprise until you say yes.</strong></p>
+      </div>
+      <button class="good" id="acceptDateBtn">I'd Love To ❤️</button>
+      <button class="secondary" id="declineDateBtn">Not Tonight</button>
+    </div>
+    <div id="acceptedPanel" class="hidden">
+      <div class="heartpulse">❤️</div><div class="yes-title" id="acceptedTitle">IT'S A DATE</div>
+      <p id="acceptedMessage" style="text-align:center">Your adventure is waiting...</p>
+      <button class="gold" id="revealAdventureBtn">Reveal Our Adventure 🧭</button>
+    </div>
+    <div class="status" id="inviteStatus">Waiting for your answer.</div>
+  </section>
+
+  <section class="card hidden" id="adventureCard">
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.12em;opacity:.58">YOUR HEART STONE ADVENTURE</div>
+      <div style="font-size:38px;margin:8px 0 2px">❤️</div>
+      <h2 style="margin:0">Our Adventure</h2>
+      <div style="margin-top:7px;font-size:14px;opacity:.72">The waiting is over. This one belongs to you two.</div>
+    </div>
+    <div style="text-align:center;padding:18px;border:1px solid #eadfd5;border-radius:18px;background:rgba(255,255,255,.72);margin-bottom:14px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.1em;opacity:.58;margin-bottom:7px">TONIGHT'S ADVENTURE</div>
+      <div class="hero" id="adventureTitle">Adventure</div>
+      <p id="adventureDescription" style="margin-bottom:0"></p>
+    </div>
+    <div style="font-size:13px;text-align:center;opacity:.68;margin:8px 0 10px">Follow the moment. Make it yours. Put the phones down when you can. ❤️</div>
+    <button class="gold" id="completeStepBtn">Complete Step</button>
+    <button class="good" id="completeAdventureBtn">Complete Adventure</button>
+    <button class="secondary" id="cancelAdventureBtn">Cancel Adventure</button>
+    <div class="status" id="adventureStatus">Ready to demonstrate the experience.</div>
+    <a href="invitation-opening.html" style="display:block;text-align:center;padding:14px 16px;margin-top:12px;border:1px solid var(--accent);border-radius:15px;color:var(--accent);font-weight:750">Create or Resume an Invitation ❤️</a>
+    <p class="small" style="text-align:center">Drafts stay on this browser until you choose Send. <a href="invitation-opening.html#shared-invitations">View Shared Invitations</a></p>
+  </section>
+
+  <section class="card hidden" id="completeCard">
+    <div class="bigcheck">♥</div>
+    <h2 style="text-align:center">Adventure Complete</h2>
+    <p style="text-align:center">In Demo Mode, HEART STONE demonstrates the full lifecycle without adding simulated activity to the couple's real learning history.</p>
+    <select id="rating">
+      <option value="loved">We loved it</option>
+      <option value="liked">We liked it</option>
+      <option value="neutral">It was okay</option>
+      <option value="disliked">Not for us</option>
+    </select>
+    <textarea id="feedback" rows="2">Kickstarter demonstration completed.</textarea>
+    <button id="saveFeedbackBtn">Save Demo Feedback</button>
+    <button class="gold" id="startAnotherBtn">Start Another Adventure ❤️</button>
+    <button class="secondary" id="showHistoryBtn">Show Demo History</button>
+    <div class="status" id="completeStatus">Ready for feedback.</div>
+    <div id="historyBox" class="status hidden" style="text-align:left;margin-top:12px;"></div>
+  </section>
+
+  <div class="footer">HEART STONE™ Alpha • Simulated demonstration activity is clearly marked as Demo Mode.</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://iqxhqxlcraatdheslqeo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let heartStoneId = ""; // A remembered ID never chooses a relationship for a new account.
+const requestedConnection = new URLSearchParams(location.search).get("connection");
+let requestId = null;
+let adventureId = null;
+let stepId = null;
+let privateRequestId = null;
+let seenCandidateIds = [];
+let selectedInvitationStyle = "surprise";
+let autoSyncTimer = null;
+let lastSharedFingerprint = "";
+let suppressSharedRenderUntil = 0;
+let autoSyncBusy = false;
+let dismissedCompletedAdventureId = localStorage.getItem("hs_dismissed_completed_demo_id") || "";
+let dismissedDraftAdventureId = localStorage.getItem("hs_dismissed_draft_demo_id") || "";
+let homeRestingMode = localStorage.getItem("hs_home_resting_mode") === "1";
+
+const $ = id => document.getElementById(id);
+function status(id,msg){ $(id).textContent=msg; }
+async function ensureFreshAuth(){
+  let {data:{session}}=await sb.auth.getSession();
+  if(!session) return null;
+  const r=await sb.auth.refreshSession();
+  return r?.data?.session || session;
+}
+function step(n){ for(let i=1;i<=6;i++) $("p"+i).classList.toggle("on",i<=n); }
+function show(id,on=true){
+  const legacyPanels=["questCard","recommendationsCard","dateInvitationCard","sealedEnvelopePanel","openedInvitationPanel","acceptedPanel","adventureCard","completeCard","feedbackCard","historyCard"];
+  if(homeRestingMode&&((on&&legacyPanels.includes(id))||(!on&&id==="homeCard"))) return;
+  $(id).classList.toggle("hidden",!on);
+}
+function setAdventureFocus(on=true){
+  if(on&&homeRestingMode) return;
+  if(on){
+    homeRestingMode=false;
+    localStorage.removeItem("hs_home_resting_mode");
+    show("homeCard",false);
+  }
+  show("questCard",!on);
+  if(on) show("recommendationsCard",false);
+}
+
+
+function setAccountCardCollapsed(collapsed){
+  const card=$("authCard");
+  if(card) card.classList.toggle("profile-collapsed",collapsed);
+}
+
+let homeLoadVersion=0;
+let homeNamesVersion=0;
+async function refreshHomeNames(){
+  const version=++homeNamesVersion;
+  const requestedHeartStoneId=heartStoneId;
+  if(!requestedHeartStoneId) return;
+  const requestedUser=await currentUser();
+  if(!requestedUser || version!==homeNamesVersion) return;
+  try{
+    const [partnerResult,mineResult]=await Promise.all([
+      sb.rpc("get_heart_stone_partner_personalization",{p_heart_stone_id:requestedHeartStoneId}),
+      sb.from("profiles").select("first_name").eq("id",requestedUser.id).maybeSingle()
+    ]);
+    const activeUser=await currentUser();
+    if(version!==homeNamesVersion || requestedHeartStoneId!==heartStoneId ||
+       activeUser?.id!==requestedUser.id || $("connectedState").classList.contains("hidden")) return;
+    if(partnerResult.error || mineResult.error) return;
+    const partner=Array.isArray(partnerResult.data)?partnerResult.data[0]:partnerResult.data;
+    const names=[mineResult.data?.first_name,partner?.first_name].filter(Boolean);
+    $("homeCoupleNames").textContent=names.length?names.join(" & "):"OUR HEART STONE";
+  }catch(e){}
+}
+async function loadHeartStoneHome(){
+  if(!heartStoneId) return;
+  const version=++homeLoadVersion;
+  const requestedHeartStoneId=heartStoneId;
+  const requestedUser=await currentUser();
+  if(version!==homeLoadVersion || !requestedUser) return;
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  await refreshHomeNames();
+  if((await currentUser())?.id!==requestedUser.id) return;
+
+  // Build 42 Home v16 race fix:
+  // loadHeartStoneHome() begins asynchronously when the connected UI is restored.
+  // If the user has already chosen Create/Continue while profile data was loading,
+  // that newer navigation intent must win; never redraw Home from this stale load.
+  if(version!==homeLoadVersion || requestedHeartStoneId!==heartStoneId || $("connectedState").classList.contains("hidden") || !homeRestingMode) return;
+
+  setAccountCardCollapsed(true);
+  show("homeCard",true);
+  show("questCard",false);
+
+  // Build 42 Home is the clean resting state. Preserve all data, but do not
+  // leave any prior lifecycle panel visible underneath the Home card.
+  [
+    "recommendationsCard",
+    "sealedEnvelopePanel",
+    "openedInvitationPanel",
+    "acceptedPanel",
+    "adventureCard",
+    "completeCard",
+    "feedbackCard",
+    "historyCard"
+  ].forEach(id => {
+    const el=$(id);
+    if(el) show(id,false);
+  });
+}
+
+function setConnectedUI(connected){
+  if(!connected) homeRestingMode=false;
+  window.dispatchEvent(new CustomEvent("heartstone:home-state",{detail:{connected}}));
+  $("dateQuestApp").classList.toggle("signed-out",!connected);
+  ["email","password","signInBtn","authStatus"].forEach(id=>show(id,!connected));
+  show("signOutBtn",false);
+  show("connectedState",connected);
+  show("inviteCard",false);
+  $("signedInEmail").textContent="";
+  if(!connected){
+    $("password").value="";
+    step(1);
+    homeLoadVersion++;
+    homeNamesVersion++;
+    profileLoadVersion++;
+    clearProfileFields();
+    show("invitationResponseNotice",false);
+    $("invitationResponseMessage").textContent="";
+    $("homeCoupleNames").textContent="OUR HEART STONE";
+    setAccountCardCollapsed(false);
+    ["homeCard","questCard","recommendationsCard","dateInvitationCard",
+      "sealedEnvelopePanel","openedInvitationPanel","acceptedPanel",
+      "adventureCard","completeCard","feedbackCard","historyCard"
+    ].forEach(id=>{ if($(id)) show(id,false); });
+  }
+  if(connected){
+    step(3);
+    loadMyProfile();
+    loadHeartStoneHome();
+  }
+}
+
+function wireFriendlyQuestChoices(){
+  document.querySelectorAll("[data-choice-for]").forEach(group=>{
+    const target=group.getAttribute("data-choice-for");
+    group.querySelectorAll(".choice").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        group.querySelectorAll(".choice").forEach(b=>b.classList.remove("selected"));
+        btn.classList.add("selected");
+        $(target).value=btn.dataset.value;
+      });
+    });
+  });
+  document.querySelectorAll("#moodChoices .choice").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      btn.classList.toggle("selected");
+      const moods=[...document.querySelectorAll("#moodChoices .choice.selected")].map(b=>b.dataset.mood);
+      if(!moods.length){ btn.classList.add("selected"); moods.push(btn.dataset.mood); }
+      $("mood").value=moods.join(",");
+    });
+  });
+}
+wireFriendlyQuestChoices();
+
+
+async function currentUser(){
+  const {data} = await sb.auth.getUser();
+  return data?.user || null;
+}
+
+let profileLoadVersion=0;
+function clearProfileFields(){
+  $("profileFirstName").value="";
+  $("profileGender").value="";
+  $("profilePronouns").value="";
+  $("sharePronounsWithPartner").checked=false;
+  status("profileStatus","Your choices stay attached to your private profile.");
+  status("firstJourneyProgress","Sign in to see your private interest progress.");
+}
+async function loadMyProfile(){
+  const version=++profileLoadVersion;
+  clearProfileFields();
+  const u=await currentUser();
+  if(version!==profileLoadVersion || !u) return;
+  $("signedInEmail").textContent=u.email ? "Signed in as: "+u.email : "";
+  status("firstJourneyProgress","Checking your private interest answers...");
+  const {data,error}=await sb.from("profiles")
+    .select("first_name,gender,pronouns,share_pronouns_with_partner")
+    .eq("id",u.id)
+    .maybeSingle();
+  const active=await currentUser();
+  if(version!==profileLoadVersion || active?.id!==u.id) return;
+  if(error){
+    status("profileStatus","Could not load your profile: "+error.message);
+    return;
+  }
+  if(data){
+    $("profileFirstName").value=data.first_name||"";
+    $("profileGender").value=data.gender||"";
+    $("profilePronouns").value=data.pronouns||"";
+    $("sharePronounsWithPartner").checked=!!data.share_pronouns_with_partner;
+    status("profileStatus","Your profile is ready.");
+  }
+  const {count, error:answersError}=await sb.from("user_onboarding_answers")
+    .select("question_key",{count:"exact",head:true})
+    .eq("user_id",u.id)
+    .like("question_key","first_journey_interest_%");
+  const stillActive=await currentUser();
+  if(version!==profileLoadVersion || stillActive?.id!==u.id) return;
+  status("firstJourneyProgress",answersError
+    ? "Could not load your interest progress right now."
+    : (count||0)+" interest answers saved to this account.");
+}
+
+$("saveProfileBtn").onclick=async()=>{
+  const u=await currentUser();
+  if(!u) return status("profileStatus","Please sign in first.");
+  const version=profileLoadVersion;
+  const firstName=$("profileFirstName").value.trim();
+  if(!firstName) return status("profileStatus","Please enter your first name.");
+  const changes={
+    first_name:firstName,
+    gender:$("profileGender").value||null,
+    pronouns:$("profilePronouns").value||null,
+    share_pronouns_with_partner:$("sharePronounsWithPartner").checked,
+    updated_at:new Date().toISOString()
+  };
+
+  $("saveProfileBtn").disabled=true;
+  status("profileStatus","Saving your profile...");
+
+  const {data,error}=await sb.from("profiles")
+    .update(changes)
+    .eq("id",u.id)
+    .select("id")
+    .maybeSingle();
+
+  $("saveProfileBtn").disabled=false;
+  if(version!==profileLoadVersion || (await currentUser())?.id!==u.id) return;
+  if(error) return status("profileStatus","Profile error: "+error.message);
+  if(!data) return status("profileStatus","Profile was not saved. Please try again.");
+
+  status("profileStatus","Saved ❤️ HEART STONE will use your choices respectfully.");
+  if(heartStoneId) refreshHomeNames();
+};
+
+const FIRST_JOURNEY_KEY="first_journey_backup_v1";
+function validateFirstJourney(raw){
+  if(!raw || raw.format!=="heart-stone-first-journey" || raw.version!==1 || !raw.profile || !raw.privateJourney) throw new Error("This is not a First Journey export.");
+  const {name,likes,contact}=raw.profile;
+  const {limits,choice,memory,reflection,feeling,learning}=raw.privateJourney;
+  if(typeof name!=="string" || name.length>60 || !likes || typeof likes!=="object" || Array.isArray(likes) || !contact || typeof contact.open!=="boolean" || !limits || typeof limits!=="object" || typeof memory!=="string" || typeof reflection!=="string" || !learning || typeof learning!=="object") throw new Error("This First Journey file is incomplete.");
+  return {format:"heart-stone-first-journey",version:1,profile:{name,likes,contact},privateJourney:{limits,choice,memory,reflection,feeling,learning}};
+}
+$("firstJourneySaveBtn").onclick=async()=>{
+  const file=$("firstJourneyImport").files?.[0];
+  if(!file) return status("firstJourneyStatus","Choose your downloaded JSON file first.");
+  if(file.size>1024*1024) return status("firstJourneyStatus","The file is too large for a First Journey backup.");
+  const u=await currentUser();
+  if(!u) return status("firstJourneyStatus","Please sign in first.");
+  let answer;
+  try { answer=validateFirstJourney(JSON.parse(await file.text())); }
+  catch(e){ return status("firstJourneyStatus",e.message||"Could not read that file."); }
+  $("firstJourneySaveBtn").disabled=true;
+  status("firstJourneyStatus","Saving your private backup...");
+  const {error}=await sb.from("user_onboarding_answers").upsert({user_id:u.id,question_key:FIRST_JOURNEY_KEY,answer_kind:"free_text",answer_json:answer,skipped:false,updated_at:new Date().toISOString()},{onConflict:"user_id,question_key"});
+  $("firstJourneySaveBtn").disabled=false;
+  status("firstJourneyStatus",error?"Could not save backup: "+error.message:"First Journey backup saved to your account.");
+};
+$("firstJourneyDownloadBtn").onclick=async()=>{
+  const u=await currentUser();
+  if(!u) return status("firstJourneyStatus","Please sign in first.");
+  const {data,error}=await sb.from("user_onboarding_answers").select("answer_json").eq("user_id",u.id).eq("question_key",FIRST_JOURNEY_KEY).maybeSingle();
+  if(error) return status("firstJourneyStatus","Could not load backup: "+error.message);
+  if(!data) return status("firstJourneyStatus","No First Journey backup is saved in this account yet.");
+  const blob=new Blob([JSON.stringify(data.answer_json,null,2)+"\n"],{type:"application/json"});
+  const url=URL.createObjectURL(blob),link=document.createElement("a");
+  link.href=url;link.download="heart-stone-my-first-journey.json";document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  status("firstJourneyStatus","Download started. Keep your private answers and memory safe.");
+};
+
+async function loadExistingHeartStone(){
+  const u = await currentUser();
+  if(!u) return null;
+  const {data,error}=await sb.from("heart_stone_memberships")
+    .select("heart_stone_id,status,joined_at").eq("user_id",u.id).eq("status","active")
+    .order("joined_at",{ascending:false}).limit(100);
+  if(error){status("connectionInviteStatus","Could not load your connections: "+error.message);return null;}
+  if((await currentUser())?.id!==u.id) return null;
+  const connections=data||[];
+  const labels=await Promise.all(connections.map(async c=>{
+    const result=await sb.rpc("get_moment_invitation_partners",{p_heart_stone_id:c.heart_stone_id});
+    return !result.error&&Array.isArray(result.data)?result.data.map(p=>p.name).filter(Boolean).join(", "):"";
+  }));
+  if((await currentUser())?.id!==u.id) return null;
+  const selected=requestedConnection?connections.find(c=>c.heart_stone_id===requestedConnection):connections.length===1?connections[0]:null;
+  const box=$("connectionLinks");box.replaceChildren();
+  connections.forEach((c,index)=>{
+    const link=document.createElement("a");link.className="secondary";
+    link.style.cssText="display:block;padding:12px;margin:8px 0";
+    link.href="index.html?connection="+encodeURIComponent(c.heart_stone_id);
+    link.textContent=(labels[index]?"With "+labels[index]:"Connection "+(index+1))+(selected?.heart_stone_id===c.heart_stone_id?" · Selected":"");
+    box.append(link);
+  });
+  show("connectionManager",true);
+  status("connectionSelectionStatus",selected?"This page belongs to your selected connection.":connections.length>1?"Choose a connection to continue. None is selected automatically.":requestedConnection?"That connection is no longer available to this account.":"No active connections yet.");
+  if(!selected){heartStoneId="";return null;}
+  heartStoneId=selected.heart_stone_id;
+  document.querySelectorAll('a[href="./heart-stone-first-journey.html"]').forEach(a=>a.href="./heart-stone-first-journey.html?connection="+encodeURIComponent(heartStoneId));
+  setConnectedUI(true);step(3);startAutomaticPartnerSync();
+  await loadSharedDemoState();
+  return heartStoneId;
+}
+$("addDatingConnectionBtn").onclick=()=>{show("inviteCard",true);$("inviteCard").scrollIntoView({behavior:"smooth"});};
+$("refreshDatingConnectionsBtn").onclick=()=>location.assign("index.html");
+
+$("signInBtn").onclick = async()=>{
+  status("authStatus","Signing in...");
+  const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error) return status("authStatus","Sign-in error: "+error.message);
+  $("dateQuestApp").classList.remove("signed-out");
+  $("password").value="";
+  status("authStatus","Signed in as "+data.user.email);
+  step(2);
+  const connected = await loadExistingHeartStone();
+  if(!connected){ show("signOutBtn",true); show("inviteCard",true); }
+};
+
+async function signOutUser(){
+  const {error}=await sb.auth.signOut();
+  if(error) return status("authStatus","Sign-out error: "+error.message);
+  if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; }
+  heartStoneId="";
+  show("connectionManager",false);$("connectionLinks").replaceChildren();
+  localStorage.removeItem("hs_heart_stone_id");
+  setConnectedUI(false);
+  status("authStatus","Signed out.");
+  $("authCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+$("signOutBtn").onclick = signOutUser;
+$("connectedSignOutBtn").onclick = signOutUser;
+
+$("createInviteBtn").onclick = async()=>{
+  status("connectionInviteStatus","Creating invitation...");
+  const {data,error}=await sb.rpc("create_heart_stone_invitation",{
+    p_partner_email:$("partnerEmail").value.trim(),
+    p_partner_first_name:$("partnerName").value.trim(),
+    p_expires_hours:24
+  });
+  if(error) return status("connectionInviteStatus","Invitation error: "+error.message);
+  const row=Array.isArray(data)?data[0]:data;
+  // Pending invitations never replace the currently selected relationship.
+  $("inviteToken").value=row?.invitation_token||"";
+  status("connectionInviteStatus","Invitation created for this person. Your selected connection has not changed.\nCopy the token to the invited person’s device.");
+};
+
+$("acceptInviteBtn").onclick = async()=>{
+  status("connectionInviteStatus","Accepting invitation...");
+  const {data,error}=await sb.rpc("accept_heart_stone_invitation",{p_token:$("inviteToken").value.trim()});
+  if(error) return status("connectionInviteStatus","Accept error: "+error.message);
+  location.assign("index.html?connection="+encodeURIComponent(data));
+};
+
+$("questBtn").onclick = async()=>{
+  if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
+  status("questStatus","HEART STONE is choosing...");
+  const moods=$("mood").value.split(",").map(x=>x.trim()).filter(Boolean);
+  const {data,error}=await sb.rpc("begin_demo_quest",{
+    p_heart_stone_id:heartStoneId,
+    p_adventure_type:$("adventureType").value,
+    p_when_label:$("whenLabel").value.trim(),
+    p_available_minutes:Number($("minutes").value),
+    p_budget_label:$("budget").value.trim(),
+    p_mood:moods,
+    p_max_distance_minutes:Number($("distance").value),
+    p_optional_request:$("requestNote").value.trim()||null,
+    p_limit:3
+  });
+  if(error){
+    if((error.message||"").includes("ACTIVE_ADVENTURE_ALREADY_EXISTS")){
+      status("questStatus","You already have an adventure in progress. Loading it now...");
+      const loaded=await loadExistingActiveDemoAdventure();
+      if(loaded) return;
+    }
+    return status("questStatus","Quest error: "+error.message);
+  }
+  requestId=data;
+  privateRequestId=data;
+  seenCandidateIds=[];
+  status("questStatus","Recommendations ready.");
+  await loadRecommendations();
+  step(4);
+};
+
+async function loadRecommendations(){
+  if(!requestId || privateRequestId!==requestId){
+    show("recommendationsCard",false);
+    return;
+  }
+  const {data,error}=await sb.from("recommendations").select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at,source_discovery_candidate_id").eq("request_id",requestId).order("created_at");
+  if(error) return status("questStatus","Recommendation load error: "+error.message);
+  (data||[]).forEach(r=>{
+    if(r.source_discovery_candidate_id && !seenCandidateIds.includes(r.source_discovery_candidate_id)){
+      seenCandidateIds.push(r.source_discovery_candidate_id);
+    }
+  });
+  const box=$("recommendations"); box.innerHTML="";
+  (data||[]).forEach(r=>{
+    const div=document.createElement("div"); div.className="recommendation";
+    div.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="small">${escapeHtml(r.recommendation_class||"")}</div><p>${escapeHtml(r.summary||"")}</p><button>Choose This</button>`;
+    div.querySelector("button").onclick=()=>chooseRecommendation(r);
+    box.appendChild(div);
+  });
+  show("recommendationsCard",true);
+}
+
+
+async function loadExistingActiveDemoAdventure(){
+  if(!heartStoneId) return false;
+
+  const {data:advs,error:advErr}=await sb.from("adventures")
+    .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
+    .eq("heart_stone_id",heartStoneId)
+    .eq("is_demo",true)
+    .eq("status","active")
+    .order("created_at",{ascending:false})
+    .limit(1);
+  if(advErr || !advs?.[0]) return false;
+
+  const adv=advs[0];
+  adventureId=adv.id;
+
+  if(!adv.adventure_revealed_at){
+    show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
+    show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+    // Acceptance owns the invitation status now; never leave the sender's
+    // pre-acceptance "waiting for your partner" message behind.
+    status("inviteStatus","");
+    const {data:{user}}=await sb.auth.getUser();
+    const inviter=(adv.created_by_user_id===user?.id);
+    $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
+    $("acceptedMessage").textContent=inviter?"Your partner accepted. Your adventure is ready.":"Your invitation is accepted. Your adventure is waiting...";
+    status("inviteStatus",inviter ? "Your invitation was accepted. ❤️" : "It's a date. ❤️");
+    step(4); $("dateInvitationCard").scrollIntoView({behavior:"smooth"});
+    return true;
+  }
+
+  let title=adv.title||"Our Adventure";
+  let summary="";
+  if(adv.source_recommendation_id){
+    const {data:rec}=await sb.from("recommendations")
+      .select("id,request_id,title,summary")
+      .eq("id",adv.source_recommendation_id)
+      .maybeSingle();
+    if(rec){
+      requestId=rec.request_id||requestId;
+      title=rec.title||title;
+      summary=rec.summary||"";
+    }
+  }
+
+  $("adventureTitle").textContent=title;
+  $("adventureDescription").textContent=summary;
+  show("recommendationsCard",false);
+
+  const {data:steps}=await sb.from("adventure_steps")
+    .select("id,status,title,description")
+    .eq("adventure_id",adventureId)
+    .order("position");
+  stepId=steps?.[0]?.id||null;
+  const firstStepCompleted=steps?.[0]?.status==="completed";
+
+  setAdventureFocus(true);
+  show("completeCard",false);
+  show("adventureCard",true);
+  $("completeStepBtn").disabled=firstStepCompleted;
+  $("completeStepBtn").textContent=firstStepCompleted ? "Step Completed ✓" : "Complete Step";
+  status("adventureStatus",firstStepCompleted ? "This step is already complete." : "Your adventure is already in progress.");
+  status("questStatus","Your current adventure was loaded automatically.");
+  step(5);
+  $("adventureCard").scrollIntoView({behavior:"smooth"});
+  return true;
+}
+
+async function partnerAcceptedHeading(){
+  try{
+    if(!heartStoneId) return "❤️ THEY SAID YES!";
+    const {data,error}=await sb.rpc("get_heart_stone_partner_personalization",{
+      p_heart_stone_id:heartStoneId
+    });
+    if(error) return "❤️ THEY SAID YES!";
+    const p=Array.isArray(data) ? data[0] : data;
+    if(!p) return "❤️ THEY SAID YES!";
+
+    if(p.pronouns==="she_her") return "❤️ SHE SAID YES!";
+    if(p.pronouns==="he_him") return "❤️ HE SAID YES!";
+    if(p.pronouns==="they_them") return "❤️ THEY SAID YES!";
+    if(p.pronouns==="name_only" && p.first_name)
+      return "❤️ "+p.first_name.toUpperCase()+" SAID YES!";
+    return p.first_name ? "❤️ "+p.first_name.toUpperCase()+" SAID YES!" : "❤️ THEY SAID YES!";
+  }catch(e){
+    return "❤️ THEY SAID YES!";
+  }
+}
+
+function isDeclinedInvitation(adv){
+  // Accepted adventures can also be abandoned later; those are cancellations.
+  return adv?.status==="abandoned" && !!adv.invitation_style && !adv.invitation_accepted_at;
+}
+async function showInvitationDeclined(adv){
+  if(!isDeclinedInvitation(adv)) return;
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user) return;
+  const noticeKey="hs_decline_notice_v2:"+user.id+":"+adv.id;
+  if(localStorage.getItem(noticeKey)) return;
+  const inviter=adv.created_by_user_id===user.id;
+  $("invitationResponseMessage").textContent=inviter
+    ? "Your partner declined this invitation for tonight. You can plan another time whenever you’re both ready."
+    : "Your “Not tonight” response was sent. Your partner knows you declined this invitation. No explanation needed.";
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  adventureId=null;
+  stepId=null;
+  ["questCard","recommendationsCard","dateInvitationCard","sealedEnvelopePanel",
+    "openedInvitationPanel","acceptedPanel","adventureCard","completeCard"]
+    .forEach(id=>{ if($(id)) show(id,false); });
+  show("homeCard",true);
+  show("invitationResponseNotice",true);
+  status("homeStatus","This invitation is closed.");
+  step(3);
+  $("invitationResponseNotice").scrollIntoView({behavior:"smooth",block:"center"});
+  // Acknowledge only after the notice has rendered successfully.
+  localStorage.setItem(noticeKey,"1");
+}
+$("dismissInvitationResponseBtn").onclick=()=>show("invitationResponseNotice",false);
+
+async function loadSharedDemoState(){
+  if(homeRestingMode) return;
+  if(Date.now()<suppressSharedRenderUntil) return;
+  // Do not blank the current invitation UI while asynchronous shared-state
+  // queries are running. Each resolved lifecycle branch renders its next
+  // state atomically; blanking first caused the visible invitation flash.
+  if(!heartStoneId) return status("questStatus","Connect the couple first so this phone has a HEART STONE ID.");
+  status("questStatus","Checking the shared HEART STONE...");
+
+  // Resolve the latest sent invitation directly so recommendation refreshes cannot confuse device roles.
+  const {data:invited,error:invitedErr}=await sb.from("adventures")
+    .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
+    .eq("heart_stone_id",heartStoneId).eq("is_demo",true)
+    .not("invitation_style","is",null).in("status",["proposed","active","completed","abandoned"])
+    .order("created_at",{ascending:false}).limit(1);
+  if(homeRestingMode) return;
+  if(invitedErr) return status("questStatus","Invitation sync error: "+invitedErr.message);
+  if(isDeclinedInvitation(invited?.[0])){
+    await showInvitationDeclined(invited[0]);
+    return;
+  }
+  if(invited?.[0] && invited[0].status==="active" && invited[0].invitation_accepted_at && invited[0].adventure_revealed_at){
+    const adv=invited[0]; adventureId=adv.id;
+    show("dateInvitationCard",false);
+    await loadExistingActiveDemoAdventure();
+    return;
+  }
+  if(invited?.[0] && invited[0].status==="active" && invited[0].invitation_accepted_at && !invited[0].adventure_revealed_at){
+    const adv=invited[0]; adventureId=adv.id;
+    show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
+    show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+    // Acceptance owns the invitation status now; never leave the sender's
+    // pre-acceptance "waiting for your partner" message behind.
+    status("inviteStatus","");
+    const {data:{user:currentUser}}=await sb.auth.getUser();
+    // A shared-state request may have started before the recipient tapped Open.
+    // If the local open transition now owns the screen, discard this stale render.
+    if(Date.now()<suppressSharedRenderUntil) return;
+    const inviter=(adv.created_by_user_id===currentUser?.id);
+    $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
+    if($("acceptedText")) $("acceptedText").textContent=inviter ? "Your partner accepted. Your adventure is ready." : "Your adventure is waiting...";
+    if($("acceptedMessage")) $("acceptedMessage").textContent=inviter ? "Your partner accepted. Your adventure is ready." : "Your invitation is accepted. Your adventure is waiting...";
+    status("inviteStatus",inviter ? "Your invitation was accepted. ❤️" : "It's a date. ❤️");
+    step(4); return;
+  }
+  if(invited?.[0] && invited[0].status==="proposed"){
+    const adv=invited[0]; adventureId=adv.id;
+
+    // Guard against an older async proposed render finishing after acceptance.
+    const {data:freshAdv}=await sb.from("adventures")
+      .select("status,invitation_accepted_at,adventure_revealed_at")
+      .eq("id",adv.id)
+      .maybeSingle();
+    if(freshAdv && (freshAdv.status!=="proposed" || freshAdv.invitation_accepted_at)){
+      return loadSharedDemoState();
+    }
+
+    const {data:{user:currentUser}}=await sb.auth.getUser();
+    const inviter=(adv.created_by_user_id===currentUser?.id);
+    if(!inviter && !adv.invitation_style){
+      adventureId=null;
+      show("dateInvitationCard",false); show("recommendationsCard",false);
+      show("adventureCard",false); show("completeCard",false); show("questCard",true);
+      step(3);
+      return;
+    }
+    show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true); show("acceptedPanel",false);
+    if(inviter){
+      show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false);
+      status("inviteStatus","Invitation sent ❤️ Waiting for your partner to open it.");
+    }else{
+      show("senderStylePanel",false);
+      if(!adv.invitation_opened_at){
+        // This DOM is reused across adventures. Reset it for every new envelope.
+        $("envelope").classList.remove("open");
+        $("openInvitationBtn").disabled=false;
+        show("sealedEnvelopePanel",true); show("openedInvitationPanel",false);
+        status("inviteStatus","A HEART STONE invitation is waiting... ❤️");
+      }else{
+        show("sealedEnvelopePanel",false); show("openedInvitationPanel",true);
+        const messages={romantic:"Someone special is asking for a little time together. ❤️",playful:"Psst... someone has plans for the two of you. 😏",mysterious:"A little mystery is waiting for the two of you. ✨",adventurous:"Your next adventure is calling. 🧭",surprise:"Someone special has a surprise waiting for you. 💎"};
+        $("invitationMessage").textContent=messages[adv.invitation_style]||messages.surprise;
+        status("inviteStatus","The adventure stays a surprise until you say yes.");
+      }
+    }
+    step(4); return;
+  }
+
+  // Build 42 exclusive Home rule:
+  // Passive polling may still deliver a real sent invitation above this point.
+  // But while Home is the chosen resting state, do not resurrect private/
+  // unsent creation drafts or old recommendation flows underneath it.
+  if(homeRestingMode){
+    [
+      "questCard","recommendationsCard","dateInvitationCard",
+      "sealedEnvelopePanel","openedInvitationPanel","acceptedPanel",
+      "adventureCard","completeCard","feedbackCard"
+    ].forEach(id=>{
+      const el=$(id);
+      if(el) show(id,false);
+    });
+    show("homeCard",true);
+    return;
+  }
+
+  const {data:reqs,error:reqErr}=await sb.from("recommendation_requests")
+    .select("id,created_at,created_by_user_id")
+    .eq("heart_stone_id",heartStoneId)
+    .eq("is_demo",true)
+    .order("created_at",{ascending:false})
+    .limit(1);
+  if(reqErr) return status("questStatus","Partner sync error: "+reqErr.message);
+  const latest=reqs?.[0];
+  if(!latest) return status("questStatus","No shared demo adventure has been created yet.");
+
+  requestId=latest.id;
+  const {data:recs,error:recErr}=await sb.from("recommendations")
+    .select("id,title,summary,recommendation_class,estimated_duration_minutes,estimated_budget,selected_at")
+    .eq("request_id",requestId)
+    .order("created_at");
+  if(recErr) return status("questStatus","Partner sync error: "+recErr.message);
+  if(!recs?.length) return status("questStatus","The shared request exists, but its choices are not ready yet. Try Refresh Partner Sync.");
+
+  const selected=recs.find(r=>r.selected_at);
+  if(!selected){
+    // Recommendation browsing is private. Passive sync does absolutely nothing.
+    return;
+  }
+  if(selected){
+    const {data:advs,error:advErr}=await sb.from("adventures")
+      .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .eq("source_recommendation_id",selected.id)
+      .order("created_at",{ascending:false})
+      .limit(1);
+    if(advErr) return status("questStatus","Partner adventure load error: "+advErr.message);
+    if(advs?.[0]){
+      adventureId=advs[0].id;
+      $("adventureTitle").textContent=selected.title;
+      $("adventureDescription").textContent=selected.summary||"";
+      show("recommendationsCard",false);
+
+      const {data:steps}=await sb.from("adventure_steps")
+        .select("id,status,title,description")
+        .eq("adventure_id",adventureId)
+        .order("position");
+      stepId=steps?.[0]?.id||null;
+      const firstStepCompleted=steps?.[0]?.status==="completed";
+
+      if(advs[0].status==="proposed"){
+        adventureId=advs[0].id;
+
+        // Build 42 Home draft rule: an unsent invitation draft may be tucked
+        // away locally. Polling must not redraw it underneath Home. If it is
+        // later sent, invitation_style becomes non-null and normal sync resumes.
+        if(
+          !advs[0].invitation_style &&
+          advs[0].id===dismissedDraftAdventureId
+        ){
+          show("dateInvitationCard",false);
+          show("recommendationsCard",false);
+          show("sealedEnvelopePanel",false);
+          show("openedInvitationPanel",false);
+          show("acceptedPanel",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("feedbackCard",false);
+          show("homeCard",true);
+          return;
+        }
+
+        const {data:{user}}=await sb.auth.getUser();
+        const inviter=(advs[0].created_by_user_id===user?.id);
+
+        // Build 40 privacy boundary:
+        // A recommendation may create a proposed adventure privately, but the
+        // partner must not see any invitation UI until Send My Invitation sets
+        // invitation_style. Keep the recipient on Ask HEART STONE meanwhile.
+        if(!inviter && !advs[0].invitation_style){
+          adventureId=null;
+          show("dateInvitationCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("questCard",true);
+          step(3);
+          return;
+        }
+
+        show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
+        show("acceptedPanel",false);
+        if(inviter){
+          show("sealedEnvelopePanel",false); show("openedInvitationPanel",false);
+          if(!advs[0].invitation_style){
+            show("senderStylePanel",true);
+            status("inviteStatus","Choose the feeling, then send something special.");
+          }else{
+            show("senderStylePanel",false);
+            status("inviteStatus","Invitation sent ❤️ Waiting for your partner to open it.");
+          }
+        }else{
+          show("senderStylePanel",false);
+          if(!advs[0].invitation_opened_at){
+            $("envelope").classList.remove("open");
+            $("openInvitationBtn").disabled=false;
+            show("sealedEnvelopePanel",true); show("openedInvitationPanel",false);
+            status("inviteStatus","A little something is waiting for you. ❤️");
+          }else{
+            show("sealedEnvelopePanel",false); show("openedInvitationPanel",true);
+            const messages={romantic:"Someone special is asking for a little time together. ❤️",playful:"Psst... someone has plans for the two of you. 😏",mysterious:"A little mystery is waiting for the two of you. ✨",adventurous:"Your next adventure is calling. 🧭",surprise:"Someone special has a surprise waiting for you. 💎"};
+            $("invitationMessage").textContent=messages[advs[0].invitation_style]||messages.surprise;
+            status("inviteStatus","The adventure stays a surprise until you say yes.");
+          }
+        }
+        step(4); return;
+      }
+
+      if(advs[0].status==="completed"){
+        // Build 42 resting-state rule:
+        // If the personalized Home is already visible (for example after a
+        // fresh sign-in/refresh), an older completed demo remains preserved
+        // in history but must not reopen the completion workflow underneath
+        // the Home screen. During a live adventure the Home is hidden, so
+        // normal two-device completion synchronization remains unchanged.
+        const homeIsResting = $("homeCard") && !$("homeCard").classList.contains("hidden");
+        if(homeIsResting){
+          adventureId=null;
+          stepId=null;
+          show("dateInvitationCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("historyBox",false);
+          show("questCard",false);
+          show("homeCard",true);
+          status("homeStatus","Your HEART STONE is ready.");
+          step(3);
+          return;
+        }
+        if(advs[0].demo_ready_at){
+          dismissedCompletedAdventureId=advs[0].id;
+          localStorage.setItem("hs_dismissed_completed_demo_id", advs[0].id);
+          adventureId=null;
+          stepId=null;
+          requestId=null;
+          privateRequestId=null;
+          seenCandidateIds=[];
+          show("dateInvitationCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("historyBox",false);
+          show("questCard",true);
+          status("questStatus","Ready for your next HEART STONE adventure. ❤️");
+          step(3);
+          return;
+        }
+        if(advs[0].id===dismissedCompletedAdventureId){
+          adventureId=null;
+          stepId=null;
+          show("dateInvitationCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("historyBox",false);
+          show("questCard",true);
+          step(3);
+          return;
+        }
+        setAdventureFocus(true);
+        show("adventureCard",false);
+        show("completeCard",true);
+        status("completeStatus","Partner sync complete — this demo adventure was completed on the other phone.\nReal learning profile remains protected from Demo Mode.");
+        status("questStatus","Partner sync complete — completed adventure received.");
+        step(6);
+        $("completeCard").scrollIntoView({behavior:"smooth"});
+        return;
+      }
+
+      if(advs[0].status==="abandoned"){
+        if(isDeclinedInvitation(advs[0])){
+          await showInvitationDeclined(advs[0]);
+          return;
+        }
+        adventureId=null;
+        stepId=null;
+        show("adventureCard",false);
+        show("completeCard",false);
+        show("recommendationsCard",false);
+        show("questCard",true);
+        status("questStatus","That adventure was canceled. No problem — choose another whenever you’re ready.");
+        step(3);
+        $("questCard").scrollIntoView({behavior:"smooth"});
+        return;
+      }
+
+      if(advs[0].status==="active" && !advs[0].adventure_revealed_at){
+        adventureId=advs[0].id;
+        show("questCard",false); show("recommendationsCard",false); show("adventureCard",false); show("completeCard",false); show("dateInvitationCard",true);
+        show("senderStylePanel",false); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",true);
+    // Acceptance owns the invitation status now; never leave the sender's
+    // pre-acceptance "waiting for your partner" message behind.
+    status("inviteStatus","");
+        const {data:{user}}=await sb.auth.getUser();
+        const inviter=(advs[0].created_by_user_id===user?.id);
+        $("acceptedTitle").textContent=inviter ? await partnerAcceptedHeading() : "❤️ IT'S A DATE";
+        $("acceptedMessage").textContent=inviter?"Your partner accepted. Your adventure is ready.":"Your invitation is accepted. Your adventure is waiting...";
+        status("inviteStatus","Either of you can reveal your adventure.");
+        step(4); return;
+      }
+
+      setAdventureFocus(true);
+      show("completeCard",false);
+      show("adventureCard",true);
+      $("completeStepBtn").disabled=firstStepCompleted;
+      $("completeStepBtn").textContent=firstStepCompleted ? "Step Completed ✓" : "Complete Step";
+      status("adventureStatus",firstStepCompleted ? "This step was completed on the partner's phone." : "Ready to demonstrate the experience.");
+      status("questStatus","Partner sync complete — the selected adventure is now on this phone.");
+      step(5);
+      $("adventureCard").scrollIntoView({behavior:"smooth"});
+      return;
+    }
+  }
+
+  // Never expose unselected recommendation choices through partner synchronization.
+  show("recommendationsCard",false);
+  show("dateInvitationCard",false);
+  show("questCard",true);
+  return;
+}
+
+
+
+async function getSharedDemoFingerprint(){
+  if(!heartStoneId) return "";
+  const {data:advs}=await sb.from("adventures")
+    .select("id,status,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at,updated_at")
+    .eq("heart_stone_id",heartStoneId)
+    .eq("is_demo",true)
+    .not("invitation_style","is",null)
+    .order("created_at",{ascending:false})
+    .limit(1);
+
+  const adv=advs?.[0];
+  if(!adv) return "";
+
+  const {data:steps}=await sb.from("adventure_steps")
+    .select("id,status")
+    .eq("adventure_id",adv.id)
+    .order("created_at",{ascending:true});
+
+  return JSON.stringify({
+    adventure:adv,
+    steps:(steps||[]).map(x=>({id:x.id,status:x.status}))
+  });
+}
+
+async function checkForPartnerUpdates(){
+  if(autoSyncBusy || !heartStoneId || homeRestingMode) return;
+  autoSyncBusy=true;
+  try{
+    const fp=await getSharedDemoFingerprint();
+    if(homeRestingMode || !fp) return;
+
+    let shared=null;
+    try{ shared=JSON.parse(fp); }catch(e){}
+
+    // Critical lifecycle recovery: if the shared adventure has been revealed,
+    // either device must leave the "IT'S A DATE" screen even if its fingerprint
+    // baseline was established after the reveal happened.
+    const adv=shared?.adventure;
+    const invitationVisible=!$("dateInvitationCard").classList.contains("hidden");
+
+    // Build 42 completion synchronization:
+    // If this phone is visibly inside the active adventure and the shared
+    // adventure has become completed on the partner's device, completion must
+    // win immediately—even if this browser happened to establish its polling
+    // fingerprint baseline after the status transition.
+    const adventureVisible=!$("adventureCard").classList.contains("hidden");
+    if(adv?.status==="completed" && adventureVisible){
+      lastSharedFingerprint=fp;
+      await loadSharedDemoState();
+      return;
+    }
+
+    // Shared "Start Another Adventure" must win even when this device
+    // established its polling baseline after demo_ready_at was already set.
+    if(adv?.status==="completed" && adv?.demo_ready_at){
+      lastSharedFingerprint=fp;
+      await loadSharedDemoState();
+      return;
+    }
+
+    if(adv?.status==="active" && adv?.adventure_revealed_at && invitationVisible){
+      lastSharedFingerprint=fp;
+      await loadSharedDemoState();
+      return;
+    }
+
+    if(fp!==lastSharedFingerprint){
+      const hadPrevious=!!lastSharedFingerprint;
+      lastSharedFingerprint=fp;
+
+      // A newly-sent invitation may be the first shared fingerprint this
+      // browser has ever seen. Treat that first non-empty state as a real
+      // partner update so the recipient gets the envelope without refreshing.
+      if(hadPrevious || adv?.invitation_style){
+        if(Date.now()>=suppressSharedRenderUntil){
+          await loadSharedDemoState();
+          if(hadPrevious) status("questStatus","Partner update received automatically — both phones are synchronized.");
+        }
+      }
+    }
+  } finally {
+    autoSyncBusy=false;
+  }
+}
+
+function startAutomaticPartnerSync(){
+  if(autoSyncTimer) clearInterval(autoSyncTimer);
+  lastSharedFingerprint="";
+  checkForPartnerUpdates();
+  autoSyncTimer=setInterval(checkForPartnerUpdates,2000);
+}
+
+
+$("homeProfileBtn").onclick=()=>{
+  setAccountCardCollapsed(false);
+  $("authCard")?.scrollIntoView({behavior:"smooth",block:"start"});
+};
+async function returnInvitationDraftHome(){
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  if(adventureId){
+    try{
+      const {data:draft}=await sb.from("adventures")
+        .select("id,status,invitation_style")
+        .eq("id",adventureId)
+        .maybeSingle();
+      if(draft && draft.status==="proposed" && !draft.invitation_style){
+        dismissedDraftAdventureId=draft.id;
+        localStorage.setItem("hs_dismissed_draft_demo_id",draft.id);
+      }
+    }catch(e){}
+  }
+  [
+    "questCard","recommendationsCard","dateInvitationCard",
+    "sealedEnvelopePanel","openedInvitationPanel","acceptedPanel",
+    "adventureCard","completeCard","feedbackCard"
+  ].forEach(id=>{
+    const el=$(id);
+    if(el) show(id,false);
+  });
+  show("homeCard",true);
+  status("homeStatus","Your HEART STONE is ready.");
+  $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+$("invitationBackHomeBtn").onclick=returnInvitationDraftHome;
+
+$("backHomeBtn").onclick=async()=>{
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  // If the sender has reached "Make it an invitation" but has not sent it,
+  // remember that proposal as a tucked-away draft on this device.
+  if(adventureId && $("senderStylePanel") && !$("senderStylePanel").classList.contains("hidden")){
+    try{
+      const {data:draft}=await sb.from("adventures")
+        .select("id,status,invitation_style")
+        .eq("id",adventureId)
+        .maybeSingle();
+      if(draft && draft.status==="proposed" && !draft.invitation_style){
+        dismissedDraftAdventureId=draft.id;
+        localStorage.setItem("hs_dismissed_draft_demo_id",draft.id);
+      }
+    }catch(e){}
+  }
+
+  [
+    "questCard",
+    "recommendationsCard",
+    "dateInvitationCard",
+    "sealedEnvelopePanel",
+    "openedInvitationPanel",
+    "acceptedPanel",
+    "adventureCard",
+    "completeCard",
+    "feedbackCard"
+  ].forEach(id=>{
+    const el=$(id);
+    if(el) show(id,false);
+  });
+  show("homeCard",true);
+  status("homeStatus","Your HEART STONE is ready.");
+  $("homeCard").scrollIntoView({behavior:"smooth",block:"start"});
+};
+$("homeCreateBtn").onclick=()=>{
+  homeRestingMode=false;
+  localStorage.removeItem("hs_home_resting_mode");
+  show("homeCard",false);
+  show("questCard",true);
+  $("questCard").scrollIntoView({behavior:"smooth",block:"start"});
+};
+$("homeContinueBtn").onclick=async()=>{
+  homeRestingMode=false;
+  localStorage.removeItem("hs_home_resting_mode");
+  dismissedDraftAdventureId="";
+  localStorage.removeItem("hs_dismissed_draft_demo_id");
+
+  status("homeStatus","Checking your shared HEART STONE...");
+  show("homeCard",false);
+
+  // The latest adventure owns Continue. Never search past a closed adventure
+  // and resurrect an older draft or completion screen.
+  try{
+    const {data:{user}}=await sb.auth.getUser();
+    const {data:existing,error:existingErr}=await sb.from("adventures")
+      .select("id,title,status,source_recommendation_id,created_by_user_id,invitation_style,invitation_opened_at,invitation_accepted_at,adventure_revealed_at,demo_ready_at")
+      .eq("heart_stone_id",heartStoneId)
+      .eq("is_demo",true)
+      .order("created_at",{ascending:false})
+      .limit(1);
+
+    if(existingErr) throw existingErr;
+    const adv=existing?.[0]||null;
+
+    if(adv && ["proposed","active"].includes(adv.status)){
+      adventureId=adv.id;
+
+      // Private unsent proposal: only its creator may resume the invitation draft.
+      if(adv.status==="proposed" && !adv.invitation_style){
+        if(adv.created_by_user_id===user?.id){
+          show("questCard",false);
+          show("recommendationsCard",false);
+          show("adventureCard",false);
+          show("completeCard",false);
+          show("dateInvitationCard",true);
+          show("acceptedPanel",false);
+          show("sealedEnvelopePanel",false);
+          show("openedInvitationPanel",false);
+          show("senderStylePanel",true);
+          status("inviteStatus","Choose the feeling, then send something special.");
+          step(4);
+          $("dateInvitationCard").scrollIntoView({behavior:"smooth",block:"start"});
+          return;
+        }
+
+        // Partner cannot see another person's private unsent draft.
+        homeRestingMode=true;
+        localStorage.setItem("hs_home_resting_mode","1");
+        show("homeCard",true);
+        status("homeStatus","There isn't an adventure waiting for you right now.");
+        return;
+      }
+
+      // Sent invitation / accepted / revealed / active adventure:
+      // existing shared-state lifecycle already knows how to restore each stage.
+      await loadSharedDemoState();
+      return;
+    }
+    // Recover feedback only when the latest adventure itself is completed.
+    if(adv?.status==="completed" && !adv.demo_ready_at && adv.id!==dismissedCompletedAdventureId){
+      adventureId=adv.id;
+      stepId=null;
+      setAdventureFocus(true);
+      show("dateInvitationCard",false);
+      show("adventureCard",false);
+      show("completeCard",true);
+      step(6);
+      status("completeStatus","Adventure Complete — you can save your own private demo feedback.");
+      $("completeCard").scrollIntoView({behavior:"smooth",block:"start"});
+      return;
+    }
+  }catch(e){
+    console.error("Continue recovery error",e);
+    homeRestingMode=true;
+    localStorage.setItem("hs_home_resting_mode","1");
+    show("homeCard",true);
+    status("homeStatus","We couldn't load your adventure. Please try Continue Our Adventure again.");
+    return;
+  }
+
+  // No unfinished adventure exists. Do NOT reopen old recommendation choices.
+  adventureId=null;
+  stepId=null;
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  show("questCard",false);
+  show("recommendationsCard",false);
+  show("dateInvitationCard",false);
+  show("adventureCard",false);
+  show("completeCard",false);
+  show("homeCard",true);
+  status("homeStatus","There isn't an adventure waiting right now.");
+};
+$("homeMemoriesBtn").onclick=()=>status("homeStatus","Our Memories is coming in the next HEART STONE build.");
+$("homeStoryBtn").onclick=()=>status("homeStatus","Our Story is coming in the next HEART STONE build.");
+
+$("syncPartnerBtn").onclick=loadSharedDemoState;
+$("refreshPartnerBtn").onclick=loadSharedDemoState;
+$("moreRecommendationsBtn").onclick=async()=>{
+  if(!requestId || privateRequestId!==requestId) return;
+  status("questStatus","Finding three fresh ideas just for you...");
+  const {error}=await sb.rpc("refresh_demo_recommendations",{
+    p_request_id:requestId,
+    p_exclude_candidate_ids:seenCandidateIds,
+    p_limit:3
+  });
+  if(error){
+    status("questStatus","Refresh error: "+error.message);
+    return;
+  }
+  await loadRecommendations();
+  status("questStatus","Three fresh ideas ready.");
+  $("recommendationsCard").scrollIntoView({behavior:"smooth"});
+};
+
+async function chooseRecommendation(r){
+  privateRequestId=null;
+  const {data,error}=await sb.rpc("propose_demo_recommendation",{p_recommendation_id:r.id});
+  if(error) return alert("Choose error: "+error.message);
+  adventureId=data;
+  setAdventureFocus(true); show("adventureCard",false); show("dateInvitationCard",true);
+  show("senderStylePanel",true); show("sealedEnvelopePanel",false); show("openedInvitationPanel",false); show("acceptedPanel",false);
+  if($("envelope")) $("envelope").classList.remove("open");
+  if($("openInvitationBtn")) $("openInvitationBtn").disabled=false;
+  selectedInvitationStyle="surprise";
+  document.querySelectorAll("#styleGrid button").forEach(b=>b.classList.toggle("selected",b.dataset.style==="surprise"));
+  status("inviteStatus","Choose the feeling, then send something special.");
+  step(4); $("dateInvitationCard").scrollIntoView({behavior:"smooth"});
+}
+
+$("completeStepBtn").onclick = async()=>{
+  if(!stepId) return status("adventureStatus","No demo step found.");
+  const {error}=await sb.rpc("set_alpha_adventure_step_status",{p_step_id:stepId,p_status:"completed"});
+  if(error) return status("adventureStatus","Step error: "+error.message);
+  $("completeStepBtn").disabled=true;
+  $("completeStepBtn").textContent="Step Completed ✓";
+  status("adventureStatus","Step completed — simulated for the Kickstarter demonstration.");
+};
+
+$("completeAdventureBtn").onclick = async()=>{
+  if(!adventureId) return status("adventureStatus","No demo adventure selected.");
+  status("adventureStatus","Completing shared demo adventure...");
+  const {error}=await sb.rpc("complete_demo_adventure",{p_adventure_id:adventureId});
+  if(error) return status("adventureStatus","Completion error: "+error.message);
+  setAdventureFocus(true);
+  show("adventureCard",false);
+  show("completeCard",true);
+  step(6);
+  status("completeStatus","Adventure Complete — both partners are synchronized.\nEach partner may now save their own private demo feedback.");
+  $("completeCard").scrollIntoView({behavior:"smooth"});
+};
+
+document.querySelectorAll("#styleGrid button").forEach(btn=>{
+  btn.onclick=()=>{selectedInvitationStyle=btn.dataset.style;document.querySelectorAll("#styleGrid button").forEach(b=>b.classList.toggle("selected",b===btn));};
+});
+$("sendInvitationBtn").onclick=async()=>{
+  if(!adventureId)return;
+  status("inviteStatus","Sealing your HEART STONE invitation...");
+  const {error}=await sb.rpc("set_demo_invitation_style",{p_adventure_id:adventureId,p_style:selectedInvitationStyle});
+  if(error)return status("inviteStatus","Invitation error: "+error.message);
+  show("senderStylePanel",false); status("inviteStatus","Invitation sent ❤️ Waiting for your partner to open it.");
+};
+$("openInvitationBtn").onclick=async()=>{
+  if(!adventureId)return;
+
+  // Freeze partner polling for this tiny visual transition. If a poll was
+  // already in flight, let it finish BEFORE changing the envelope DOM.
+  if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; }
+  suppressSharedRenderUntil=Date.now()+3000;
+  $("openInvitationBtn").disabled=true;
+  while(autoSyncBusy){
+    await new Promise(resolve=>setTimeout(resolve,25));
+  }
+
+  // Keep the sealed screen visually untouched while the database records
+  // the open. Changing status/height before the swap can make mobile browsers
+  // visibly re-anchor the page.
+  const {error}=await sb.rpc("open_demo_date_invitation",{p_adventure_id:adventureId});
+  if(error){
+    $("openInvitationBtn").disabled=false;
+    return status("inviteStatus","Invitation error: "+error.message);
+  }
+
+  const style=selectedInvitationStyle || "surprise";
+  const messages={
+    romantic:"Someone special is asking for a little time together. ❤️",
+    playful:"Psst... someone has plans for the two of you. 😏",
+    mysterious:"A little mystery is waiting for the two of you. ✨",
+    adventurous:"Your next adventure is calling. 🧭",
+    surprise:"Someone special has a surprise waiting for you. 💎"
+  };
+  if($("invitationMessage")) $("invitationMessage").textContent=messages[style]||messages.surprise;
+
+  // One atomic visual swap: populate first, then replace the sealed panel.
+  const y=window.scrollY;
+  show("openedInvitationPanel",true);
+  show("sealedEnvelopePanel",false);
+  status("inviteStatus","The adventure stays a surprise until you say yes.");
+  window.scrollTo(0,y);
+
+  // Resume partner synchronization after the transition has fully settled.
+  setTimeout(()=>{
+    suppressSharedRenderUntil=0;
+    startAutomaticPartnerSync();
+  },700);
+};
+$("acceptDateBtn").onclick=async()=>{
+  if(!adventureId) return;
+  status("inviteStatus","Accepting your date invitation...");
+  const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:adventureId,p_accept:true});
+  if(error) return status("inviteStatus","Invitation error: "+error.message);
+  show("openedInvitationPanel",false); show("acceptedPanel",true);
+  $("acceptedTitle").textContent="❤️ IT'S A DATE";
+  $("acceptedMessage").textContent="Your adventure is waiting...";
+  status("inviteStatus","Your partner will see the good news too. ❤️");
+  await loadSharedDemoState(true);
+};
+
+$("revealAdventureBtn").onclick=async()=>{
+  const freshSession=await ensureFreshAuth();
+  if(!freshSession) return status("inviteStatus","Session expired. Please sign in again.");
+
+  if(!adventureId)return;
+  status("inviteStatus","Revealing your adventure...");
+  const {error}=await sb.rpc("reveal_demo_adventure",{p_adventure_id:adventureId});
+  if(error)return status("inviteStatus","Reveal error: "+error.message);
+  show("dateInvitationCard",false);
+  await loadExistingActiveDemoAdventure();
+};
+
+$("declineDateBtn").onclick=async()=>{
+  if(!adventureId || $("declineDateBtn").disabled) return;
+  const declinedId=adventureId;
+  $("declineDateBtn").disabled=true;
+  status("inviteStatus","Sending your response...");
+  try{
+    const {error}=await sb.rpc("respond_demo_date_invitation",{p_adventure_id:declinedId,p_accept:false});
+    if(error) return status("inviteStatus","Invitation error: "+error.message);
+    const {data:adv,error:loadError}=await sb.from("adventures")
+      .select("id,status,created_by_user_id,invitation_style,invitation_accepted_at")
+      .eq("id",declinedId).maybeSingle();
+    if(loadError || !adv){
+      status("inviteStatus","Your response was sent. Refresh to view the updated invitation.");
+      return;
+    }
+    await showInvitationDeclined(adv);
+  }catch(e){
+    status("inviteStatus","We couldn't confirm your response. Please refresh before trying again.");
+  }finally{
+    $("declineDateBtn").disabled=false;
+  }
+};
+
+$("cancelAdventureBtn").onclick = async()=>{
+  if(!adventureId) return status("adventureStatus","No demo adventure selected.");
+  const confirmed=window.confirm("Cancel this adventure? It will not count as completed.");
+  if(!confirmed) return;
+  status("adventureStatus","Canceling this shared adventure...");
+  const {error}=await sb.rpc("cancel_demo_adventure",{p_adventure_id:adventureId});
+  if(error) return status("adventureStatus","Cancel error: "+error.message);
+  adventureId=null;
+  stepId=null;
+  show("adventureCard",false);
+  show("completeCard",false);
+  show("recommendationsCard",false);
+  show("questCard",true);
+  status("questStatus","Adventure canceled. Nothing was marked complete — choose another whenever you’re ready.");
+  step(3);
+  $("questCard").scrollIntoView({behavior:"smooth"});
+};
+
+$("saveFeedbackBtn").onclick = async()=>{
+  if(!adventureId) return status("completeStatus","No adventure selected.");
+  status("completeStatus","Saving your private demo feedback...");
+  const {error}=await sb.rpc("save_demo_adventure_feedback",{
+    p_adventure_id:adventureId,
+    p_rating:$("rating").value,
+    p_comment:$("feedback").value.trim()
+  });
+  if(error) return status("completeStatus","Feedback error: "+error.message);
+  status("completeStatus","Your demo feedback was saved privately.\nReal learning profile remains protected from Demo Mode.");
+};
+
+$("startAnotherBtn").onclick = async()=>{
+  if(!adventureId) return status("completeStatus","No completed demo adventure is selected.");
+  const session=await ensureFreshAuth();
+  if(!session) return status("completeStatus","Session expired. Please sign in again.");
+
+  status("completeStatus","Getting both of you ready for another adventure...");
+  const {error}=await sb.rpc("start_another_demo_adventure",{p_adventure_id:adventureId});
+  if(error) return status("completeStatus","Start another error: "+error.message);
+
+  dismissedCompletedAdventureId=adventureId;
+  localStorage.setItem("hs_dismissed_completed_demo_id", adventureId);
+  adventureId=null;
+  stepId=null;
+  requestId=null;
+  privateRequestId=null;
+  seenCandidateIds=[];
+  lastSharedFingerprint="";
+  show("completeCard",false);
+  show("historyBox",false);
+  show("dateInvitationCard",false);
+  show("recommendationsCard",false);
+  show("adventureCard",false);
+  show("questCard",true);
+  status("questStatus","Ready for your next HEART STONE adventure. ❤️");
+  step(3);
+  $("questCard").scrollIntoView({behavior:"smooth"});
+};
+
+$("showHistoryBtn").onclick = async()=>{
+  if(!heartStoneId) return status("completeStatus","No HEART STONE ID.");
+  const {data,error}=await sb.rpc("get_demo_adventure_history",{p_heart_stone_id:heartStoneId,p_limit:20});
+  if(error)return status("completeStatus","History error: "+error.message);
+  const rows=Array.isArray(data)?data:[];
+  const cards=rows.map(x=>{
+    const d=x.completed_at?new Date(x.completed_at).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"Demo adventure";
+    return `<div style="padding:14px 0;border-bottom:1px solid #eadfd5">
+      <div style="font-weight:800;font-size:16px">${escapeHtml(x.title||"HEART STONE Adventure")}</div>
+      <div style="font-size:12px;opacity:.68;margin-top:4px">${escapeHtml(d)} · Demo Mode</div>
+    </div>`;
+  }).join("");
+  $("historyBox").innerHTML=`<div style="font-weight:900;font-size:20px;margin-bottom:4px">❤️ Our Demo Adventures</div>
+    <div style="font-size:13px;opacity:.72;margin-bottom:8px">A private-safe preview of adventures completed in Demo Mode. Personal feedback stays private.</div>
+    ${cards||'<div style="padding:18px 0;opacity:.7">No completed demo adventures yet.</div>'}`;
+  show("historyBox",true);
+};
+
+function escapeHtml(s){
+  return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+
+const gatewayDateLogo=$("gatewayDateLogo");
+const existingDateLogo=document.querySelector(".brand .official-logo");
+if(gatewayDateLogo && existingDateLogo) gatewayDateLogo.src=existingDateLogo.src;
+
+$("enterDateQuestBtn").onclick=async()=>{
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  homeLoadVersion++;
+  show("platformGateway",false);
+  show("dateQuestApp",true);
+  ["questCard","recommendationsCard","dateInvitationCard","sealedEnvelopePanel","openedInvitationPanel","acceptedPanel","adventureCard","completeCard","feedbackCard","historyCard"].forEach(id=>show(id,false));
+  const connected=!$("connectedState").classList.contains("hidden");
+  setAccountCardCollapsed(connected);
+  if(connected) show("homeCard",true);
+  window.scrollTo({top:0,behavior:"smooth"});
+  try{
+    const user=await currentUser();
+    if(!user){setConnectedUI(false);return;}
+    if(connected&&heartStoneId) await loadHeartStoneHome();
+    else await loadExistingHeartStone();
+  }catch{status("authStatus","Could not check your account. Please try entering DATE QUEST again.");}
+};
+
+$("enterWorldQuestBtn").onclick=async()=>{
+  show("platformGateway",false);
+  show("worldQuestStart",true);
+  await checkWorldQuestResume();
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+
+$("worldQuestBackBtn").onclick=()=>{
+  show("worldQuestStart",false);
+  show("platformGateway",true);
+  resetWorldQuestEntry();
+};
+
+const worldPanels=["worldTeamAuthPanel","worldIndividualPanel","worldCouplePanel","worldCreatePanel","worldJoinPanel","worldTeamLobby","worldLaunchStage"];
+let worldLobbyMode="captain";
+let worldLobbyCode="";
+let worldLobbyTeam="";
+let worldPendingPath="";
+let worldRemoteTeamId="";
+let worldRemoteState=null;
+let worldRemoteChannel=null;
+let worldRemotePoll=null;
+let worldRemoteResultShown=-1;
+let worldRemoteChallengeStartedKey="";
+let worldCurrentUserId="";
+let worldPlayerIdentity="";
+let worldAccountIdentity="";
+function renderWorldIdentity(){
+  if(!worldAccountIdentity){ show("worldIdentityBar",false); return; }
+  $("worldIdentityAccount").textContent=worldAccountIdentity;
+  $("worldIdentityPlayer").textContent=worldPlayerIdentity||"Not connected";
+  $("worldIdentityTeam").textContent=worldLobbyTeam||"Not in a team";
+  show("worldIdentityBar",true);
+}
+async function checkWorldQuestResume(){
+  show("worldResumeQuestBtn",false);
+  show("worldResumeQuestStatus",false);
+  const user=await currentUser();
+  if(!user) return;
+  worldCurrentUserId=user.id;
+  worldAccountIdentity=user.email||"Authenticated account";
+  renderWorldIdentity();
+  const {data,error}=await sb.rpc("resume_world_quest_team");
+  if(error||!data) return;
+  worldRemoteState=data;
+  worldRemoteTeamId=data.team_id;
+  worldLobbyCode=data.invite_code;
+  worldLobbyTeam=data.team_name;
+  worldLobbyMode=data.captain_user_id===user.id?"captain":"member";
+  worldPlayerIdentity=(data.members||[]).find(member=>member.user_id===user.id)?.display_name||"";
+  worldChallengeIndex=Math.min(4,data.challenge_index||0);
+  worldQuestScore=data.score||0;
+  worldQuestSkips=data.skips||0;
+  worldQuestCompleted=(data.results||[]).filter(result=>!result.skipped).length;
+  $("worldResumeQuestBtn").textContent=data.status==="lobby"?"RESUME TEAM LOBBY":"RESUME ACTIVE TEAM QUEST";
+  $("worldResumeQuestStatus").textContent=data.status==="lobby"
+    ? data.team_name+" is still waiting in the lobby."
+    : data.team_name+" is saved at Challenge "+(worldChallengeIndex+1)+" with "+worldQuestScore+" points.";
+  show("worldResumeQuestBtn",true);
+  show("worldResumeQuestStatus",true);
+  renderWorldIdentity();
+}
+let worldCountdownTimer=null;
+let worldChallengeTimer=null;
+let worldChallengeSeconds=1200;
+let worldEvidenceUrl="";
+let worldEvidenceFile=null;
+let worldSkipVotes=[];
+const worldChallenges=[
+  {type:"FIND",title:"Find the Heart of Your City",command:"Find a public landmark that represents your city—and capture your whole team with it.",seconds:1200,points:1,ruleOne:"<strong>TEAM PHOTO</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC LANDMARK</strong>The location must be recognizable and publicly accessible."},
+  {type:"GO",title:"Go Where Your Community Gathers",command:"Reach a public place where people in your community naturally come together—and capture your team at the entrance.",seconds:900,points:1,ruleOne:"<strong>TEAM AT THE LOCATION</strong>Every present teammate must be visible.",ruleTwo:"<strong>PUBLIC ACCESS</strong>The gathering place must be safe and publicly accessible."},
+  {type:"DO",title:"Bring Public Art to Life",command:"Find a public statue, mural, or sculpture and recreate one pose or shape from it as a team.",seconds:900,points:1,ruleOne:"<strong>ART + RECREATION</strong>The artwork and your team’s recreation must both be visible.",ruleTwo:"<strong>PLAY IT SAFE</strong>Stay on public ground and do not climb the artwork."},
+  {type:"SOLVE",title:"Decode the Past",command:"Find a dated public plaque or historical marker and capture the year together with your team.",seconds:720,points:1,ruleOne:"<strong>YEAR IS READABLE</strong>The date on the marker must be visible in the photo.",ruleTwo:"<strong>PUBLIC MARKER</strong>The plaque or marker must be permanently displayed in public."},
+  {type:"COMPLETE",title:"Complete the World Connection",command:"Find something in your city shaped like a heart, circle, or star and capture your team pointing to it.",seconds:900,points:1,ruleOne:"<strong>SHAPE IS VISIBLE</strong>The heart, circle, or star must be clear in the photo.",ruleTwo:"<strong>TEAM CONNECTION</strong>Every present teammate must be visible and pointing to it."}
+];
+const worldTeamChallenges=[
+  {type:"FIND",title:"Find Your City’s Symbol",command:"Find a public symbol, emblem, or landmark connected to your city—and capture your entire team recreating its shape or pose.",seconds:1200,points:1,ruleOne:"<strong>FULL TEAM PHOTO</strong>Every present teammate and the city symbol must be visible.",ruleTwo:"<strong>ONE SHARED POSE</strong>The team must clearly recreate a shape or pose from the symbol."},
+  {type:"GO",title:"Reach the Community Crossroads",command:"Go to a safe public place where several paths, streets, or walkways meet and form one connected team line there.",seconds:900,points:1,ruleOne:"<strong>CONNECTED LINE</strong>Every present teammate must be visible in one unbroken line.",ruleTwo:"<strong>PUBLIC CROSSROADS</strong>At least three visible routes must meet at the location."},
+  {type:"DO",title:"Spell the World Together",command:"Use your team’s bodies or safe handheld objects to form the letters WQ in one photo.",seconds:900,points:1,ruleOne:"<strong>WQ IS READABLE</strong>Both letters must be recognizable in the submitted photo.",ruleTwo:"<strong>EVERYONE CONTRIBUTES</strong>Every present teammate must help form or frame the letters."},
+  {type:"SOLVE",title:"Build the Number Code",command:"Find three different numbers displayed in one safe public location and arrange your team from smallest number to largest.",seconds:720,points:1,ruleOne:"<strong>THREE NUMBERS</strong>All three numbers must be readable in the evidence.",ruleTwo:"<strong>CORRECT ORDER</strong>Your team must visibly point from the smallest number to the largest."},
+  {type:"COMPLETE",title:"Create the World Connection",command:"Find a public circle, heart, or star and create a second matching shape with your whole team beside it.",seconds:900,points:1,ruleOne:"<strong>TWO MATCHING SHAPES</strong>The public shape and the team-created shape must both be visible.",ruleTwo:"<strong>WHOLE TEAM FINISH</strong>Every present teammate must be part of the final shape."}
+];
+const worldEnvelopeWords=["ONE","TWO","THREE","FOUR","FIVE"];
+let worldChallengeIndex=0;
+let worldQuestScore=0;
+let worldQuestSkips=0;
+let worldQuestCompleted=0;
+let worldQuestStartedAt=0;
+function currentWorldChallenges(){
+  return (worldLobbyMode==="captain"||worldLobbyMode==="member")?worldTeamChallenges:worldChallenges;
+}
+function currentWorldChallenge(){ return currentWorldChallenges()[worldChallengeIndex]; }
+function currentWorldChallengeCount(){ return currentWorldChallenges().length; }
+function worldAudienceText(text){
+  if(worldLobbyMode==="couple"){
+    return String(text)
+      .replaceAll("your whole team","both of you")
+      .replaceAll("your team’s","your couple’s")
+      .replaceAll("your team","both of you")
+      .replaceAll("Every present teammate must be visible and pointing to it.","Both of you must be visible and pointing to it.")
+      .replaceAll("Every present teammate must be visible.","Both of you must be visible in the photo.");
+  }
+  if(worldLobbyMode!=="individual") return text;
+  return String(text)
+    .replaceAll("your whole team","yourself")
+    .replaceAll("your team’s","your")
+    .replaceAll("your team","yourself")
+    .replaceAll("Every present teammate must be visible and pointing to it.","You must be visible and pointing to it.")
+    .replaceAll("Every present teammate must be visible.","You must be visible in the photo.");
+}
+function renderWorldQuestHud(){
+  $("worldQuestScore").textContent=worldQuestScore;
+  $("worldQuestSkips").textContent=worldQuestSkips+"/3";
+  $("worldQuestTrackFill").style.width=((worldChallengeIndex/currentWorldChallengeCount())*100)+"%";
+}
+function renderWorldChallengeData(){
+  const challenge=currentWorldChallenge();
+  const number=worldChallengeIndex+1;
   $("worldRevealKicker").textContent="ENVELOPE "+worldEnvelopeWords[worldChallengeIndex]+(number===1?" · THE ADVENTURE BEGINS":" · CHALLENGE "+number);
   $("worldRevealType").textContent=challenge.type;
   $("worldRevealTitle").textContent=challenge.title;
