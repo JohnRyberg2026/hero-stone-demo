@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('node:assert/strict');
+const I=require('./recommendation-inputs.js'),S=require('./recommendation-safety.js');
+const participant={authorized:true,loaded:true,boundariesVerified:true,accepted:true,boundaries:{minimalWalking:true}};
+const args={accountId:'A',profile:{ownerId:'A',loaded:true,revision:2},participants:[participant],wishes:[{ownerId:'A',authorized:true,permitted:true,category:'outdoors',notes:'private'}]};
+const ready=I.build(args);assert.equal(ready.ready,true);assert.equal(ready.revision,2);assert.equal(JSON.stringify(ready).includes('private'),false);
+const trail={category:'outdoors',walkingLevel:'long',accessibilityVerified:true,cost:0};
+const drive={...trail,walkingLevel:'minimal'};
+assert.deepEqual(S.rank([trail,drive],ready.participants,ready.wishes),[drive]);
+assert.equal(I.build({...args,profile:{...args.profile,loaded:false}}).ready,false);
+assert.equal(I.build({...args,profile:{...args.profile,ownerId:'B'}}).ready,false);
+assert.equal(I.build({...args,participants:[{...participant,authorized:false}]}).ready,false);
+assert.equal(I.build({...args,wishes:[{...args.wishes[0],ownerId:'B'}]}).wishes.length,0);
+assert.equal(I.build({...args,wishes:[{...args.wishes[0],preference:'dream'}]}).wishes.length,0);
+console.log('PASS: authorized profile revision, boundary changes, fail-closed retrieval, wish privacy and account isolation.');
