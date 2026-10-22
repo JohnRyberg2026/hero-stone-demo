@@ -12,6 +12,8 @@ on:
       - 'test-recommendation-profile-boundary.cjs'
       - 'adventure-preferences-store.js'
       - 'test-adventure-preferences-store.cjs'
+      - 'adventure-preferences-setup.js'
+      - 'test-adventure-preferences-setup.cjs'
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
@@ -33,3 +35,4 @@ jobs:
       - run: node test-safe-adventure-discovery.cjs
       - run: node test-recommendation-profile-boundary.cjs
       - run: node test-adventure-preferences-store.cjs
+      - run: node test-adventure-preferences-setup.cjs
