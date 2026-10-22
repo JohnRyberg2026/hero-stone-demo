@@ -65,15 +65,13 @@ if(typeof document!=='undefined')(()=>{
  function renderCatalog(){
   const all=typeof StoreCatalog==='undefined'?[]:StoreCatalog,filter=$('catalogCategory').value,search=$('catalogSearch').value.trim().toLowerCase();
   const shown=all.filter(p=>(!filter||p.category===filter)&&[p.name,p.brand,p.subcategory,p.photo].join(' ').toLowerCase().includes(search));
-  $('catalogHeading').textContent='Explore '+all.length+' clothing finds · Photos, sizes & details';$('catalogGrid').replaceChildren();$('catalogCount').textContent=shown.length+' clothing find'+(shown.length===1?'':'s')+'. Personal fit details are kept separate.';
+  $('catalogHeading').textContent='Browse '+all.length+' clothing finds';$('catalogGrid').replaceChildren();$('catalogCount').textContent=shown.length+' clothing find'+(shown.length===1?'':'s')+'. Personal fit details are kept separate.';
   for(const p of shown){const card=make('article');card.className='product-card';
-   if(p.imageUrl){const img=make('img');img.src=p.imageUrl;img.alt=p.photo;img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>{img.hidden=true;};card.append(img);}else{const placeholder=make('p','Product image unavailable');placeholder.className='notice';card.append(placeholder);}
-   card.append(make('small',p.brand+' · '+p.subcategory),make('h3',p.name),make('strong','$'+p.price.toFixed(2)+' USD · '+p.variant),make('p','Observed Oct 21, 2026 — confirm current price.'),make('p','Listed sizes: '+p.sizes.join(', ')));
-   const d=make('details');d.append(make('summary','Fabric, fit & photo notes'),make('p',p.fabric||'Fabric composition not captured.'),make('p',p.note),make('p',p.photo));card.append(d);
-   const a=make('a','View product & size chart on Amazon ↗');a.href=p.url;a.target='_blank';a.rel='noopener noreferrer';card.append(a);
-   const add=make('button','Make This a Little Wish ♡');add.type='button';add.className='primary';add.onclick=()=>{if((editing>=0||$('wishName').value)&&!confirm('Replace the unfinished idea with this product? Kept wishes remain.'))return;section='closet';reset();category=p.category;$('wishName').value=p.brand+' '+p.name;$('productUrl').value=p.url;$('source').value='Amazon — my product link';categoryChanged();sourceChanged();dirty=true;notify('formStatus','Product chosen. Set your own preferences and spending limit. No personal size has been copied.');$('builder').scrollIntoView({behavior:'smooth'});};card.append(add);$('catalogGrid').append(card);
+   card.append(make('h3',p.name));
+   const add=make('button','Make This a Little Wish ♡');add.type='button';add.className='primary';add.onclick=()=>{if((editing>=0||$('wishName').value)&&!confirm('Replace the unfinished idea with this product? Kept wishes remain.'))return;section='closet';reset();category=p.category;$('wishName').value=p.brand+' '+p.name;$('productUrl').value=p.url;$('source').value='Amazon — my product link';categoryChanged();sourceChanged();dirty=true;notify('formStatus','Product chosen. Set your own preferences and spending limit. No personal size has been copied.');$('builder').scrollIntoView({behavior:'smooth'});};card.append(add);const save=make('button','Save for Later ♡');save.type='button';save.dataset.wishId='product:'+p.asin;save.textContent=window.QuestWishUI?.has(save.dataset.wishId)?'Saved ✓':'Save for Later ♡';save.onclick=()=>window.QuestWishUI?.open({id:'product:'+p.asin,name:p.name,category:'closet',url:p.url,destination:'mine',preference:'ask',notes:'',connection:'',favorite:false});card.append(save);$('catalogGrid').append(card);
   }
  }
  $('catalogCategory').replaceChildren(...['',...new Set((typeof StoreCatalog==='undefined'?[]:StoreCatalog).map(p=>p.category))].map(c=>{const o=make('option',c||'All clothing');o.value=c;return o;}));$('catalogCategory').onchange=renderCatalog;$('catalogSearch').oninput=renderCatalog;renderCatalog();
  showSection('closet');render();
 })();
+
