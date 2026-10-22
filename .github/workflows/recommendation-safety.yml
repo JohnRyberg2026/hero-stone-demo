@@ -1,0 +1,21 @@
+name: Recommendation safety checks
+on:
+  push:
+    paths:
+      - 'recommendation-safety.js'
+      - 'test-recommendation-safety.cjs'
+      - '.github/workflows/recommendation-safety.yml'
+  pull_request:
+    paths:
+      - 'recommendation-safety.js'
+      - 'test-recommendation-safety.cjs'
+      - '.github/workflows/recommendation-safety.yml'
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node test-recommendation-safety.cjs
