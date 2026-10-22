@@ -280,6 +280,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 }
 
 </style>
+<script src="quest-access.js?v=1"></script>
 </head>
 <body>
 <section class="gateway" id="platformGateway">
@@ -293,13 +294,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <article class="quest-choice">
         <img class="quest-choice-logo" id="gatewayDateLogo" alt="DATE QUEST official logo"/>
         <div class="choice-title">DATE QUEST™</div>
-        <div class="choice-copy">Private, personalized adventures created for you and your partner.</div>
+        <div class="choice-copy">Adults only · 18+. Romantic adventures for consenting adults, with optional R-rated intimacy.</div>
         <button id="enterDateQuestBtn">ENTER DATE QUEST</button>
       </article>
       <article class="quest-choice">
         <img class="world-choice-logo" src="images/world-choice-logo.png" alt="WORLD QUEST official logo"/>
         <div class="choice-title">WORLD QUEST™</div>
-        <div class="choice-copy">Real-world adventures for individuals, couples, friends, families and teams.</div>
+        <div class="choice-copy">Family-safe adventures for friends, families and teams. Adult features are off unless specifically added and individually opted into.</div>
         <button id="enterWorldQuestBtn">ENTER WORLD QUEST</button>
       </article>
     </div>
@@ -313,6 +314,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <img class="world-choice-logo" src="images/world-choice-logo.png" alt="WORLD QUEST official logo"/>
       <h2>ENTER WORLD QUEST™</h2>
       <p class="world-entry-intro">Your city is the game board. The world is the community. HEART STONE™ is the referee.</p>
+      <p>Family-safe mode is active. Adult preferences and intimate content are excluded.</p>
+      <button type="button" id="addWorldAdultOption">Add an adults-only option</button>
+      <section id="worldAdultOption" hidden aria-label="Optional adult settings">
+        <h3>Optional adults-only setting · 18+</h3>
+        <p>Every participant must be a verified adult and separately opt in. Family and mixed-age experiences remain family-safe. You may remove this option at any time.</p>
+        <label><input type="checkbox"> I am 18+ and want to request the adult option for myself.</label>
+        <p id="worldAdultStatus" role="status">Family-safe mode is active. Adult content remains off.</p>
+        <button type="button" id="removeWorldAdultOption">Remove adult option</button>
+      </section>
+
 
       <div class="world-identity-bar hidden" id="worldIdentityBar" aria-live="polite">
         <div class="world-identity-item"><span class="world-identity-label">SIGNED-IN ACCOUNT</span><span class="world-identity-value" id="worldIdentityAccount">—</span></div>
