@@ -1,0 +1,21 @@
+-- Run after multiple-dating-connections-test.sql, inside the same rollback test.
+select set_config('request.jwt.claim.sub','66666666-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.assert_ok(jsonb_array_length(public.shared_date_candidates(auth.uid())->'people')=2,'organizer sees both connected people');
+select pg_temp.assert_ok(not exists(select 1 from jsonb_array_elements(public.shared_date_candidates(auth.uid())->'people') p where p->>'id'='66666666-0000-4000-8000-000000000004'),'candidate lookup never lists another person’s unrelated connection');
+select pg_temp.assert_ok(not exists(select 1 from jsonb_array_elements(public.shared_date_candidates(auth.uid())->'people') p where (select count(*) from jsonb_object_keys(p))<>2),'candidate lookup includes only id and name');
+select pg_temp.fails($q$select public.shared_date_candidates('66666666-0000-4000-8000-000000000002')$q$,'Sign in with the expected account');
+select pg_temp.assert_ok(not exists(select 1 from jsonb_array_elements(public.shared_date_action('view',auth.uid(),current_setting('test.groupDate')::uuid)->'participants') p where p->>'id'<>auth.uid()::text and p->>'response' is not null),'organizer sees only their own individual response');
+select set_config('request.jwt.claim.sub','66666666-0000-4000-8000-000000000002',true);
+select pg_temp.assert_ok(jsonb_array_length(public.shared_date_candidates(auth.uid())->'people')=2,'invitee can also select from their own distinct connections');
+select pg_temp.assert_ok(not exists(select 1 from jsonb_array_elements(public.shared_date_action('view',auth.uid(),current_setting('test.groupDate')::uuid)->'participants') p where p->>'id'<>auth.uid()::text and p->>'response' is not null),'invitee cannot read other individual responses');
+select pg_temp.assert_ok(exists(select 1 from jsonb_array_elements(public.shared_date_action('view',auth.uid(),current_setting('test.groupDate')::uuid)->'participants') p where p->>'id'=auth.uid()::text and p->>'response'='accepted'),'caller still sees their own response');
+set local role anon;
+select pg_temp.fails($q$select public.shared_date_candidates('66666666-0000-4000-8000-000000000001')$q$,'permission denied%');
+reset role;
+update hs_shared_dates.verified_adults set revoked_at=now() where user_id='66666666-0000-4000-8000-000000000001';
+select set_config('request.jwt.claim.sub','66666666-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select pg_temp.fails('select public.shared_date_candidates(auth.uid())','Every included person needs%');
+reset role;
+select 'PASS: account candidates and individual response privacy' as result;
