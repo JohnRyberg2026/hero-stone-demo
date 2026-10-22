@@ -10,4 +10,7 @@ async function enterAdultDemo(page){
  await enter.click();await dialog.waitFor({state:'detached'});
  assert(await page.locator('main').isVisible(),'App opens after explicit entry.');
 }
-module.exports={enterAdultDemo};
+async function isolateBrowser(page){
+ await page.route('**/*',route=>{const url=new URL(route.request().url());return url.origin==='http://127.0.0.1:8765'?route.continue():route.abort('blockedbyclient');});
+}
+module.exports={enterAdultDemo,isolateBrowser};

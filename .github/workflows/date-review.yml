@@ -1,0 +1,39 @@
+name: DATE QUEST review checks
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: date-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  local-and-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Install pinned browser test runtime
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Run local and fictional browser journeys
+        env:
+          QUEST_STORE_URL: http://127.0.0.1:8765/date-store.html
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/quest-review-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent "$QUEST_STORE_URL" >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl --fail --silent "$QUEST_STORE_URL" >/dev/null
+          node tools/check-date-release.cjs --browser
+
