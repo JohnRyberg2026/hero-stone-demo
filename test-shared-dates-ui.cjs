@@ -9,7 +9,7 @@ class E{
 function setup(){
  const els=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(x=>[x[1],new E()]));
  const responses=['accepted','declined','reschedule','withdrawn'].map(x=>{const e=new E('button');e.dataset.accountResponse=x;return e;});
- const state={calls:[],user:'one',allow:true,date:null,changed:null};
+ const state={calls:[],user:'one',allow:true,date:null,changed:null,windowHandlers:{}};
  const self={id:'one',name:'One'},people=[{id:'two',name:'Two'},{id:'three',name:'Three'}];
  const api={connect:async()=>({account:{id:state.user,email:'one@example.invalid'},self,people}),action:async(op,args={})=>{
   state.calls.push({op,args:structuredClone(args)});if(state.fail)throw Error('Could not confirm this change');
@@ -21,7 +21,7 @@ function setup(){
   return structuredClone(state.date);
  }};
  const document={getElementById:id=>els[id],querySelectorAll:selector=>selector==='[data-account-response]'?responses:[...Object.values(els),...responses],createElement:tag=>new E(tag),createTextNode:t=>t,head:{append:s=>s.onload()}};
- const context=vm.createContext({document,window:{supabase:{createClient:()=>({})},SharedDateService:{create:args=>{state.changed=args.onAccountChange;return api;}}},localStorage:{},crypto:{},confirm:()=>state.allow});
+ const context=vm.createContext({document,window:{addEventListener:(name,fn)=>state.windowHandlers[name]=fn,supabase:{createClient:()=>({})},SharedDateService:{create:args=>{state.changed=args.onAccountChange;return api;}}},localStorage:{},crypto:{},confirm:()=>state.allow});
  vm.runInContext(fs.readFileSync('shared-dates.js','utf8'),context);return {els,responses,state};
 }
 (async()=>{
@@ -34,6 +34,13 @@ function setup(){
  // Cancellation and server failure retain the selected account state without success claims.
  state.allow=false;await responses.find(b=>b.dataset.accountResponse==='withdrawn').onclick();assert(!state.calls.some(c=>c.op==='respond'));
  state.allow=true;state.fail=true;await responses.find(b=>b.dataset.accountResponse==='withdrawn').onclick();assert.match(els.sharedAccountFeedback.textContent,/Could not confirm/);state.fail=false;
+ // Cancel keeps the saved snapshot and warns only while edits are dirty.
+ els.editAccountDate.onclick();els.accountDateTitle.value='Unsaved revision';els.accountDateTitle.oninput();
+ let prevented=false;const leaving={preventDefault(){prevented=true;}};state.windowHandlers.beforeunload(leaving);assert(prevented);assert.equal(leaving.returnValue,'');
+ state.allow=false;els.cancelAccountEdit.onclick();assert(!els.accountDateEditor.hidden);assert.equal(els.accountDateTitle.value,'Unsaved revision');
+ state.allow=true;els.cancelAccountEdit.onclick();assert(els.accountDateEditor.hidden);assert.equal(els.accountDetailTitle.textContent,'A date <script>');assert.equal(state.calls.filter(c=>c.op==='revise').length,0);
+ prevented=false;state.windowHandlers.beforeunload({preventDefault(){prevented=true;}});assert(!prevented);
+ els.newAccountDate.onclick();els.accountDateTitle.value='Unsent';els.accountDateTitle.oninput();els.cancelAccountEdit.onclick();assert(els.accountDateEditor.hidden);assert.equal(state.calls.filter(c=>c.op==='create').length,1);
  state.changed();assert(els.accountDateDetail.hidden);assert(els.accountDateEditor.hidden);assert.equal(els.accountRoster.children.length,0);assert.equal(els.accountDateTitle.value,'');
  assert(html.includes('data-quest-audience="date"'));assert(!html.includes('sharedActor'));assert(html.includes('current adult verification'));
  console.log('PASS: own-account UI, private drafts, three-person roster, explicit review/send/cancel, no impersonation picker, private responses, failed writes and account-change clearing.');

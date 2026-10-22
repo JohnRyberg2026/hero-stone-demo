@@ -96,6 +96,12 @@
   const body=payload();const date=await service.action(current?'revise':'create',{date:current,payload:body});detail(date);
   $('sharedAccountFeedback').textContent='Private draft saved to your account. No invitation has been sent.';await refresh();
  });
+ $('cancelAccountEdit').onclick=()=>{
+  if(busy||!discard())return;
+  if(current)detail(current);else{$('accountDateEditor').hidden=true;dirty=false;}
+  $('sharedAccountFeedback').textContent='Unsaved edits discarded. Your saved plan has not changed.';
+ };
+ window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
  $('editAccountDate').onclick=()=>{if(!busy&&current&&account&&current.organizer===account.id)editor(current);};
  $('reviewAccountSend').onclick=()=>run(async()=>{
   const date=await service.action('view',{date:current});detail(date);
