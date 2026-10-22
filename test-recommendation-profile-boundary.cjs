@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('node:assert/strict'),B=require('./recommendation-profile-boundary.js');
+const a={authenticatedUserId:'A',profileResponse:{ownerId:'A',loaded:true,revision:5},participantResponses:[{authorized:true,loaded:true,boundariesVerified:true,accepted:true,boundaries:{minimalWalking:true}}]};
+assert.equal(B.accept(a).ready,true);
+assert.equal(B.accept({...a,profileResponse:{...a.profileResponse,ownerId:'B'}}).ready,false);
+assert.equal(B.accept({...a,profileResponse:{...a.profileResponse,error:'network'}}).ready,false);
+assert.equal(B.accept({...a,participantResponses:[{...a.participantResponses[0],authorized:false}]}).ready,false);
+assert.equal(B.accept({...a,participantResponses:[{...a.participantResponses[0],loaded:false}]}).ready,false);
+assert.equal(JSON.stringify(B.accept(a)).includes('ownerNotes'),false);
+console.log('PASS: authenticated profile boundary, account mismatch, network failure, consent and privacy.');
