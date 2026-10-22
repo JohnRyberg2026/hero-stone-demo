@@ -33,7 +33,7 @@ The connected database’s 15 public/invitation functions directly referencing m
 | Shared memories / private fit | No new copying or migration of private data; private-fit code unchanged |
 | Shared-date roster | PR #49 can check invitees across the organizer’s independently active pair connections |
 
-Old `build*-preview.html` artifacts and `Index.html` are historical and are not upgraded by this change. Do not serve them as multi-connection entry points after enabling the migration. Production rollout needs to retire or redirect unsupported entry points.
+Old `build*-preview.html` artifacts and `Index.html` now redirect to `index.html`, preserving query strings and sign-in fragments. Their original implementations remain in Git history. Validate these paths on staging before enabling the migration.
 
 ## Testing
 

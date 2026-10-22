@@ -9,7 +9,7 @@
     52,
     54
   ],
-  "local_node_suites_passed": 13,
+  "local_node_suites_passed": 14,
   "database_tests": "combined-rollback-passed",
   "installed": false,
   "deployed": false,
@@ -30,8 +30,8 @@
   "release_blockers": [
     "trusted adult verification integration",
     "reviewed recorded backend installation",
-    "retire unsupported archived entry points",
     "browser, accessibility, separate-device and concurrent-session validation",
     "deployment approval"
-  ]
+  ],
+  "archived_entries_redirected": 30
 }

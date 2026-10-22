@@ -15,7 +15,7 @@ One account can select among independent dating connections in the reviewed migr
 | Check | Result |
 | --- | --- |
 | Current home-first entry / calendar tests | Passed with all adult/connection changes included |
-| Complete local Node runner | 13 of 13 suites passed |
+| Complete local Node runner | 14 of 14 suites passed |
 | Combined authenticated/anonymous database tests | Passed in a rollback-only transaction |
 | Database cleanup | Shared-date schema absent; connection schema absent; original unique index restored; all eight fictional accounts absent |
 | Frozen server checkpoint | Original files retained; response-privacy update is additive |
@@ -31,7 +31,7 @@ Reproduce the complete database test: run `database/date-connection-release-roll
 
 1. Configure a trusted adult-verification provider/process. The private eligibility table is intentionally empty after installation; browser confirmations, profile age flags and user metadata must not populate it. No real account is enrolled by this candidate.
 2. Review/package/apply the backend candidates through the project's migration workflow, in the order below. The live database still has the original single-active-connection restriction. No backend candidate is installed.
-3. Retire/redirect archived `build*-preview.html` and `Index.html` entry points before enabling concurrent relationships. They have not been upgraded for explicit selection.
+3. Archived `build*-preview.html` and `Index.html` entries now redirect to the current app, preserving query strings and sign-in fragments. The 30 old implementations remain in Git history. Verify these redirects on the actual staging host, including case-sensitive paths, before enabling concurrent relationships.
 4. Run browser, accessibility, separate-device and concurrent-session release tests against an isolated staging environment with explicitly authorized verified test accounts. Obtain deployment approval after those checks.
 
 ## Reviewed dependency order
