@@ -38,6 +38,7 @@
  const visibility=()=>{if(document.hidden)engine.stop();};
  document.addEventListener('visibilitychange',visibility);
  host.addEventListener('keydown',event=>{if(event.key==='Escape')engine.stop();});
- root.addEventListener('pagehide',()=>{engine.dispose();document.removeEventListener('visibilitychange',visibility);root.speechSynthesis?.removeEventListener('voiceschanged',refresh);},{once:true});
+ // Keep listeners alive for browser back/forward cache restores; require fresh opt-in.
+ root.addEventListener('pagehide',()=>{engine.enable(false);toggle.checked=false;select.value='';select.disabled=true;play.disabled=true;engine.select(null);});
  if(engine.supported){refresh();root.speechSynthesis.addEventListener('voiceschanged',refresh);}
 })(typeof window==='object'?window:globalThis);
