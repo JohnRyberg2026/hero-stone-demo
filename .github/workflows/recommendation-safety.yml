@@ -2,6 +2,12 @@ name: Recommendation safety checks
 on:
   push:
     paths:
+      - '*.js'
+      - '*.cjs'
+      - '*.html'
+      - '*.css'
+      - 'tests/**'
+      - 'tools/**'
       - 'heart-stone-welcome-preview.html'
       - 'test-heart-stone-welcome-browser.cjs'
       - 'heart-stone-companion.js'
@@ -55,9 +61,16 @@ on:
       - 'adventure-profile-preview.html'
       - 'test-adventure-profile-browser-load.cjs'
       - 'test-adventure-profile-browser.cjs'
+      - 'tools/check-date-release.cjs'
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
+      - '*.js'
+      - '*.cjs'
+      - '*.html'
+      - '*.css'
+      - 'tests/**'
+      - 'tools/**'
       - 'heart-stone-welcome-preview.html'
       - 'test-heart-stone-welcome-browser.cjs'
       - 'heart-stone-companion.js'
@@ -99,6 +112,7 @@ on:
       - 'adventure-profile-preview.html'
       - 'test-adventure-profile-browser-load.cjs'
       - 'test-adventure-profile-browser.cjs'
+      - 'tools/check-date-release.cjs'
       - '.github/workflows/recommendation-safety.yml'
 permissions:
   contents: read
@@ -113,26 +127,13 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
-      - run: node tests/moment-invitations.cjs
-      - run: node test-local-date-builder.cjs
-      - run: node test-invitation-store-plan.cjs
-      - run: node test-private-plan-review.cjs
-      - run: node test-storybook-drafts.cjs
-      - run: node test-storybook-account-store.cjs
-      - run: node test-recommendation-safety.cjs
-      - run: node test-recommendation-inputs.cjs
-      - run: node test-safe-adventure-discovery.cjs
-      - run: node test-recommendation-profile-boundary.cjs
-      - run: node test-adventure-preferences-store.cjs
-      - run: node test-adventure-preferences-setup.cjs
-      - run: node test-adventure-profile-flow.cjs
-      - run: node test-adventure-profile-view.cjs
-      - run: node test-adventure-profile-browser-load.cjs
+      - name: Combined product regression checks
+        run: node tools/check-date-release.cjs
       - name: Install browser runtime
         run: |
           npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
           npx playwright install --with-deps chromium
-      - name: Browser profile isolation checks
+      - name: Combined browser journeys (fictional services)
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/profile-preview-server.log 2>&1 &
           server_pid=$!
@@ -141,15 +142,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:8765/adventure-profile-preview.html >/dev/null; then break; fi
             sleep 0.25
           done
-          node test-adventure-profile-browser.cjs
-          node test-storybook-browser.cjs
-          node test-storybook-account-browser.cjs
-          node test-heart-stone-companion-browser.cjs
-          node test-heart-stone-welcome-browser.cjs
-          node test-profile-planning-journey-browser.cjs
-          node test-private-plan-review-browser.cjs
-          node test-plan-invitation-browser.cjs
-          node test-moment-storybook-browser.cjs
+          node tools/check-date-release.cjs --browser-only
   storybook-database:
     runs-on: ubuntu-latest
     timeout-minutes: 10
