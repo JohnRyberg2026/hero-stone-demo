@@ -19,6 +19,7 @@
  const visibility=()=>{if(document.hidden)stop();};
  reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',visibility);
  document.addEventListener('keydown',event=>{if(event.key==='Escape')stop();});
- window.addEventListener('pagehide',()=>{stop();reduced.removeEventListener('change',sync);document.removeEventListener('visibilitychange',visibility);},{once:true});
+ // A cached page may return; preserve its reduced-motion and visibility listeners.
+ window.addEventListener('pagehide',()=>stop());
  sync();
 })();
