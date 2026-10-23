@@ -4,6 +4,8 @@
 <h1>Meet HEART STONE</h1><p>Development rehearsal — optional voice for your heart companion.</p>
 <button type="button" id="avatarQuiet">Quiet mode</button><p id="avatarQuietStatus" role="status"></p>
 <section id="heartStoneCompanion" data-guide="welcome" aria-label="HEART STONE companion"></section>
+<button type="button" id="avatarSettingsToggle" aria-expanded="false" aria-controls="avatarSettings">Voice &amp; movement</button>
+<div id="avatarSettings" hidden>
 <section id="avatarVoicePreview" aria-label="Optional voice"><h2>A voice, when you invite it</h2>
 <p>Prefer a female voice? Choose one you like from your device’s available voices. Names and availability vary; a female voice cannot be guaranteed.</p>
 <p>This rehearsal reads only the greeting below or the current welcome-tour step when you press Hear this step. Your browser or selected voice provider may process those public words online. No microphone is requested.</p>
@@ -14,4 +16,5 @@
 <section id="avatarMotionPreview" aria-label="Optional movement"><h2>A little room to explore</h2><p>Invite one short stroll. The same HEART STONE above takes a short stroll inside its button. Your controls stay still.</p>
 
 <button type="button" aria-pressed="false">Take a little stroll</button><p role="status">HEART STONE is resting.</p></section>
+</div>
 <script src="heart-stone-companion.js"></script><script src="heart-stone-avatar-motion.js"></script><script src="heart-stone-avatar-voice.js"></script><script src="heart-stone-avatar-controls.js"></script></html>
