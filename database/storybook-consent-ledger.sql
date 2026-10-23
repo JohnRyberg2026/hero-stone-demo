@@ -17,7 +17,7 @@ revoke all on hs_storybook_consent.responses from public,anon,authenticated;
 create index storybook_consent_lookup on hs_storybook_consent.responses(volume_id,fingerprint,actor,id desc);
 -- A generation prevents an edit-away/edit-back or leave/rejoin cycle from
 -- resurrecting historic approvals even when the final text/roster looks identical.
-create table hs_storybook_consent.generations(volume_id uuid primary key references public.storybook_volumes(id),generation bigint not null default 1);
+create table hs_storybook_consent.generations(volume_id uuid primary key references public.storybook_volumes(id),generation bigint not null default 1,required_users uuid[] not null);
 alter table hs_storybook_consent.generations enable row level security;
 revoke all on hs_storybook_consent.generations from public,anon,authenticated;
 create function hs_storybook_consent.invalidate() returns trigger language plpgsql security definer set search_path='' as $$
@@ -61,7 +61,8 @@ begin
  select coalesce(jsonb_agg(to_jsonb(s) order by s.id),'[]'::jsonb) into v_sources from public.story_seeds s where s.id in(select e.story_seed_id from public.storybook_entries e where e.volume_id=p_volume_id);
  -- Entire observed entry/seed rows bind titles, captions, narrative flags,
  -- source dates/identity and later-added columns. No caller-supplied content hash.
- insert into hs_storybook_consent.generations(volume_id) values(p_volume_id) on conflict do nothing;
+ insert into hs_storybook_consent.generations(volume_id,required_users) values(p_volume_id,v_people) on conflict do nothing;
+ if exists(select 1 from hs_storybook_consent.generations where volume_id=p_volume_id and required_users is distinct from v_people) then raise exception 'Participant scope requires explicit reconciliation' using errcode='42501';end if;
  select generation into v_generation from hs_storybook_consent.generations where volume_id=p_volume_id for update;
  v_contract:=jsonb_build_object('version',1,'generation',v_generation,'volume',v_volume,'entries',v_entries,'sources',v_sources,'participants',v_people,'viewers',v_people,'action',p_action,'destination','relationship:'||v_hs::text);
  v_hash:=encode(sha256(convert_to(v_contract::text,'UTF8')),'hex');
