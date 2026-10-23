@@ -33,6 +33,13 @@ const {chromium}=require('playwright');
   await page.locator('[data-enable]').check();await page.locator('select').selectOption('0');await page.locator('[data-play]').click();await stroll.click();
   await page.locator('#hideHeartStone').click();assert.equal(await page.evaluate(()=>document.getAnimations().length),0);assert(!(await page.locator('#avatarVoicePreview').isVisible()));assert(!(await page.locator('#avatarMotionPreview').isVisible()));
   const spokenBeforeRestore=await page.evaluate(()=>__spoken.length);await page.locator('#restoreHeartStone').click();assert(await page.locator('#avatarVoicePreview').isVisible());assert(await page.locator('#avatarMotionPreview').isVisible());assert(!(await page.locator('[data-enable]').isChecked()));assert.equal(await page.evaluate(()=>__spoken.length),spokenBeforeRestore);assert.equal(await page.evaluate(()=>document.getAnimations().length),0);
+  // Tour speech reads only an explicitly requested public step; advancing never speaks.
+  await page.locator('#meetHeartStone').click();const hearStep=page.getByRole('button',{name:'Hear this step',exact:true});assert(await hearStep.isDisabled());
+  await page.locator('[data-enable]').check();await page.locator('select').selectOption('0');const tourBefore=await page.evaluate(()=>__spoken.length);await hearStep.click();assert.equal(await page.evaluate(()=>__spoken.length),tourBefore+1);
+  const cancelBefore=await page.evaluate(()=>__cancels);await page.locator('#startHeartStoneTour').click();await page.waitForFunction(n=>__cancels>n,cancelBefore);assert.equal(await page.evaluate(()=>__spoken.length),tourBefore+1);await hearStep.click();assert((await page.evaluate(()=>__spoken.at(-1))).includes('Let’s Connect'));
+  await page.locator('#closeHeartStoneGuide').click();await page.waitForFunction(()=>document.querySelector('#heartStoneGuide').hidden);assert(await hearStep.isDisabled());
+  await page.locator('#meetHeartStone').click();await page.evaluate(()=>document.querySelector('#heartStoneGuideMessage').textContent='Private content must never be read');await page.waitForFunction(()=>Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Hear this step').disabled);assert.equal(await page.evaluate(()=>__spoken.length),tourBefore+2);
+  await page.locator('#avatarQuiet').click();
   for(const width of [320,390,1280]){await page.setViewportSize({width,height:844});assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)));}
   assert.equal(errors.length,0,errors.join(';'));console.log('PASS avatar preview: explicit voice opt-in, selection, Escape/disable, motion pause/finish, reduced motion and responsive widths. Speech engine simulated; audible output not tested.');
  }finally{await browser.close();}
