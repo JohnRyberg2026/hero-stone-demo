@@ -25,18 +25,22 @@
   async function request(operation,{book=null,id=book?.id,expectedRevision=null}={}){
    const actor=await identity();if(!actor){if(owner)clear();return {ok:false,reason:'signed_out'};}
    if(owner&&owner!==actor){clear();return {ok:false,reason:'account_changed'};}
-   owner=actor;const version=epoch,write=operation!=='read';
-   if(typeof id!=='string'||!id.trim()||id.length>100||write&&!valid(book,actor)||operation==='save'&&(!Number.isSafeInteger(expectedRevision)||expectedRevision<0))return {ok:false,reason:'invalid_input'};
+   owner=actor;const version=epoch,write=!['read','list'].includes(operation);
+   if(operation!=='list'&&(typeof id!=='string'||!id.trim()||id.length>100)||write&&!valid(book,actor)||operation==='save'&&(!Number.isSafeInteger(expectedRevision)||expectedRevision<0))return {ok:false,reason:'invalid_input'};
    // Copy now: later edits must not change an already approved payload.
-   const args={p_operation:operation,p_expected_user:actor,p_book_id:id,p_expected_revision:expectedRevision,p_book:write?JSON.parse(JSON.stringify(book)):null};
+   const args={p_operation:operation,p_expected_user:actor,p_book_id:id||null,p_expected_revision:expectedRevision,p_book:write?JSON.parse(JSON.stringify(book)):null};
    let result;try{result=await client.rpc('storybook_draft_action',args);}catch{result={error:{code:'transport'}};}
    const after=await identity();if(after!==actor||epoch!==version||owner!==actor){clear();return {ok:false,reason:'account_changed',mayHaveSaved:write};}
    if(result.error)return {ok:false,reason:result.error.code==='40001'?'revision_conflict':write?'unconfirmed':'unavailable',mayHaveSaved:write};
    const data=result.data;
+   if(operation==='list'){
+    if(!Array.isArray(data)||data.length>100||data.some(v=>!v||Object.keys(v).some(k=>!['id','title','year','storageRevision'].includes(k))||typeof v.id!=='string'||!v.id.trim()||v.id.length>100||typeof v.title!=='string'||!v.title.trim()||v.title.length>120||!Number.isInteger(v.year)||v.year<1900||v.year>9999||!Number.isSafeInteger(v.storageRevision)||v.storageRevision<0)||new Set(data.map(v=>v.id)).size!==data.length)return {ok:false,reason:'unavailable'};
+    return {ok:true,volumes:JSON.parse(JSON.stringify(data))};
+   }
    if(!data||!valid(data.book,actor)||data.book.id!==id||!Number.isSafeInteger(data.storageRevision)||data.storageRevision<0)return {ok:false,reason:write?'unconfirmed':'unavailable',mayHaveSaved:write};
    return {ok:true,book:JSON.parse(JSON.stringify(data.book)),storageRevision:data.storageRevision};
   }
-  return Object.freeze({read:id=>request('read',{id}),create:book=>request('create',{book}),save:(book,expectedRevision)=>request('save',{book,expectedRevision}),dispose:()=>{subscription?.data?.subscription?.unsubscribe?.();clear();}});
+  return Object.freeze({list:()=>request('list'),read:id=>request('read',{id}),create:book=>request('create',{book}),save:(book,expectedRevision)=>request('save',{book,expectedRevision}),dispose:()=>{subscription?.data?.subscription?.unsubscribe?.();clear();}});
  }
  const api={create,valid};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.StorybookAccountStore=api;
 })(typeof globalThis==='undefined'?this:globalThis);

@@ -19,6 +19,8 @@ begin
  saved:=public.storybook_draft_action('create',a,'book',null,b);
  if saved->>'storageRevision'<>'0' then raise exception 'FAIL create'; end if;
  perform public.storybook_draft_action('create',a,'book',null,b);
+ saved:=public.storybook_draft_action('list',a,null);
+ if jsonb_array_length(saved)<>1 or saved->0->>'title'<>'Fictional book' or saved->0 ? 'moments' then raise exception 'FAIL private volume list';end if;
  b:=jsonb_set(b,'{revision}','1');
  b:=jsonb_set(b,'{moments}',jsonb_build_array(jsonb_build_object('id','moment','author',a,'source','user','happenedOn','2026-01-31','month',1,'text','My fictional note','revision',0)));
  saved:=public.storybook_draft_action('save',a,'book',0,b);
@@ -34,6 +36,7 @@ begin
 end $$;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',true);
 do $$begin
+ if public.storybook_draft_action('list','00000000-0000-4000-8000-000000000002',null)<>'[]'::jsonb then raise exception 'FAIL other account list';end if;
  if exists(select from hs_storybook.drafts) then raise exception 'FAIL cross-account RLS';end if;
  begin perform public.storybook_draft_action('read','00000000-0000-4000-8000-000000000002','book');raise exception 'FAIL cross-account RPC';exception when insufficient_privilege then null;end;
 end $$;

@@ -3,8 +3,8 @@
  const $=id=>document.getElementById(id),preview=window.StorybookPreview;
  let client=null,store=null,account=null,savedId=null,savedRevision=null,busy=false,epoch=0,loading=null;
  function status(text){$('storySaveStatus').textContent=text;}
- function controls(){document.querySelectorAll('button,input,textarea').forEach(e=>e.disabled=busy);$('saveAccountBook').disabled=busy||!account;$('loadAccountBook').disabled=busy||!account;if(document.getElementById('momentEditor').hidden===false&&document.getElementById('editorTitle').textContent==='Edit your words')$('momentDate').disabled=true;}
- function clear(){epoch++;account=null;savedId=null;savedRevision=null;preview.clear();$('accountBookId').value='';$('storyAccountIdentity').textContent='Account changed. Connect again.';status('Private account content cleared.');controls();}
+ function controls(){document.querySelectorAll('button,input,textarea').forEach(e=>e.disabled=busy);$('saveAccountBook').disabled=busy||!account;$('loadAccountBook').disabled=busy||!account;$('listAccountBooks').disabled=busy||!account;if(document.getElementById('momentEditor').hidden===false&&document.getElementById('editorTitle').textContent==='Edit your words')$('momentDate').disabled=true;}
+ function clear(){epoch++;account=null;savedId=null;savedRevision=null;preview.clear();$('accountBookId').value='';$('accountBookList').replaceChildren();$('storyAccountIdentity').textContent='Account changed. Connect again.';status('Private account content cleared.');controls();}
  async function connectClient(){
   if(client)return client;
   if(!loading)loading=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js';s.onload=resolve;s.onerror=()=>{s.remove();loading=null;reject(Error('Account connection unavailable. Your open draft is unchanged.'));};document.head.append(s);}).then(()=>{
@@ -32,6 +32,14 @@
   if(version!==epoch||account!==owner)return;
   if(!result.ok){failure(result);return;}
   savedId=result.book.id;savedRevision=result.storageRevision;preview.replace(result.book);status('Account save confirmed · revision '+savedRevision+'. Later edits require another explicit save.');
+ });
+ $('listAccountBooks').onclick=()=>run(async()=>{
+  if(!account)return;const version=epoch,owner=account;
+  $('accountBookList').replaceChildren();const result=await store.list();if(version!==epoch||account!==owner)return;
+  if(!result.ok){status('Your saved volumes could not be loaded. Your open draft is unchanged.');return;}
+  if(!result.volumes.length){const p=document.createElement('p');p.textContent='No personal volumes found for this account.';$('accountBookList').append(p);}
+  for(const volume of result.volumes){const b=document.createElement('button');b.type='button';b.textContent=volume.title+' · '+volume.year;b.onclick=()=>{$('accountBookId').value=volume.id;$('loadAccountBook').click();};$('accountBookList').append(b);}
+  status('Personal volume list refreshed. Nothing has been saved, replaced or shared.');
  });
  $('loadAccountBook').onclick=()=>run(async()=>{
   if(!account)return;const id=$('accountBookId').value.trim();if(!id){status('Enter your saved book ID.');return;}

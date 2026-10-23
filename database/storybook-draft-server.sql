@@ -68,6 +68,9 @@ returns jsonb language plpgsql security invoker set search_path='' as $$
 declare actor uuid:=auth.uid(); row hs_storybook.drafts%rowtype;
 begin
  if actor is null or actor is distinct from p_expected_user then raise exception 'Sign in with the expected account' using errcode='42501'; end if;
+ if p_operation='list' then
+  return (select coalesce(jsonb_agg(jsonb_build_object('id',q.book_id,'title',q.book->>'title','year',(q.book->>'year')::integer,'storageRevision',q.storage_revision) order by (q.book->>'year')::integer desc,q.book_id),'[]'::jsonb) from (select book_id,book,storage_revision from hs_storybook.drafts where owner=actor order by (book->>'year')::integer desc,book_id limit 100) q);
+ end if;
  if p_operation not in ('read','create','save') or p_operation is null or p_book_id is null or length(btrim(p_book_id))=0 or length(p_book_id)>100 then raise exception 'Invalid draft request' using errcode='22023'; end if;
  if p_operation<>'read' and not hs_storybook.validate_book(p_book,actor,p_book_id) then raise exception 'Invalid private draft' using errcode='22023'; end if;
  if p_operation='create' then
