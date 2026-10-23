@@ -5,6 +5,8 @@ on:
       - 'storybook-preview.html'
       - 'storybook-preview.js'
       - 'test-storybook-browser.cjs'
+      - 'database/storybook-draft-server.sql'
+      - 'database/test-storybook-draft-isolated.sql'
       - 'storybook-account-store.js'
       - 'test-storybook-account-store.cjs'
       - 'storybook-drafts.js'
@@ -34,6 +36,8 @@ on:
       - 'storybook-preview.html'
       - 'storybook-preview.js'
       - 'test-storybook-browser.cjs'
+      - 'database/storybook-draft-server.sql'
+      - 'database/test-storybook-draft-isolated.sql'
       - 'storybook-account-store.js'
       - 'test-storybook-account-store.cjs'
       - 'storybook-drafts.js'
@@ -85,3 +89,27 @@ jobs:
           done
           node test-adventure-profile-browser.cjs
           node test-storybook-browser.cjs
+  storybook-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: fictional-ci-only
+          POSTGRES_DB: storybook_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Check private drafts in disposable PostgreSQL
+        env:
+          PGPASSWORD: fictional-ci-only
+        run: psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-draft-isolated.sql
