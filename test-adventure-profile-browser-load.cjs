@@ -1,10 +1,10 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 // Execute the preview's actual scripts without Node globals, as a browser does.
-const elements=Object.fromEntries(['statusHeading','statusMessage','statusRevision','refresh'].map(id=>[id,{textContent:'',addEventListener(_,fn){this.click=fn;}}]));
+const html=fs.readFileSync('adventure-profile-preview.html','utf8');
+const elements=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(x=>[x[1],{textContent:'',value:'',hidden:false,focus(){},addEventListener(_,fn){this.click=fn;}}]));
 let user=null,authChange,reads=0;
 const client={auth:{getUser:async()=>({data:{user:user?{id:user}:null}}),onAuthStateChange:fn=>{authChange=fn;}},from:()=>({select:()=>({eq:(_,id)=>({maybeSingle:async()=>{reads++;return {data:{account_id:id,revision:3,boundaries:{minimalWalking:true},interests:['private interest']}};}})})})};
-const context=vm.createContext({window:{supabase:{createClient:()=>client}},document:{getElementById:id=>elements[id]},setTimeout});
-const html=fs.readFileSync('adventure-profile-preview.html','utf8');
+const context=vm.createContext({window:{addEventListener(){},supabase:{createClient:()=>client}},document:{getElementById:id=>elements[id]},setTimeout});
 for(const match of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g)){
  if(match[1]?.startsWith('https:'))continue;
  vm.runInContext(match[1]?fs.readFileSync(match[1],'utf8'):match[2],context,{filename:match[1]||'preview-inline'});

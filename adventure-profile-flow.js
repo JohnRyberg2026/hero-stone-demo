@@ -6,7 +6,7 @@ const AdventureProfileFlow=(()=>{
  async function load(client){
   const result=await Store.read(client);
   if(result.ready)return {state:'returning',profile:result.profile,boundaries:result.boundaries,interests:result.interests};
-  if(result.reason==='signed_out')return {state:'signed_out'};
+  if(['signed_out','account_changed'].includes(result.reason))return {state:result.reason};
   // A missing row cannot be distinguished from a read failure by Store.read.
   // Never treat a failed read as permission to create a new profile.
   return {state:'needs_confirmation'};
@@ -21,11 +21,12 @@ const AdventureProfileFlow=(()=>{
   if(!result.created)return {state:result.reason};
   return {state:'created',revision:result.revision};
  }
- async function update(client,{revision,boundaries,interests}={}){
+ async function update(client,{revision,ownerId,boundaries,interests}={}){
   const state=await load(client);
   if(state.state!=='returning')return {state:state.state};
+  if(ownerId&&state.profile.ownerId!==ownerId)return {state:'account_changed'};
   if(state.profile.revision!==revision)return {state:'revision_conflict'};
-  const result=await Store.save(client,{expectedRevision:revision,boundaries,interests});
+  const result=await Store.save(client,{expectedRevision:revision,expectedUser:state.profile.ownerId,boundaries,interests});
   return result.saved?{state:'updated',revision:result.revision}:{state:result.reason};
  }
  return {load,initialize,update};

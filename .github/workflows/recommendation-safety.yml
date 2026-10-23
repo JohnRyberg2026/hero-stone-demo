@@ -33,6 +33,11 @@ on:
       - 'test-adventure-profile-flow.cjs'
       - 'adventure-profile-view.js'
       - 'test-adventure-profile-view.cjs'
+      - 'adventure-profile-screen.js'
+      - 'database/adventure-preferences-guard.sql'
+      - 'database/test-adventure-preferences-isolated.sql'
+      - 'supabase/migrations/20261022213100_adventure_preferences_draft.sql'
+      - 'test-profile-planning-journey-browser.cjs'
       - 'adventure-profile-preview.html'
       - 'test-adventure-profile-browser-load.cjs'
       - 'test-adventure-profile-browser.cjs'
@@ -58,6 +63,11 @@ on:
       - 'recommendation-inputs.js'
       - 'test-recommendation-safety.cjs'
       - 'test-recommendation-inputs.cjs'
+      - 'adventure-profile-screen.js'
+      - 'database/adventure-preferences-guard.sql'
+      - 'database/test-adventure-preferences-isolated.sql'
+      - 'supabase/migrations/20261022213100_adventure_preferences_draft.sql'
+      - 'test-profile-planning-journey-browser.cjs'
       - 'adventure-profile-preview.html'
       - 'test-adventure-profile-browser-load.cjs'
       - 'test-adventure-profile-browser.cjs'
@@ -104,6 +114,7 @@ jobs:
           node test-storybook-account-browser.cjs
           node test-heart-stone-companion-browser.cjs
           node test-heart-stone-welcome-browser.cjs
+          node test-profile-planning-journey-browser.cjs
   storybook-database:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -127,4 +138,6 @@ jobs:
       - name: Check private drafts in disposable PostgreSQL
         env:
           PGPASSWORD: fictional-ci-only
-        run: psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-draft-isolated.sql
+        run: |
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-draft-isolated.sql
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-adventure-preferences-isolated.sql

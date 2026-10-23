@@ -1,20 +1,8 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Adventure Profile — Development Preview</title>
-<style>body{font:16px system-ui,sans-serif;max-width:42rem;margin:2rem auto;padding:0 1rem;color:#252525}section{border:1px solid #aaa;border-radius:12px;padding:1.2rem}p{line-height:1.5}.note{font-size:.9rem;color:#555}button{padding:.6rem 1rem}</style></head>
-<body><main><a href="heart-stone-welcome-preview.html">← Back to the HEART STONE welcome</a><h1>Adventure preferences</h1><p class="note">Development preview only. Reads only the signed-in account. No edits, invitations, purchases or sharing.</p><section aria-live="polite"><h2 id="statusHeading">Checking account</h2><p id="statusMessage">Confirming saved preferences…</p><p id="statusRevision"></p><button id="refresh" type="button">Refresh profile</button></section></main>
+<style>body{font:16px system-ui,sans-serif;max-width:42rem;margin:2rem auto;padding:0 1rem;color:#252525}section{border:1px solid #aaa;border-radius:12px;padding:1.2rem}p{line-height:1.5}.note{font-size:.9rem;color:#555}button{padding:.6rem 1rem}label,input,select{display:block;width:100%;box-sizing:border-box;margin:12px 0;font:inherit;padding:10px}[hidden]{display:none!important}</style></head>
+<body><main><a href="heart-stone-welcome-preview.html">← Back to the HEART STONE welcome</a><h1>Adventure preferences</h1><p class="note">Development preview only. Reads only the signed-in account. Updates require explicit confirmation. No invitations, purchases or sharing.</p><section aria-live="polite"><h2 id="statusHeading">Checking account</h2><p id="statusMessage">Confirming saved preferences…</p><p id="statusRevision"></p><button id="refresh" type="button">Refresh profile</button><button id="editPreferences" type="button" hidden>Review or update my preferences</button></section>
+<section id="preferencesEditor" hidden aria-labelledby="preferencesEditorTitle"><h2 id="preferencesEditorTitle" tabindex="-1">Your private preferences</h2><p>This first editor covers walking comfort and a spending limit. Other saved boundaries and interests are retained.</p><form id="preferencesForm"><fieldset id="preferencesFields"><label for="walkingComfort">Walking comfort</label><select id="walkingComfort"><option value="unknown">Not specified</option><option value="minimal">Keep walking minimal</option><option value="unspecified_limit">No minimal-walking limit selected</option></select><label for="spendingLimit">Maximum spending comfort</label><input id="spendingLimit" type="number" min="0" step="0.01"><p>Leave blank for no recorded limit. A limit is not permission to spend.</p></fieldset><button type="submit" id="savePreferences">Review &amp; save these changes</button><button type="button" id="cancelPreferences">Cancel edits</button></form><p id="preferencesFeedback" role="status" aria-live="polite"></p></section><p><a href="date-store.html">Continue to manual adventure planning</a> · This planner does not yet apply these preferences automatically.</p></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
 <script src="adventure-preferences-store.js"></script><script src="adventure-preferences-setup.js"></script><script src="adventure-profile-flow.js"></script><script src="adventure-profile-view.js"></script>
-<script>
-'use strict';
-(()=>{
- const heading=document.getElementById('statusHeading'),message=document.getElementById('statusMessage'),revision=document.getElementById('statusRevision');
- let epoch=0;
- const client=window.supabase?.createClient('https://iqxhqxlcraatdheslqeo.supabase.co','sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h');
- function render(state){const m=AdventureProfileView.model(state);heading.textContent=m.screen==='saved'?'Saved preferences':m.screen==='sign_in'?'Sign in required':m.screen==='refresh'?'Refresh required':'Unavailable';message.textContent=m.message;revision.textContent=Number.isSafeInteger(m.revision)?'Saved revision: '+m.revision:'';}
- async function refresh(){const token=++epoch;heading.textContent='Checking account';message.textContent='Confirming saved preferences…';revision.textContent='';if(!client){render({state:'needs_confirmation'});return;}
-  try{const state=await AdventureProfileFlow.load(client);if(token!==epoch)return;render(state);}catch{if(token===epoch)render({state:'needs_confirmation'});}
- }
- client?.auth?.onAuthStateChange(()=>{epoch++;render({state:'needs_confirmation'});setTimeout(refresh,0);});
- document.getElementById('refresh').addEventListener('click',refresh);refresh();
-})();
-</script></body></html>
+<script src="adventure-profile-screen.js"></script></body></html>
