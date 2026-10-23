@@ -19,6 +19,10 @@ on:
       - 'test-storybook-browser.cjs'
       - 'database/storybook-draft-server.sql'
       - 'database/test-storybook-draft-isolated.sql'
+      - 'database/shared-date-server.sql'
+      - 'database/shared-date-candidates.sql'
+      - 'database/shared-date-server-test.sql'
+      - 'database/test-shared-dates-isolated.sql'
       - 'storybook-account-store.js'
       - 'test-storybook-account-store.cjs'
       - 'storybook-drafts.js'
@@ -82,6 +86,10 @@ on:
       - 'test-storybook-browser.cjs'
       - 'database/storybook-draft-server.sql'
       - 'database/test-storybook-draft-isolated.sql'
+      - 'database/shared-date-server.sql'
+      - 'database/shared-date-candidates.sql'
+      - 'database/shared-date-server-test.sql'
+      - 'database/test-shared-dates-isolated.sql'
       - 'storybook-account-store.js'
       - 'test-storybook-account-store.cjs'
       - 'storybook-drafts.js'
@@ -169,3 +177,4 @@ jobs:
         run: |
           psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-draft-isolated.sql
           psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-adventure-preferences-isolated.sql
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-shared-dates-isolated.sql
