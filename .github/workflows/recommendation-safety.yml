@@ -39,6 +39,11 @@ on:
       - 'test-private-plan-review-browser.cjs'
       - 'date-store.html'
       - 'local-date-builder.js'
+      - 'test-local-date-builder.cjs'
+      - 'invitation-store-plan.js'
+      - 'invitation-opening.html'
+      - 'test-invitation-store-plan.cjs'
+      - 'test-plan-invitation-browser.cjs'
       - 'adventure-profile-screen.js'
       - 'database/adventure-preferences-guard.sql'
       - 'database/test-adventure-preferences-isolated.sql'
@@ -75,6 +80,11 @@ on:
       - 'test-private-plan-review-browser.cjs'
       - 'date-store.html'
       - 'local-date-builder.js'
+      - 'test-local-date-builder.cjs'
+      - 'invitation-store-plan.js'
+      - 'invitation-opening.html'
+      - 'test-invitation-store-plan.cjs'
+      - 'test-plan-invitation-browser.cjs'
       - 'adventure-profile-screen.js'
       - 'database/adventure-preferences-guard.sql'
       - 'database/test-adventure-preferences-isolated.sql'
@@ -97,6 +107,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
+      - run: node test-local-date-builder.cjs
+      - run: node test-invitation-store-plan.cjs
       - run: node test-private-plan-review.cjs
       - run: node test-storybook-drafts.cjs
       - run: node test-storybook-account-store.cjs
@@ -129,6 +141,7 @@ jobs:
           node test-heart-stone-welcome-browser.cjs
           node test-profile-planning-journey-browser.cjs
           node test-private-plan-review-browser.cjs
+          node test-plan-invitation-browser.cjs
   storybook-database:
     runs-on: ubuntu-latest
     timeout-minutes: 10
