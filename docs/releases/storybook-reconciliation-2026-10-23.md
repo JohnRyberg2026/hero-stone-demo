@@ -38,3 +38,9 @@ Opening a book, accepting an invitation, ending an adventure, or belonging to a 
 3. Define one book-list interface that returns only verified accessible summaries, with scope and source explicit; backend failure must not masquerade as an empty saved library.
 4. Keep existing books intact while the personal adapter is validated. Confirm original event dates, twelve monthly chapters, duplicate/retry behavior and account-change clearing.
 5. Only then prepare recorded staging migrations and an end-to-end phone/computer demonstration. Production changes remain outside this checkpoint.
+
+## Summary-reader review candidate
+
+`database/storybook-relationship-reader.sql` proposes a narrow adapter for the older volumes. Its public wrapper does not elevate privileges; a private-schema function checks the authenticated/expected identity, active account and explicitly selected active relationship under row locks. It returns up to 100 summaries containing only ID, title, year, state, scope and relationship ID. It does not return entries, narrative, memories or approval records, change grants on existing tables, create books, transfer content or publish.
+
+The CI-only test reproduces the observed caller-permission-view/base-grant mismatch using a minimal view fixture, then checks the candidate with active, unrelated, former-member, suspended, spoofed and anonymous identities. It is not a clone of all legacy tables/functions/triggers, and the candidate remains uninstalled and unconnected to the UI. Full-baseline staging validation and an owner-account client adapter are still required. No policy widening is proposed.

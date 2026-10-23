@@ -23,6 +23,8 @@ on:
       - 'database/shared-date-candidates.sql'
       - 'database/shared-date-server-test.sql'
       - 'database/test-shared-dates-isolated.sql'
+      - 'database/storybook-relationship-reader.sql'
+      - 'database/test-storybook-relationship-reader-isolated.sql'
       - 'storybook-account-store.js'
       - 'test-storybook-account-store.cjs'
       - 'storybook-drafts.js'
@@ -90,6 +92,8 @@ on:
       - 'database/shared-date-candidates.sql'
       - 'database/shared-date-server-test.sql'
       - 'database/test-shared-dates-isolated.sql'
+      - 'database/storybook-relationship-reader.sql'
+      - 'database/test-storybook-relationship-reader-isolated.sql'
       - 'storybook-account-store.js'
       - 'test-storybook-account-store.cjs'
       - 'storybook-drafts.js'
@@ -179,3 +183,4 @@ jobs:
           psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-adventure-preferences-isolated.sql
           psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-shared-dates-isolated.sql
           node tools/test-shared-date-concurrency.cjs
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-relationship-reader-isolated.sql
