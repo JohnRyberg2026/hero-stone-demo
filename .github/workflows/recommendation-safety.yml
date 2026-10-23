@@ -2,6 +2,8 @@ name: Recommendation safety checks
 on:
   push:
     paths:
+      - 'storybook-drafts.js'
+      - 'test-storybook-drafts.cjs'
       - 'recommendation-safety.js'
       - 'recommendation-inputs.js'
       - 'test-recommendation-safety.cjs'
@@ -24,6 +26,8 @@ on:
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
+      - 'storybook-drafts.js'
+      - 'test-storybook-drafts.cjs'
       - 'recommendation-safety.js'
       - 'recommendation-inputs.js'
       - 'test-recommendation-safety.cjs'
@@ -45,6 +49,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
+      - run: node test-storybook-drafts.cjs
       - run: node test-recommendation-safety.cjs
       - run: node test-recommendation-inputs.cjs
       - run: node test-safe-adventure-discovery.cjs
