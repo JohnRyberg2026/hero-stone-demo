@@ -3,8 +3,8 @@
  const $=id=>document.getElementById(id),preview=window.StorybookPreview;
  let client=null,store=null,account=null,savedId=null,savedRevision=null,busy=false,epoch=0,loading=null;
  function status(text){$('storySaveStatus').textContent=text;}
- function controls(){document.querySelectorAll('button,input,textarea').forEach(e=>e.disabled=busy);$('saveAccountBook').disabled=busy||!account;$('loadAccountBook').disabled=busy||!account;$('listAccountBooks').disabled=busy||!account;if(document.getElementById('momentEditor').hidden===false&&document.getElementById('editorTitle').textContent==='Edit your words')$('momentDate').disabled=true;}
- function clear(){epoch++;account=null;savedId=null;savedRevision=null;preview.clear();$('accountBookId').value='';$('accountBookList').replaceChildren();$('storyAccountIdentity').textContent='Account changed. Connect again.';status('Private account content cleared.');controls();}
+ function controls(){document.querySelectorAll('button,input,textarea').forEach(e=>e.disabled=busy);$('saveAccountBook').disabled=busy||!account;$('loadAccountBook').disabled=busy||!account;$('listAccountBooks').disabled=busy||!account;if(document.getElementById('momentEditor').hidden===false&&document.getElementById('editorTitle').textContent==='Edit your words')$('momentDate').disabled=true;window.dispatchEvent(new CustomEvent('storybook:controls',{detail:{busy}}));}
+ function clear(){window.dispatchEvent(new Event('storybook:account-cleared'));epoch++;account=null;savedId=null;savedRevision=null;preview.clear();$('accountBookId').value='';$('accountBookList').replaceChildren();$('storyAccountIdentity').textContent='Account changed. Connect again.';status('Private account content cleared.');controls();}
  async function connectClient(){
   if(client)return client;
   if(!loading)loading=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js';s.onload=resolve;s.onerror=()=>{s.remove();loading=null;reject(Error('Account connection unavailable. Your open draft is unchanged.'));};document.head.append(s);}).then(()=>{
@@ -20,7 +20,7 @@
   const api=await connectClient(),version=epoch,r=await api.auth.getUser();
   if(r.error||!r.data?.user||version!==epoch){status('Sign in through HEART STONE, then connect again.');return;}
   if(account&&account!==r.data.user.id){clear();return;}
-  account=r.data.user.id;$('storyAccountIdentity').textContent='Connected to your signed-in account.';status('Connected. Nothing has been saved or loaded.');
+  account=r.data.user.id;window.dispatchEvent(new CustomEvent('storybook:account-ready',{detail:{client:api,account}}));$('storyAccountIdentity').textContent='Connected to your signed-in account.';status('Connected. Nothing has been saved or loaded.');
  });
  $('saveAccountBook').onclick=()=>run(async()=>{
   if(!account||preview.unfinished()){status('Keep or cancel the unfinished memory edit before saving the volume.');return;}

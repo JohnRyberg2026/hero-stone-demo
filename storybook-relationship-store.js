@@ -9,22 +9,23 @@
   function clear(){owner=null;epoch++;sequence++;onAccountChange();}
   const subscription=client.auth.onAuthStateChange((_,session)=>{if(owner&&owner!==session?.user?.id)clear();});
   async function identity(){try{const r=await client.auth.getUser();return r.error?null:r.data?.user?.id||null;}catch{return null;}}
-  async function list(expectedUser,relationshipId){
+  async function list(expectedUser,relationshipId,relationships=false){
    if(disposed)return {ok:false,reason:'disposed'};
-   if(!uuid(expectedUser)||!uuid(relationshipId))return {ok:false,reason:'invalid_input'};
+   if(!uuid(expectedUser)||!relationships&&!uuid(relationshipId))return {ok:false,reason:'invalid_input'};
    const version=epoch,request=++sequence,actor=await identity();
    if(disposed||request!==sequence||version!==epoch)return {ok:false,reason:'superseded'};
    if(!actor){if(owner)clear();return {ok:false,reason:'signed_out'};}
    if(actor!==expectedUser||owner&&owner!==actor){clear();return {ok:false,reason:'account_changed'};}
    owner=actor;
-   let result;try{result=await client.rpc('list_my_relationship_storybooks',{p_expected_user:actor,p_heart_stone_id:relationshipId});}catch{result={error:true};}
+   let result;try{result=await client.rpc(relationships?'list_my_storybook_relationships':'list_my_relationship_storybooks',relationships?{p_expected_user:actor}:{p_expected_user:actor,p_heart_stone_id:relationshipId});}catch{result={error:true};}
    const after=await identity();
    if(disposed||request!==sequence||version!==epoch)return {ok:false,reason:'superseded'};
    if(after!==actor){clear();return {ok:false,reason:'account_changed'};}
+   if(relationships){const rows=result?.data;if(result?.error||!Array.isArray(rows)||rows.length>100||new Set(rows.map(v=>v?.id)).size!==rows.length||rows.some(v=>!v||Object.keys(v).length!==2||!uuid(v.id)||typeof v.label!=='string'||!v.label.trim()||v.label.length>1000))return {ok:false,reason:'unavailable'};return {ok:true,relationships:JSON.parse(JSON.stringify(rows))};}
    if(!result||result.error||!valid(result.data,relationshipId))return {ok:false,reason:'unavailable'};
    return {ok:true,scope:'relationship',relationshipId,volumes:JSON.parse(JSON.stringify(result.data)),mayHaveMore:result.data.length===100};
   }
-  return Object.freeze({list,invalidate:()=>{sequence++;},dispose:()=>{disposed=true;subscription?.data?.subscription?.unsubscribe?.();clear();}});
+  return Object.freeze({list:(account,relationship)=>list(account,relationship),relationships:account=>list(account,null,true),invalidate:()=>{sequence++;},dispose:()=>{disposed=true;subscription?.data?.subscription?.unsubscribe?.();clear();}});
  }
  const api=Object.freeze({create,valid});if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.StorybookRelationshipStore=api;
 })(typeof globalThis==='undefined'?this:globalThis);
