@@ -45,8 +45,11 @@ reset role;update public.story_seeds set source_occurred_at='2026-02-01';set loc
 do $$begin if pg_temp.review()->>'fingerprint'=current_setting('test.caption_hash') then raise exception 'FAIL original date not bound';end if;end$$;
 reset role;insert into public.heart_stone_memberships values('22222222-0000-4000-8000-000000000001','11111111-0000-4000-8000-000000000003','active');set local role authenticated;
 do $$begin if jsonb_array_length(pg_temp.review()->'participants')<>3 or (pg_temp.review()->>'allApproved')::boolean then raise exception 'FAIL changed roster';end if;end$$;
+select set_config('test.before_leave',pg_temp.review()->>'fingerprint',true);
 reset role;update public.heart_stone_memberships set status='left' where user_id='11111111-0000-4000-8000-000000000002';set local role authenticated;
 do $$begin begin perform pg_temp.review();raise exception 'FAIL former member';exception when insufficient_privilege then null;end;end$$;
+reset role;update public.heart_stone_memberships set status='active' where user_id='11111111-0000-4000-8000-000000000002';set local role authenticated;
+do $$begin if pg_temp.review()->>'fingerprint'=current_setting('test.before_leave') or (pg_temp.review()->>'allApproved')::boolean then raise exception 'FAIL rejoin resurrected consent';end if;end$$;
 set local role anon;
 do $$begin begin perform public.review_relationship_storybook_consent('11111111-0000-4000-8000-000000000001','33333333-0000-4000-8000-000000000001','include');raise exception 'FAIL anon';exception when insufficient_privilege then null;end;end$$;
 reset role;
