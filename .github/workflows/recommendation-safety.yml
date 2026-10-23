@@ -5,6 +5,8 @@ on:
       - 'storybook-preview.html'
       - 'storybook-preview.js'
       - 'test-storybook-browser.cjs'
+      - 'storybook-account-store.js'
+      - 'test-storybook-account-store.cjs'
       - 'storybook-drafts.js'
       - 'test-storybook-drafts.cjs'
       - 'recommendation-safety.js'
@@ -32,6 +34,8 @@ on:
       - 'storybook-preview.html'
       - 'storybook-preview.js'
       - 'test-storybook-browser.cjs'
+      - 'storybook-account-store.js'
+      - 'test-storybook-account-store.cjs'
       - 'storybook-drafts.js'
       - 'test-storybook-drafts.cjs'
       - 'recommendation-safety.js'
@@ -56,6 +60,7 @@ jobs:
         with:
           node-version: '22'
       - run: node test-storybook-drafts.cjs
+      - run: node test-storybook-account-store.cjs
       - run: node test-recommendation-safety.cjs
       - run: node test-recommendation-inputs.cjs
       - run: node test-safe-adventure-discovery.cjs
