@@ -18,6 +18,8 @@ on:
       - 'test-adventure-profile-flow.cjs'
       - 'adventure-profile-view.js'
       - 'test-adventure-profile-view.cjs'
+      - 'adventure-profile-preview.html'
+      - 'test-adventure-profile-browser-load.cjs'
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
@@ -25,6 +27,8 @@ on:
       - 'recommendation-inputs.js'
       - 'test-recommendation-safety.cjs'
       - 'test-recommendation-inputs.cjs'
+      - 'adventure-profile-preview.html'
+      - 'test-adventure-profile-browser-load.cjs'
       - '.github/workflows/recommendation-safety.yml'
 jobs:
   safety:
@@ -42,3 +46,4 @@ jobs:
       - run: node test-adventure-preferences-setup.cjs
       - run: node test-adventure-profile-flow.cjs
       - run: node test-adventure-profile-view.cjs
+      - run: node test-adventure-profile-browser-load.cjs

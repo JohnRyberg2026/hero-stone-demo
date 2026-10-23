@@ -1,7 +1,7 @@
 'use strict';
 // Explicit first-save path. Caller must be authenticated; RLS remains mandatory.
 const AdventurePreferencesSetup=(()=>{
- const Store=require('./adventure-preferences-store.js');
+ const Store=typeof module!=='undefined'&&module.exports?require('./adventure-preferences-store.js'):AdventurePreferencesStore;
  async function create(client,{boundaries={},interests=[]}={}){
   if(!Store.valid(boundaries)||!Array.isArray(interests)||!interests.every(x=>typeof x==='string'&&x.length<=80))return {created:false,reason:'invalid_input'};
   if(!client?.auth?.getUser)return {created:false,reason:'signed_out'};

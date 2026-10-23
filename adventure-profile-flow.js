@@ -1,8 +1,8 @@
 'use strict';
 // Orchestrates first-time vs returning-user profile flow without implicit writes.
 const AdventureProfileFlow=(()=>{
- const Store=require('./adventure-preferences-store.js');
- const Setup=require('./adventure-preferences-setup.js');
+ const Store=typeof module!=='undefined'&&module.exports?require('./adventure-preferences-store.js'):AdventurePreferencesStore;
+ const Setup=typeof module!=='undefined'&&module.exports?require('./adventure-preferences-setup.js'):AdventurePreferencesSetup;
  async function load(client){
   const result=await Store.read(client);
   if(result.ready)return {state:'returning',profile:result.profile,boundaries:result.boundaries,interests:result.interests};
