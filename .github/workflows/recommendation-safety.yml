@@ -156,7 +156,7 @@ jobs:
     timeout-minutes: 10
     services:
       postgres:
-        image: postgres:16
+        image: postgres:17
         env:
           POSTGRES_PASSWORD: fictional-ci-only
           POSTGRES_DB: storybook_test
@@ -171,7 +171,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - name: Check private drafts in disposable PostgreSQL
+      - name: Check private drafts and consent in disposable PostgreSQL 17
         env:
           PGPASSWORD: fictional-ci-only
         run: |
