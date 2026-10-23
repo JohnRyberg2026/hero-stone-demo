@@ -2,6 +2,8 @@ name: Recommendation safety checks
 on:
   push:
     paths:
+      - 'storybook-account-ui.js'
+      - 'test-storybook-account-browser.cjs'
       - 'storybook-preview.html'
       - 'storybook-preview.js'
       - 'test-storybook-browser.cjs'
@@ -33,6 +35,8 @@ on:
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
+      - 'storybook-account-ui.js'
+      - 'test-storybook-account-browser.cjs'
       - 'storybook-preview.html'
       - 'storybook-preview.js'
       - 'test-storybook-browser.cjs'
@@ -89,6 +93,7 @@ jobs:
           done
           node test-adventure-profile-browser.cjs
           node test-storybook-browser.cjs
+          node test-storybook-account-browser.cjs
   storybook-database:
     runs-on: ubuntu-latest
     timeout-minutes: 10
