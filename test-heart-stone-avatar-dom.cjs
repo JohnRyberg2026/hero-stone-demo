@@ -1,16 +1,17 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM}=require('jsdom');
 (async()=>{
- const html=fs.readFileSync('heart-stone-avatar-voice-preview.html','utf8');
+ const html=fs.readFileSync(process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html','utf8');
  const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,url:'http://localhost/'}),w=dom.window,d=w.document;
  const voices=[{name:'Test English voice',lang:'en-US',localService:true}],spoken=[],animations=new Set();let cancellations=0;
  const media={matches:false,addEventListener(){},removeEventListener(){}};w.matchMedia=()=>media;
  w.speechSynthesis={getVoices:()=>voices,speak:u=>spoken.push(u.text),cancel:()=>cancellations++,addEventListener(){},removeEventListener(){}};
  w.SpeechSynthesisUtterance=function(text){this.text=text;};
  w.Element.prototype.animate=function(){const a={target:this,cancel(){animations.delete(a);}};animations.add(a);return a;};
- for(const tag of d.querySelectorAll('script[src]'))w.eval(fs.readFileSync(tag.getAttribute('src'),'utf8'));
+ for(const tag of d.querySelectorAll('script[src*="heart-stone"]'))w.eval(fs.readFileSync(tag.getAttribute('src'),'utf8'));
  const $=s=>d.querySelector(s),click=s=>$(s).click(),tick=()=>new Promise(r=>setImmediate(r));
  function enable(){const checkbox=$('[data-enable]');checkbox.checked=true;checkbox.dispatchEvent(new w.Event('change'));$('select').value='0';$('select').dispatchEvent(new w.Event('change'));}
+ if(process.env.AVATAR_WELCOME){assert.equal(d.querySelectorAll('nav a').length,4);assert.equal(d.querySelector('body').dataset.questAudience,'date');assert(d.querySelector('script[src^="quest-access.js"]'));}
  assert.equal(d.querySelectorAll('svg').length,1);assert($('#avatarSettings').hidden);assert.equal(spoken.length,0);assert.equal(animations.size,0);
  click('#avatarSettingsToggle');assert(!$('#avatarSettings').hidden);enable();click('[data-play]');click('#avatarMotionPreview button');assert.equal(spoken.length,1);assert.equal(animations.size,1);assert.equal([...animations][0].target,$('#meetHeartStone svg'));
  click('#avatarSettingsToggle');assert($('#avatarSettings').hidden);assert.equal(animations.size,0);assert.equal(cancellations,1);assert(!$('[data-enable]').checked);

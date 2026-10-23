@@ -24,9 +24,11 @@ jobs:
           node test-heart-stone-avatar-voice.cjs
           node test-heart-stone-avatar-motion.cjs
           node test-heart-stone-avatar-dom.cjs
+          AVATAR_WELCOME=1 node test-heart-stone-avatar-dom.cjs
           python3 -m http.server 8765 > /tmp/avatar-server.log 2>&1 &
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:8765/heart-stone-avatar-voice-preview.html > /dev/null; then break; fi
             sleep 1
           done
           node test-heart-stone-avatar-preview-browser.cjs
+          AVATAR_WELCOME=1 node test-heart-stone-avatar-preview-browser.cjs
