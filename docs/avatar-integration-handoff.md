@@ -25,7 +25,7 @@ https://github.com/JohnRyberg2026/hero-stone-demo/actions/runs/40011697216
 
 A temporary local merge of that narration revision with PR #56 revision `9e6fe839a4879e81ac7fd8b9fee173770ceac910` had no conflicts. All 28 application component suites plus both avatar suites passed together. This does not certify compatibility with later upstream revisions. The trial merge was not published and PR #56 was not changed.
 
-Browser speech is simulated in automated tests. Actual audible output, female-voice availability, mobile browser speech behavior and real back/forward-cache restoration still require device checks. The movement preview currently uses a separate demonstration figure; it is not a finished single-character in-app integration.
+Browser speech is simulated in automated tests. Actual audible output, female-voice availability, mobile browser speech behavior and real back/forward-cache restoration still require device checks. The rehearsal now moves the existing companion figure within its own stationary button; there is only one character. The shared companion’s older playful-motion controls are hidden on this preview so the two animation controls cannot compete. This is still a standalone rehearsal, not an application-page installation.
 
 ## Before application integration
 

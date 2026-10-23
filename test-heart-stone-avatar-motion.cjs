@@ -3,7 +3,7 @@ let canceled=0,started=0;
 const button={textContent:'',disabled:false,setAttribute(k,v){this[k]=v;}},status={};
 const figure={animate(){started++;return{cancel(){canceled++;}};}};
 const reduced={matches:false,addEventListener(k,fn){this.change=fn;},removeEventListener(){}};
-const doc={hidden:false,getElementById:()=>({querySelector:s=>s==='button'?button:s==='svg'?figure:status}),addEventListener(k,fn){this[k]=fn;},removeEventListener(){}};
+const doc={hidden:false,getElementById:id=>id==='meetHeartStone'?{querySelector:()=>figure}:{querySelector:s=>s==='button'?button:status},addEventListener(k,fn){this[k]=fn;},removeEventListener(){}};
 const win={addEventListener(k,fn){this[k]=fn;}};
 vm.runInNewContext(fs.readFileSync('heart-stone-avatar-motion.js','utf8'),{document:doc,window:win,matchMedia:()=>reduced});
 assert.equal(started,0);button.onclick();assert.equal(started,1);assert.equal(button['aria-pressed'],'true');button.onclick();assert.equal(canceled,1);

@@ -3,7 +3,8 @@
  'use strict';
  const host=document.getElementById('avatarMotionPreview');if(!host)return;
  const button=host.querySelector('button'),status=host.querySelector('[role=status]');
- const figure=host.querySelector('svg'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const figure=document.getElementById('meetHeartStone')?.querySelector('svg');if(!figure)return;
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  let animation=null;
  function stop(message='HEART STONE is resting.'){const current=animation;animation=null;current?.cancel();button.textContent='Take a little stroll';button.setAttribute('aria-pressed','false');status.textContent=message;}
  function sync(){stop(reduced.matches?'Your reduced-motion setting keeps HEART STONE still.':'HEART STONE is resting.');button.disabled=reduced.matches||typeof figure.animate!=='function';}
