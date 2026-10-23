@@ -2,6 +2,8 @@ name: Recommendation safety checks
 on:
   push:
     paths:
+      - 'heart-stone-welcome-preview.html'
+      - 'test-heart-stone-welcome-browser.cjs'
       - 'heart-stone-companion.js'
       - 'test-heart-stone-companion-browser.cjs'
       - 'storybook-account-ui.js'
@@ -37,6 +39,8 @@ on:
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
+      - 'heart-stone-welcome-preview.html'
+      - 'test-heart-stone-welcome-browser.cjs'
       - 'heart-stone-companion.js'
       - 'test-heart-stone-companion-browser.cjs'
       - 'storybook-account-ui.js'
@@ -99,6 +103,7 @@ jobs:
           node test-storybook-browser.cjs
           node test-storybook-account-browser.cjs
           node test-heart-stone-companion-browser.cjs
+          node test-heart-stone-welcome-browser.cjs
   storybook-database:
     runs-on: ubuntu-latest
     timeout-minutes: 10
