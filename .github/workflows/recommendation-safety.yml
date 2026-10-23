@@ -20,6 +20,7 @@ on:
       - 'test-adventure-profile-view.cjs'
       - 'adventure-profile-preview.html'
       - 'test-adventure-profile-browser-load.cjs'
+      - 'test-adventure-profile-browser.cjs'
       - '.github/workflows/recommendation-safety.yml'
   pull_request:
     paths:
@@ -29,13 +30,19 @@ on:
       - 'test-recommendation-inputs.cjs'
       - 'adventure-profile-preview.html'
       - 'test-adventure-profile-browser-load.cjs'
+      - 'test-adventure-profile-browser.cjs'
       - '.github/workflows/recommendation-safety.yml'
+permissions:
+  contents: read
 jobs:
   safety:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
       - run: node test-recommendation-safety.cjs
@@ -47,3 +54,17 @@ jobs:
       - run: node test-adventure-profile-flow.cjs
       - run: node test-adventure-profile-view.cjs
       - run: node test-adventure-profile-browser-load.cjs
+      - name: Install browser runtime
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Browser profile isolation checks
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/profile-preview-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8765/adventure-profile-preview.html >/dev/null; then break; fi
+            sleep 0.25
+          done
+          node test-adventure-profile-browser.cjs
