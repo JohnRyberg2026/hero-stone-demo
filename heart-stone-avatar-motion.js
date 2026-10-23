@@ -21,5 +21,6 @@
  document.addEventListener('keydown',event=>{if(event.key==='Escape')stop();});
  // A cached page may return; preserve its reduced-motion and visibility listeners.
  window.addEventListener('pagehide',()=>stop());
+ document.addEventListener('heartstone:quiet',()=>stop());
  sync();
 })();

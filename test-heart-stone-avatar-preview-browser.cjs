@@ -13,7 +13,7 @@ const {chromium}=require('playwright');
   assert.equal(await page.evaluate(()=>__spoken.length),0);assert.equal(await page.evaluate(()=>document.getAnimations().length),0);
   assert(await page.locator('[data-play]').isDisabled());await page.locator('[data-enable]').check();assert(await page.locator('[data-play]').isDisabled());
   await page.locator('select').selectOption('0');await page.locator('[data-play]').click();assert.equal(await page.evaluate(()=>__spoken.length),1);
-  await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>__cancels),1);
+  await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>__cancels),1);await page.locator('[data-enable]').check();await page.locator('select').selectOption('0');
   await page.locator('[data-play]').click();await page.locator('[data-enable]').uncheck();assert.equal(await page.evaluate(()=>__cancels),2);
   const stroll=page.locator('#avatarMotionPreview button');await stroll.click();assert.equal(await stroll.getAttribute('aria-pressed'),'true');assert.equal(await page.evaluate(()=>document.getAnimations().length),1);
   await stroll.click();assert.equal(await page.evaluate(()=>document.getAnimations().length),0);
@@ -27,6 +27,12 @@ const {chromium}=require('playwright');
   await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));
   await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>document.querySelector('#avatarMotionPreview button').disabled);await page.emulateMedia({reducedMotion:'no-preference'});
   await page.locator('[data-enable]').check();await page.locator('select').selectOption('0');await page.locator('[data-play]').click();assert.equal(await page.evaluate(()=>__spoken.length),4);await page.locator('[data-stop]').click();
+  // Quiet and hide must stop all three independent preview behaviors.
+  await stroll.click();await page.locator('[data-play]').click();await page.locator('#heartStoneMotion').click();
+  await page.locator('#avatarQuiet').click();assert.equal(await page.evaluate(()=>document.getAnimations().length),0);assert(!(await page.locator('[data-enable]').isChecked()));assert(await page.locator('[data-play]').isDisabled());assert.equal(await page.locator('#heartStoneMotion').getAttribute('aria-pressed'),'false');
+  await page.locator('[data-enable]').check();await page.locator('select').selectOption('0');await page.locator('[data-play]').click();await stroll.click();
+  await page.locator('#hideHeartStone').click();assert.equal(await page.evaluate(()=>document.getAnimations().length),0);assert(!(await page.locator('#avatarVoicePreview').isVisible()));assert(!(await page.locator('#avatarMotionPreview').isVisible()));
+  const spokenBeforeRestore=await page.evaluate(()=>__spoken.length);await page.locator('#restoreHeartStone').click();assert(await page.locator('#avatarVoicePreview').isVisible());assert(await page.locator('#avatarMotionPreview').isVisible());assert(!(await page.locator('[data-enable]').isChecked()));assert.equal(await page.evaluate(()=>__spoken.length),spokenBeforeRestore);assert.equal(await page.evaluate(()=>document.getAnimations().length),0);
   for(const width of [320,390,1280]){await page.setViewportSize({width,height:844});assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)));}
   assert.equal(errors.length,0,errors.join(';'));console.log('PASS avatar preview: explicit voice opt-in, selection, Escape/disable, motion pause/finish, reduced motion and responsive widths. Speech engine simulated; audible output not tested.');
  }finally{await browser.close();}
