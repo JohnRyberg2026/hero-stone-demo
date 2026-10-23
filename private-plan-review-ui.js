@@ -8,10 +8,10 @@
  $('reviewPrivatePlan').onclick=async()=>{
   if(busy)return;busy=true;$('reviewPrivatePlan').disabled=true;$('privatePlanFindings').replaceChildren();$('privatePlanStatus').textContent='Checking your own saved preferences…';
   try{
-   let plan;window.dispatchEvent(new CustomEvent('heartstone:review-plan',{detail:{respond:value=>plan=value}}));
+   const version=epoch;let plan;window.dispatchEvent(new CustomEvent('heartstone:review-plan',{detail:{respond:value=>plan=value}}));
    if(!plan){$('privatePlanStatus').textContent='Check the open plan fields before reviewing.';return;}
-   const api=await connect(),auth=await api.auth.getUser();if(auth.error||!auth.data?.user){clear();$('privatePlanStatus').textContent='Sign in through HEART STONE first. No review was completed.';return;}
-   owner=auth.data.user.id;const expected=owner,version=epoch,profile=await AdventurePreferencesStore.read(api);
+   const api=await connect(),auth=await api.auth.getUser();if(version!==epoch)return;if(auth.error||!auth.data?.user){clear();$('privatePlanStatus').textContent='Sign in through HEART STONE first. No review was completed.';return;}
+   owner=auth.data.user.id;const expected=owner,profile=await AdventurePreferencesStore.read(api);
    if(version!==epoch||owner!==expected)return;
    const result=PrivatePlanReview.review({accountId:expected,profile,plan,catalog:LocalDateCatalog});
    if(result.status==='unavailable'){$('privatePlanStatus').textContent='Saved preferences could not be confirmed. No cached preferences were used.';return;}
