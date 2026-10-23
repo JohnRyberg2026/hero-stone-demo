@@ -33,6 +33,12 @@ on:
       - 'test-adventure-profile-flow.cjs'
       - 'adventure-profile-view.js'
       - 'test-adventure-profile-view.cjs'
+      - 'private-plan-review.js'
+      - 'private-plan-review-ui.js'
+      - 'test-private-plan-review.cjs'
+      - 'test-private-plan-review-browser.cjs'
+      - 'date-store.html'
+      - 'local-date-builder.js'
       - 'adventure-profile-screen.js'
       - 'database/adventure-preferences-guard.sql'
       - 'database/test-adventure-preferences-isolated.sql'
@@ -63,6 +69,12 @@ on:
       - 'recommendation-inputs.js'
       - 'test-recommendation-safety.cjs'
       - 'test-recommendation-inputs.cjs'
+      - 'private-plan-review.js'
+      - 'private-plan-review-ui.js'
+      - 'test-private-plan-review.cjs'
+      - 'test-private-plan-review-browser.cjs'
+      - 'date-store.html'
+      - 'local-date-builder.js'
       - 'adventure-profile-screen.js'
       - 'database/adventure-preferences-guard.sql'
       - 'database/test-adventure-preferences-isolated.sql'
@@ -85,6 +97,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
+      - run: node test-private-plan-review.cjs
       - run: node test-storybook-drafts.cjs
       - run: node test-storybook-account-store.cjs
       - run: node test-recommendation-safety.cjs
@@ -115,6 +128,7 @@ jobs:
           node test-heart-stone-companion-browser.cjs
           node test-heart-stone-welcome-browser.cjs
           node test-profile-planning-journey-browser.cjs
+          node test-private-plan-review-browser.cjs
   storybook-database:
     runs-on: ubuntu-latest
     timeout-minutes: 10
