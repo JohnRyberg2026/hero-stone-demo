@@ -18,5 +18,5 @@
  quietButton.onclick=quiet;
  document.getElementById('hideHeartStone')?.addEventListener('click',()=>{quiet();setSettings(false);if(settingsToggle)settingsToggle.hidden=true;voice.hidden=true;motion.hidden=true;});
  document.getElementById('restoreHeartStone')?.addEventListener('click',()=>{voice.hidden=false;motion.hidden=false;if(settingsToggle)settingsToggle.hidden=false;});
- document.addEventListener('keydown',event=>{if(event.key==='Escape'){quiet();const focusInside=settings?.contains(document.activeElement);setSettings(false);if(focusInside)settingsToggle?.focus();}});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'){const focusInside=settings?.contains(document.activeElement);quiet();setSettings(false);if(focusInside)settingsToggle?.focus();}});
 })();
