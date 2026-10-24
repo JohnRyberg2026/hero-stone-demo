@@ -191,3 +191,4 @@ jobs:
           node tools/test-shared-date-concurrency.cjs
           psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-relationship-reader-isolated.sql
           psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-consent-ledger-isolated.sql
+          node tools/test-storybook-consent-concurrency.cjs

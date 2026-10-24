@@ -73,7 +73,22 @@ do $$begin
  begin insert into public.storybook_volumes(id,heart_stone_id,title,state) values(gen_random_uuid(),'22222222-0000-4000-8000-000000000001','Fictional direct insert','published');raise exception 'FAIL insert bypass';exception when feature_not_supported then null;end;
  begin update public.storybook_entries set caption='Changed published text' where id='55555555-0000-4000-8000-000000000002';raise exception 'FAIL published entry write';exception when insufficient_privilege then null;end;
  begin update public.story_seeds set source_occurred_at='2026-03-01';raise exception 'FAIL published source write';exception when insufficient_privilege then null;end;
+
+ begin insert into public.storybook_entries values(gen_random_uuid(),'33333333-0000-4000-8000-000000000002',null,'Unreviewed addition');raise exception 'FAIL published entry insert';exception when insufficient_privilege then null;end;
+ begin delete from public.storybook_entries where id='55555555-0000-4000-8000-000000000002';raise exception 'FAIL published entry delete';exception when insufficient_privilege then null;end;
+ begin update public.storybook_entries set volume_id='33333333-0000-4000-8000-000000000002' where id='55555555-0000-4000-8000-000000000001';raise exception 'FAIL move into published book';exception when insufficient_privilege then null;end;
+ begin delete from public.story_seeds where id='44444444-0000-4000-8000-000000000001';raise exception 'FAIL published source delete';exception when insufficient_privilege then null;end;
+ begin update public.storybook_volumes set title='Unreviewed title' where id='33333333-0000-4000-8000-000000000002';raise exception 'FAIL published title write';exception when insufficient_privilege then null;end;
+ begin update public.storybook_volumes set state='draft' where id='33333333-0000-4000-8000-000000000002';raise exception 'FAIL direct published-to-draft';exception when insufficient_privilege then null;end;
  if not exists(select from public.storybook_volumes where id='33333333-0000-4000-8000-000000000002' and state='published') then raise exception 'FAIL historical book changed';end if;
+end$$;
+-- Archiving is allowed; editing an archived volume must not silently republish it.
+update public.storybook_volumes set state='archived' where id='33333333-0000-4000-8000-000000000002';
+update public.storybook_entries set caption='Explicitly edited archived text' where id='55555555-0000-4000-8000-000000000002';
+update public.story_seeds set source_occurred_at='2026-03-01';
+do $$begin
+ if not exists(select from public.storybook_volumes where id='33333333-0000-4000-8000-000000000002' and state='archived') then raise exception 'FAIL archive path';end if;
+ begin update public.storybook_volumes set state='published' where id='33333333-0000-4000-8000-000000000002';raise exception 'FAIL archived republish bypass';exception when insufficient_privilege then null;end;
 end$$;
 rollback;
 select 'PASS: server-derived exact-version consent ledger, independent/action-scoped responses, withdrawal, content/date/roster invalidation, private ledger and no execution; rolled back' as result;
