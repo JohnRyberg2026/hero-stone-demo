@@ -1,0 +1,28 @@
+{
+  "status": "SAVE AND LOCK \u2014 tested avatar development checkpoint; not deployed",
+  "date": "2026-10-23",
+  "repository": "JohnRyberg2026/hero-stone-demo",
+  "avatar_pr": 57,
+  "avatar_commit": "7957ac4ec32513d3cfbc6340bd65e4636d2ee63b",
+  "application_pr": 56,
+  "application_reference_only": "d4767e9cd3a5e55c5296cf60bb5643f9827f735f",
+  "passing_avatar_run": "https://github.com/JohnRyberg2026/hero-stone-demo/actions/runs/40013304228",
+  "sha256": {
+    "heart-stone-avatar-controls.js": "6f8a3f3f31d4c85fa5a34d10454a0a90ecda5d686fd60192c27d3d2cfa6a9dc4",
+    "heart-stone-avatar-motion.js": "c7b8e55ad14cc92a9f182d8fd8b5a7d9c482913f4f3b9989a68e8347db245910",
+    "heart-stone-avatar-voice.js": "b011ff3a146463ceecffc1d77a8d4752e7a4973f8e507b24bf74238da2aeed3b",
+    "heart-stone-avatar-voice-preview.html": "a8d93c795060661bc9eb7291a3b4d6ce87d701001b4e8a78b515626be992b105",
+    "test-heart-stone-avatar-dom.cjs": "0a27bc29ae95007589a3a37c3424a38401a2e21741fb534e12705bb6036ce269",
+    "test-heart-stone-avatar-motion.cjs": "948487a512e04153de08bce8e59719bcfd384014b330984602013f40e7111178",
+    "test-heart-stone-avatar-voice.cjs": "785c2d5b29ad560981fdabb15e214a2f8afff31aff856a809e0be225f98eb0ce",
+    "test-heart-stone-avatar-preview-browser.cjs": "0f687bbf717a8d4cfdc736eb9441736e50360430951a18e49c0f1b109e5891d4",
+    ".github/workflows/avatar-rehearsal.yml": "a2a9a9b47daa9dab269cb5245e73504662a7c1f185ed82277b016f5a69246a98",
+    "docs/avatar-integration-handoff.md": "f24ad04bdb6b497d03b9e63a68d1d7c314fbaffd1f9b59a6cac694bf49366ee2"
+  },
+  "limits": [
+    "Application branch remains independently editable.",
+    "No merge, deployment or database installation.",
+    "Speech simulated in automated tests; audible device checks pending.",
+    "Checkpoint precedes application-page integration."
+  ]
+}
