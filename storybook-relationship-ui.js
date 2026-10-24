@@ -1,8 +1,8 @@
 (function(){
  'use strict';
- const $=id=>document.getElementById(id);let checkedConsent=null;let consentStore=null,consentVersion=0,consentPending=false;let store=null,account=null,version=0,pending=false,personalBusy=false;
- function resetConsent(clearBooks=true){checkedConsent=null;consentVersion++;consentPending=false;consentStore?.invalidate();if(clearBooks){$('consentBook').replaceChildren(new Option('Choose a listed book',''));$('consentAction').value='';}$('bookConsentStatus').textContent='No consent status checked.';}
- function controls(){ $('withdrawBookConsent').disabled=!account||pending||personalBusy||consentPending||checkedConsent?.ownResponse!=='approved'; $('consentBook').disabled=!account||pending||personalBusy||!$('consentBook').options[1];$('consentAction').disabled=!account||pending||personalBusy;$('checkBookConsent').disabled=!account||pending||personalBusy||consentPending||!$('consentBook').value||!$('consentAction').value; $('refreshBookRelationships').disabled=!account||pending||personalBusy;$('bookRelationship').disabled=!account||personalBusy;$('listRelationshipBooks').disabled=!account||!$('bookRelationship').value||pending||personalBusy; }
+ const $=id=>document.getElementById(id);let consentWriting=false;const unavailable=()=>navigator.onLine===false||document.hidden;let checkedConsent=null;let consentStore=null,consentVersion=0,consentPending=false;let store=null,account=null,version=0,pending=false,personalBusy=false;
+ function resetConsent(clearBooks=true){consentWriting=false;checkedConsent=null;consentVersion++;consentPending=false;consentStore?.invalidate();if(clearBooks){$('consentBook').replaceChildren(new Option('Choose a listed book',''));$('consentAction').value='';}$('bookConsentStatus').textContent='No consent status checked.';}
+ function controls(){ $('withdrawBookConsent').disabled=unavailable()||!account||pending||personalBusy||consentPending||checkedConsent?.ownResponse!=='approved'; $('consentBook').disabled=!account||pending||personalBusy||!$('consentBook').options[1];$('consentAction').disabled=!account||pending||personalBusy;$('checkBookConsent').disabled=unavailable()||!account||pending||personalBusy||consentPending||!$('consentBook').value||!$('consentAction').value; $('refreshBookRelationships').disabled=!account||pending||personalBusy;$('bookRelationship').disabled=!account||personalBusy;$('listRelationshipBooks').disabled=!account||!$('bookRelationship').value||pending||personalBusy; }
  function clear(){resetConsent();version++;account=null;pending=false;store?.invalidate();$('bookRelationship').replaceChildren(new Option('Choose a relationship',''));$('relationshipBookList').replaceChildren();$('relationshipBookStatus').textContent='Account changed. Connect again to view relationship books.';controls();}
  window.addEventListener('storybook:account-cleared',clear);
  window.addEventListener('storybook:controls',event=>{personalBusy=event.detail.busy;controls();});
@@ -24,7 +24,7 @@
  $('consentBook').onchange=$('consentAction').onchange=()=>{resetConsent(false);controls();};
  $('checkBookConsent').onclick=async()=>{
   const book=$('consentBook').value,relationship=$('bookRelationship').value,action=$('consentAction').value;
-  if(!account||!book||!relationship||!action||pending||personalBusy||consentPending)return;
+  if(unavailable()||!account||!book||!relationship||!action||pending||personalBusy||consentPending)return;
   checkedConsent=null;const token=++consentVersion,owner=account;consentPending=true;controls();$('bookConsentStatus').textContent='Checking current consent status…';
   const result=await consentStore.review(owner,book,relationship,action);
   if(token!==consentVersion||owner!==account||book!==$('consentBook').value||relationship!==$('bookRelationship').value||action!==$('consentAction').value)return;
@@ -34,13 +34,19 @@
   controls();
  };
  $('withdrawBookConsent').onclick=async()=>{
-  if(!account||pending||personalBusy||consentPending||checkedConsent?.ownResponse!=='approved')return;
+  if(unavailable()||!account||pending||personalBusy||consentPending||checkedConsent?.ownResponse!=='approved')return;
   const book=$('consentBook').value,relationship=$('bookRelationship').value,action=$('consentAction').value,fingerprint=checkedConsent.fingerprint,owner=account;
   if(!window.confirm('Withdraw your recorded approval for this book version and selected action? This does not remove copies already shared or exported.'))return;
-  checkedConsent=null;const token=++consentVersion;consentPending=true;controls();$('bookConsentStatus').textContent='Requesting withdrawal…';
+  checkedConsent=null;const token=++consentVersion;consentPending=true;consentWriting=true;controls();$('bookConsentStatus').textContent='Requesting withdrawal…';
   const result=await consentStore.withdraw(owner,book,relationship,action,fingerprint);
   if(token!==consentVersion||owner!==account)return;
-  consentPending=false;$('bookConsentStatus').textContent=result.ok?'Your approval was withdrawn for this version and action. Publication and export remain unavailable.':'Withdrawal could not be confirmed; it may have been recorded. Check consent status again before trying another withdrawal.';controls();
+  consentPending=false;consentWriting=false;$('bookConsentStatus').textContent=result.ok?'Your approval was withdrawn for this version and action. Publication and export remain unavailable.':'Withdrawal could not be confirmed; it may have been recorded. Check consent status again before trying another withdrawal.';controls();
  };
+ function expireConsent(){
+  if(!account)return;const uncertain=consentWriting;resetConsent(false);
+  $('bookConsentStatus').textContent=uncertain?'A withdrawal request may have completed. Reconnect and check consent status before trying again.':'Consent status is out of date. Check again when this page is visible and connected.';controls();
+ }
+ document.addEventListener('visibilitychange',expireConsent);
+ for(const event of ['pagehide','pageshow','offline','online'])window.addEventListener(event,expireConsent);
  controls();
 })();
