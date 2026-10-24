@@ -42,11 +42,24 @@
  const changed=()=>{engine.stop();updateStep();};
  if(guide&&message){new MutationObserver(changed).observe(message,{childList:true,subtree:true,characterData:true});new MutationObserver(changed).observe(guide,{attributes:true,attributeFilter:['hidden']});}
  let available=[];
- function refresh(){available=engine.voices();select.replaceChildren(new Option('Choose a voice',''));available.forEach((v,i)=>select.add(new Option(v.name+' ('+v.lang+')'+(v.localService?' — on device':' — may use an online service'),String(i))));select.value='';engine.select(null);play.disabled=true;updateStep();}
+ function voiceKey(v){return v?JSON.stringify([v.voiceURI||'',v.name,v.lang,!!v.localService]):'';}
+ function availability(){
+  select.disabled=!toggle.checked||available.length===0;
+  play.disabled=!toggle.checked||select.value==='';updateStep();
+  if(available.length===0)status.textContent='No English voices are available yet. You can continue silently; voices will appear here if your browser loads them.';
+ }
+ function refresh(){
+  const previous=select.value===''?'':voiceKey(available[Number(select.value)]);
+  available=engine.voices();select.replaceChildren(new Option('Choose a voice',''));
+  available.forEach((v,i)=>select.add(new Option(v.name+' ('+v.lang+')'+(v.localService?' — on device':' — may use an online service'),String(i))));
+  const index=previous?available.findIndex(v=>voiceKey(v)===previous):-1;
+  select.value=index<0?'':String(index);engine.select(index<0?null:available[index]);availability();
+  if(previous&&index<0&&available.length)status.textContent='Your selected voice is no longer available. Choose another voice to listen.';
+ }
  toggle.disabled=!engine.supported;select.disabled=true;play.disabled=true;stop.disabled=!engine.supported;
  if(!engine.supported)status.textContent='Voice is unavailable in this browser. HEART STONE remains silent.';
- toggle.onchange=()=>{engine.enable(toggle.checked);select.disabled=!toggle.checked;if(!toggle.checked){select.value='';engine.select(null);}play.disabled=!toggle.checked||select.value==='';updateStep();};
- select.onchange=()=>{engine.select(available[Number(select.value)]&&select.value!==''?available[Number(select.value)]:null);play.disabled=!toggle.checked||select.value==='';updateStep();};
+ toggle.onchange=()=>{engine.enable(toggle.checked);if(!toggle.checked){select.value='';engine.select(null);}availability();};
+ select.onchange=()=>{engine.select(available[Number(select.value)]&&select.value!==''?available[Number(select.value)]:null);availability();};
  play.onclick=()=>engine.speak();stop.onclick=()=>engine.stop();
  const visibility=()=>{if(document.hidden)engine.stop();};
  document.addEventListener('visibilitychange',visibility);

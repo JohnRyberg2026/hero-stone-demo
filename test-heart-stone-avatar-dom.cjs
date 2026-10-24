@@ -3,9 +3,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM}=require
 (async()=>{
  const html=fs.readFileSync(process.env.AVATAR_WELCOME==='actual'?'heart-stone-welcome-preview.html':process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html','utf8');
  const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,url:'http://localhost/'}),w=dom.window,d=w.document;
- const voices=[{name:'Test English voice',lang:'en-US',localService:true}],spoken=[],animations=new Set();let cancellations=0;
+ const voices=[{name:'Test English voice',lang:'en-US',localService:true}],spoken=[],animations=new Set();let cancellations=0,voicesChanged;
  const media={matches:false,addEventListener(){},removeEventListener(){}};w.matchMedia=()=>media;
- w.speechSynthesis={getVoices:()=>voices,speak:u=>spoken.push(u.text),cancel:()=>cancellations++,addEventListener(){},removeEventListener(){}};
+ w.speechSynthesis={getVoices:()=>voices,speak:u=>spoken.push(u.text),cancel:()=>cancellations++,addEventListener(name,fn){if(name==='voiceschanged')voicesChanged=fn;},removeEventListener(){}};
  w.SpeechSynthesisUtterance=function(text){this.text=text;};
  w.Element.prototype.animate=function(){const a={target:this,cancel(){animations.delete(a);}};animations.add(a);return a;};
  for(const tag of d.querySelectorAll('script[src*="heart-stone"]'))w.eval(fs.readFileSync(tag.getAttribute('src'),'utf8'));
@@ -21,5 +21,10 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM}=require
  click('#closeHeartStoneGuide');await tick();assert(hear.disabled);click('#meetHeartStone');await tick();$('#heartStoneGuideMessage').textContent='Private notes';await tick();assert(hear.disabled);const privateBefore=spoken.length;hear.click();assert.equal(spoken.length,privateBefore);
  enable();click('[data-play]');click('#avatarMotionPreview button');click('#hideHeartStone');assert($('#avatarSettings').hidden);assert($('#avatarSettingsToggle').hidden);assert.equal(animations.size,0);assert(!$('[data-enable]').checked);const hiddenCount=spoken.length;click('#restoreHeartStone');assert($('#avatarSettings').hidden);assert(!$('#avatarSettingsToggle').hidden);assert.equal(spoken.length,hiddenCount);
  click('#avatarSettingsToggle');enable();click('[data-play]');w.dispatchEvent(new w.Event('pagehide'));assert(!$('[data-enable]').checked);assert($('[data-play]').disabled);
+ click('#avatarSettingsToggle');if($('#avatarSettings').hidden)click('#avatarSettingsToggle');enable();const chosen=voices[0];const count=spoken.length;
+ voices.unshift({name:'Another voice',lang:'en-GB',localService:true});voicesChanged();assert.equal($('select').value,'1');click('[data-play]');assert.equal(spoken.length,count+1);
+ voices.splice(1,1);voicesChanged();assert.equal($('select').value,'');assert($('[data-play]').disabled);assert($('#avatarVoicePreview [role=status]').textContent.includes('no longer available'));
+ voices.length=0;voicesChanged();assert($('select').disabled);assert($('#avatarVoicePreview [role=status]').textContent.includes('No English voices'));const emptyCount=spoken.length;
+ voices.push(chosen);voicesChanged();assert(!$('select').disabled);assert.equal($('select').value,'');assert($('[data-play]').disabled);assert.equal(spoken.length,emptyCount);$('select').value='0';$('select').dispatchEvent(new w.Event('change'));click('[data-play]');assert.equal(spoken.length,emptyCount+1);
  dom.window.close();console.log('PASS avatar real-script DOM integration: one figure, coordinated quiet/close, Escape focus, narrated tour, changed-text rejection, hide/restore and page exit. Layout and audio are not tested.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
