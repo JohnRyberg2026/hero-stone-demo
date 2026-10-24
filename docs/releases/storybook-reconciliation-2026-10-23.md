@@ -43,7 +43,7 @@ Opening a book, accepting an invitation, ending an adventure, or belonging to a 
 
 `database/storybook-relationship-reader.sql` proposes a narrow adapter for the older volumes. Its public wrapper does not elevate privileges; a private-schema function checks the authenticated/expected identity, active account and explicitly selected active relationship under row locks. It returns up to 100 summaries containing only ID, title, year, state, scope and relationship ID. It does not return entries, narrative, memories or approval records, change grants on existing tables, create books, transfer content or publish.
 
-The CI-only test reproduces the observed caller-permission-view/base-grant mismatch using a minimal view fixture, then checks the candidate with active, unrelated, former-member, suspended, spoofed and anonymous identities. It is not a clone of all legacy tables/functions/triggers, and the candidate remains uninstalled and unconnected to the UI. Full-baseline staging validation and an owner-account client adapter are still required. No policy widening is proposed.
+The CI-only test reproduces the observed caller-permission-view/base-grant mismatch using a minimal view fixture, then checks the candidate with active, unrelated, former-member, suspended, spoofed and anonymous identities. It is not a clone of all legacy tables/functions/triggers, and the candidate remains uninstalled. The development summary UI and account-scoped adapter are now implemented; full-baseline staging validation is still required. No policy widening is proposed.
 
 ## Approval review — shared contents remain blocked
 
@@ -62,3 +62,8 @@ This is a demonstrated mismatch between the inspected code and the current produ
 Before enabling shared contents or publication, require a server-authoritative contract that binds exact content/source scope, original dates, participant roster, destination/viewer scope and action (contribution, inclusion, publication/export) to a version/fingerprint. Every required person must explicitly approve that same version for the relevant action. A material edit, participant/visibility change, withdrawal or eligibility/access change invalidates the relevant approval; silence is never consent. A private personal-book save is not one of these shared approvals.
 
 Acceptance tests must include: one member's approval is insufficient; missing/declined/withdrawn approvals block; caption/title/source/date/roster/viewer edits invalidate; stale and concurrent approvals cannot authorize a newer version; finalization/publication cannot substitute a shared flag for participant approvals; inaccessible sources and unopened Time Capsules cannot be included. Preserve existing books and records while designing the new ledger/adapter. Do not backfill approval from membership or historic entry flags.
+
+
+## Current handoff — 24 October
+
+See `storybook-staging-plan-2026-10-24.md` for current scope, the catalog-only preflight findings and the full-baseline acceptance matrix. The consent ledger/publication guard, status UI and own-approval withdrawal are review candidates; their availability in source does not resolve the live legacy consent gap.
