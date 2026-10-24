@@ -19,14 +19,10 @@ jobs:
         env:
           NODE_PATH: /tmp/avatar-browser/node_modules
         run: |
-          node test-heart-stone-avatar-voice.cjs
-          node test-heart-stone-avatar-motion.cjs
-          node test-heart-stone-avatar-dom.cjs
-          AVATAR_WELCOME=1 node test-heart-stone-avatar-dom.cjs
-          AVATAR_WELCOME=actual node test-heart-stone-avatar-dom.cjs
+          node tools/check-avatar-release.cjs --dom
       - name: Install headless Chromium
         run: /tmp/avatar-browser/node_modules/.bin/playwright install --only-shell chromium
-      - name: Check standalone and welcome pages in Chromium
+      - name: Check application and avatar browser journeys
         env:
           NODE_PATH: /tmp/avatar-browser/node_modules
         run: |
@@ -35,9 +31,4 @@ jobs:
             if curl --fail --silent http://127.0.0.1:8765/heart-stone-avatar-voice-preview.html > /dev/null; then break; fi
             sleep 1
           done
-          node test-heart-stone-avatar-preview-browser.cjs
-          AVATAR_WELCOME=1 node test-heart-stone-avatar-preview-browser.cjs
-          AVATAR_WELCOME=actual node test-heart-stone-avatar-preview-browser.cjs
-          node test-heart-stone-welcome-browser.cjs
-          node test-heart-stone-avatar-storybook-browser.cjs
-          node test-heart-stone-companion-browser.cjs
+          node tools/check-avatar-release.cjs --browser-only
