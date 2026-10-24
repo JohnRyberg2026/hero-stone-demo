@@ -19,3 +19,12 @@ const broken=createVoice({...synth,speak(){throw Error('unavailable');}},Utteran
 console.log('Avatar voice consent, stop, stale callback, disposal and unavailable-engine checks passed.');
 
 const tour=createVoice(synth,Utterance,()=>{});tour.select(synth.getVoices()[0]);tour.enable(true);assert.equal(tour.speak('Hi, I’m HEART STONE. Would you like help to choose where to begin?'),true);assert.equal(spoken.at(-1).text,'Hi, I’m HEART STONE. Would you like help to choose where to begin?');tour.stop();
+
+// Browser events can arrive after cancellation, or out of order for replaced speech.
+let playbackStates=[],utterances=[];
+const playback=createVoice({...synth,speak:u=>utterances.push(u)},Utterance,s=>playbackStates.push(s));
+playback.select(synth.getVoices()[0]);playback.enable(true);playback.speak();assert.equal(playbackStates.at(-1),'waiting');
+const pending=utterances[0];pending.onstart();assert.equal(playbackStates.at(-1),'speaking');playback.stop();pending.onstart();pending.onerror();pending.onend();assert.equal(playbackStates.at(-1),'silent');
+playback.speak();const superseded=utterances[1];playback.speak();superseded.onstart();superseded.onerror();assert.equal(playbackStates.at(-1),'waiting');
+utterances[2].onerror();assert.equal(playbackStates.at(-1),'error');const calls=utterances.length;playback.speak();assert.equal(utterances.length,calls+1);utterances.at(-1).onstart();assert.equal(playbackStates.at(-1),'speaking');utterances.at(-1).onend();assert.equal(playbackStates.at(-1),'ready');playback.dispose();
+console.log('PASS voice playback: waiting/start/end/error, late callbacks after Stop/replacement, and explicit retry.');

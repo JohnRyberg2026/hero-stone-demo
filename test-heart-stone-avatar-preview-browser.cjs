@@ -5,8 +5,8 @@ const {chromium}=require('playwright');
  try{
   const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{
-   window.__spoken=[];window.__cancels=0;window.__voices=[{name:'Test voice',lang:'en-US',localService:true}];
-   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>window.__voices,speak:u=>window.__spoken.push(u.text),cancel:()=>window.__cancels++,addEventListener(name,fn){if(name==='voiceschanged')window.__voicesChanged=fn;},removeEventListener(){}}});
+   window.__utterances=[];window.__spoken=[];window.__cancels=0;window.__voices=[{name:'Test voice',lang:'en-US',localService:true}];
+   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>window.__voices,speak:u=>{window.__spoken.push(u.text);window.__utterances.push(u);},cancel:()=>window.__cancels++,addEventListener(name,fn){if(name==='voiceschanged')window.__voicesChanged=fn;},removeEventListener(){}}});
    window.SpeechSynthesisUtterance=function(text){this.text=text;};
   });
   await page.goto('http://127.0.0.1:8765/'+(process.env.AVATAR_WELCOME==='actual'?'heart-stone-welcome-preview.html':process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html'));
@@ -49,6 +49,9 @@ const {chromium}=require('playwright');
   await page.evaluate(()=>{__voices.splice(1,1);__voicesChanged();});assert.equal(await page.locator('select').inputValue(),'');assert(await page.locator('[data-play]').isDisabled());
   await page.evaluate(()=>{__voices=[];__voicesChanged();});assert(await page.locator('select').isDisabled());assert((await page.locator('#avatarVoicePreview [role=status]').textContent()).includes('No English voices'));
   await page.evaluate(()=>{__voices=[{name:'Test voice',lang:'en-US',localService:true}];__voicesChanged();});assert(!(await page.locator('select').isDisabled()));assert(await page.locator('[data-play]').isDisabled());assert.equal(await page.evaluate(()=>__spoken.length),beforeVoices);
+  await page.locator('select').selectOption('0');await page.locator('[data-play]').click();const playbackStatus=page.locator('#avatarVoicePreview [role=status]');assert((await playbackStatus.textContent()).includes('Waiting for'));
+  await page.evaluate(()=>__utterances.at(-1).onstart());assert((await playbackStatus.textContent()).includes('Speaking.'));await page.locator('[data-stop]').click();await page.evaluate(()=>{__utterances.at(-1).onstart();__utterances.at(-1).onerror();});assert.equal(await playbackStatus.textContent(),'HEART STONE is silent.');
+  await page.locator('[data-play]').click();await page.evaluate(()=>__utterances.at(-1).onerror());assert((await playbackStatus.textContent()).includes('could not play'));const failedCalls=await page.evaluate(()=>__spoken.length);await page.locator('[data-play]').click();assert.equal(await page.evaluate(()=>__spoken.length),failedCalls+1);await page.locator('[data-stop]').click();
   for(const width of [320,390,1280]){await page.setViewportSize({width,height:844});assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)));}
   assert.equal(errors.length,0,errors.join(';'));console.log('PASS avatar preview: explicit voice opt-in, selection, Escape/disable, motion pause/finish, reduced motion and responsive widths. Speech engine simulated; audible output not tested.');
  }finally{await browser.close();}

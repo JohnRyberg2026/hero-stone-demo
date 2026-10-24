@@ -22,9 +22,10 @@
     if(disposed||!enabled||!voice||![GREETING,...TOUR_TEXT].includes(text))return false;
     stop();const utterance=new Utterance(text);owned=utterance;
     utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=0.95;
+    utterance.onstart=()=>{if(owned===utterance)report('speaking');};
     utterance.onend=()=>{if(owned===utterance){owned=null;report('ready');}};
     utterance.onerror=()=>{if(owned===utterance){owned=null;report('error');}};
-    try{report('speaking');synth.speak(utterance);return true;}catch(e){owned=null;report('error');return false;}
+    try{report('waiting');synth.speak(utterance);return true;}catch(e){owned=null;report('error');return false;}
    },
    stop,
    dispose(){stop();enabled=false;disposed=true;}
@@ -33,7 +34,7 @@
  if(typeof module==='object'&&module.exports){module.exports={createVoice};return;}
  const host=document.getElementById('avatarVoicePreview');if(!host)return;
  const toggle=host.querySelector('[data-enable]'),select=host.querySelector('select'),play=host.querySelector('[data-play]'),stop=host.querySelector('[data-stop]'),status=host.querySelector('[role=status]');
- const engine=createVoice(root.speechSynthesis,root.SpeechSynthesisUtterance,state=>{status.textContent={silent:'HEART STONE is silent.',ready:'Voice is ready. Choose Hear greeting to listen.',speaking:'Speaking. Stop is always available.',error:'Voice could not play. You can continue silently.'}[state];});
+ const engine=createVoice(root.speechSynthesis,root.SpeechSynthesisUtterance,state=>{status.textContent={silent:'HEART STONE is silent.',ready:'Voice is ready. Choose Hear greeting to listen.',waiting:'Waiting for your device’s voice. If nothing plays, stop or choose another voice.',speaking:'Speaking. Stop is always available.',error:'Voice could not play. You can try Hear again, choose another voice, or continue silently.'}[state];});
  const guide=document.getElementById('heartStoneGuide'),message=document.getElementById('heartStoneGuideMessage');
  const hearStep=document.createElement('button');hearStep.type='button';hearStep.textContent='Hear this step';hearStep.disabled=true;
  if(guide&&message)message.insertAdjacentElement('afterend',hearStep);
