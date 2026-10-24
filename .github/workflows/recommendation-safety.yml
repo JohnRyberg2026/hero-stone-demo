@@ -24,6 +24,9 @@ on:
       - 'database/shared-date-server-test.sql'
       - 'database/test-shared-dates-isolated.sql'
       - 'database/storybook-relationship-reader.sql'
+      - 'database/storybook-consent-ledger.sql'
+      - 'database/storybook-publication-guard.sql'
+      - 'database/test-storybook-consent-ledger-isolated.sql'
       - 'database/test-storybook-relationship-reader-isolated.sql'
       - 'storybook-account-store.js'
       - 'test-storybook-account-store.cjs'
@@ -93,6 +96,9 @@ on:
       - 'database/shared-date-server-test.sql'
       - 'database/test-shared-dates-isolated.sql'
       - 'database/storybook-relationship-reader.sql'
+      - 'database/storybook-consent-ledger.sql'
+      - 'database/storybook-publication-guard.sql'
+      - 'database/test-storybook-consent-ledger-isolated.sql'
       - 'database/test-storybook-relationship-reader-isolated.sql'
       - 'storybook-account-store.js'
       - 'test-storybook-account-store.cjs'
@@ -184,3 +190,4 @@ jobs:
           psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-shared-dates-isolated.sql
           node tools/test-shared-date-concurrency.cjs
           psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-relationship-reader-isolated.sql
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-consent-ledger-isolated.sql

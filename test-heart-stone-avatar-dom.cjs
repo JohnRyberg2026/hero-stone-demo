@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM}=require('jsdom');
 (async()=>{
- const html=fs.readFileSync(process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html','utf8');
+ const html=fs.readFileSync(process.env.AVATAR_WELCOME==='actual'?'heart-stone-welcome-preview.html':process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html','utf8');
  const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,url:'http://localhost/'}),w=dom.window,d=w.document;
  const voices=[{name:'Test English voice',lang:'en-US',localService:true}],spoken=[],animations=new Set();let cancellations=0;
  const media={matches:false,addEventListener(){},removeEventListener(){}};w.matchMedia=()=>media;

@@ -44,3 +44,21 @@ Opening a book, accepting an invitation, ending an adventure, or belonging to a 
 `database/storybook-relationship-reader.sql` proposes a narrow adapter for the older volumes. Its public wrapper does not elevate privileges; a private-schema function checks the authenticated/expected identity, active account and explicitly selected active relationship under row locks. It returns up to 100 summaries containing only ID, title, year, state, scope and relationship ID. It does not return entries, narrative, memories or approval records, change grants on existing tables, create books, transfer content or publish.
 
 The CI-only test reproduces the observed caller-permission-view/base-grant mismatch using a minimal view fixture, then checks the candidate with active, unrelated, former-member, suspended, spoofed and anonymous identities. It is not a clone of all legacy tables/functions/triggers, and the candidate remains uninstalled and unconnected to the UI. Full-baseline staging validation and an owner-account client adapter are still required. No policy widening is proposed.
+
+## Approval review — shared contents remain blocked
+
+A further read-only review inspected `storybook_volume_readiness`, `finalize_storybook_volume`, `set_storybook_entry_caption` and `storybook_content_fingerprint`, alongside the previously inspected approval/publication functions. No real content or approval rows were accessed and no functions were executed.
+
+Observed in the inspected finalization path:
+
+- `approve_storybook_entry` updates shared entry-level approval flags and inserts an actor approval record. The record does not contain a content fingerprint/revision in the inspected schema.
+- `storybook_volume_readiness` checks review/inclusion state and generated-narrative approval flags. It does not join the per-person approval records or require each participant's approval of the current content. It does not test `title_approved` or `caption_approved`.
+- `set_storybook_entry_caption` changes the caption and clears `caption_approved`; the inspected readiness expression does not use that cleared flag.
+- Finalization invokes the readiness view and records a content fingerprint. Publication checks membership, state and that finalization fingerprint. Those checks protect against certain later content changes, but do not establish unanimous participant approval.
+- The content fingerprint incorporates entry text and selected entry flags, but does not bind an exact participant roster and each person's action-specific approval to that version.
+
+This is a demonstrated mismatch between the inspected code and the current product consent contract, not a claim that real books were exposed or published improperly. The full legacy system may have additional versioning paths; those must be mapped before replacing existing behavior. The app in this PR has no relationship-entry reader or publication control, so this work does not activate the older path.
+
+Before enabling shared contents or publication, require a server-authoritative contract that binds exact content/source scope, original dates, participant roster, destination/viewer scope and action (contribution, inclusion, publication/export) to a version/fingerprint. Every required person must explicitly approve that same version for the relevant action. A material edit, participant/visibility change, withdrawal or eligibility/access change invalidates the relevant approval; silence is never consent. A private personal-book save is not one of these shared approvals.
+
+Acceptance tests must include: one member's approval is insufficient; missing/declined/withdrawn approvals block; caption/title/source/date/roster/viewer edits invalidate; stale and concurrent approvals cannot authorize a newer version; finalization/publication cannot substitute a shared flag for participant approvals; inaccessible sources and unopened Time Capsules cannot be included. Preserve existing books and records while designing the new ledger/adapter. Do not backfill approval from membership or historic entry flags.

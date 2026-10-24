@@ -23,6 +23,7 @@ jobs:
           node test-heart-stone-avatar-motion.cjs
           node test-heart-stone-avatar-dom.cjs
           AVATAR_WELCOME=1 node test-heart-stone-avatar-dom.cjs
+          AVATAR_WELCOME=actual node test-heart-stone-avatar-dom.cjs
       - name: Install headless Chromium
         run: /tmp/avatar-browser/node_modules/.bin/playwright install --only-shell chromium
       - name: Check standalone and welcome pages in Chromium
@@ -36,3 +37,5 @@ jobs:
           done
           node test-heart-stone-avatar-preview-browser.cjs
           AVATAR_WELCOME=1 node test-heart-stone-avatar-preview-browser.cjs
+          AVATAR_WELCOME=actual node test-heart-stone-avatar-preview-browser.cjs
+          node test-heart-stone-welcome-browser.cjs

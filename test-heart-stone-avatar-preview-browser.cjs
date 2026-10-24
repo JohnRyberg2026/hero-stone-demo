@@ -9,7 +9,7 @@ const {chromium}=require('playwright');
    Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[{name:'Test voice',lang:'en-US',localService:true}],speak:u=>window.__spoken.push(u.text),cancel:()=>window.__cancels++,addEventListener(){},removeEventListener(){}}});
    window.SpeechSynthesisUtterance=function(text){this.text=text;};
   });
-  await page.goto('http://127.0.0.1:8765/'+(process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html'));
+  await page.goto('http://127.0.0.1:8765/'+(process.env.AVATAR_WELCOME==='actual'?'heart-stone-welcome-preview.html':process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html'));
   if(process.env.AVATAR_WELCOME){await require('./tools/browser-adult-entry.cjs').enterAdultDemo(page);assert.equal(await page.locator('nav a').count(),4);}
   assert.equal(await page.evaluate(()=>__spoken.length),0);assert.equal(await page.evaluate(()=>document.getAnimations().length),0);
   assert(!(await page.locator('#avatarSettings').isVisible()));await page.locator('#avatarSettingsToggle').click();assert.equal(await page.locator('#avatarSettingsToggle').getAttribute('aria-expanded'),'true');
