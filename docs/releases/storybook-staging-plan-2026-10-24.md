@@ -49,3 +49,10 @@ Next substantive integration gate: obtain a complete schema-only baseline in an 
 ## Export availability check
 
 The connected tools expose catalog queries, migrations and branch operations, but no schema-export operation. Neither Supabase CLI nor `pg_dump` is available in this workspace. No connection credentials were requested, inspected or printed. A canonical schema-only export or a separately authorized isolated target is still required; reproducing selected catalog objects does not constitute a complete baseline. Catalog enum labels verified: membership `pending_connection / active / left`; book state `draft / assembling / ready / published / archived`.
+
+
+## Staging creation blocker — 24 October
+
+Requested branch name: `pr56-storybook-staging-20261024`, under the already connected project. The connector-managed confirmation flow returned `Invalid or expired requestState` on both attempts. A branch inventory after the second attempt returned an empty list, confirming no development branch was created. No candidate SQL was installed and no merge/rebase/reset was attempted. Stop creation retries until the confirmation flow is repaired or the branch is created through the Supabase dashboard with its displayed cost accepted. Do not call cost confirmation without explicit agreement to the actual quoted amount.
+
+Resume after creation: identify the new branch project reference, verify it differs from the connected base project, check branch health and migration reproduction, run the catalog-only preflight there, and compare the complete baseline before candidate installation. Branch creation reruns recorded migrations; it does not by itself prove that unrecorded schema changes were reproduced. Never redirect staging writes to the base project to work around branch setup failure.
