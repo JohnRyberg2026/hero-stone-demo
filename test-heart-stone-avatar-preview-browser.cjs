@@ -9,7 +9,7 @@ const {chromium}=require('playwright');
    Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>window.__voices,speak:u=>{window.__spoken.push(u.text);window.__utterances.push(u);},cancel:()=>window.__cancels++,addEventListener(name,fn){if(name==='voiceschanged')window.__voicesChanged=fn;},removeEventListener(){}}});
    window.SpeechSynthesisUtterance=function(text){this.text=text;};
   });
-  await page.goto('http://127.0.0.1:8765/'+(process.env.AVATAR_WELCOME==='actual'?'heart-stone-welcome-preview.html':process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html'));
+  await page.goto(process.env.AVATAR_DEVICE?require('node:url').pathToFileURL(require('node:path').join(__dirname,'heart-stone-avatar-device-check.html')).href:'http://127.0.0.1:8765/'+(process.env.AVATAR_WELCOME==='actual'?'heart-stone-welcome-preview.html':process.env.AVATAR_WELCOME?'heart-stone-avatar-welcome-preview.html':'heart-stone-avatar-voice-preview.html'));
   if(process.env.AVATAR_WELCOME){await require('./tools/browser-adult-entry.cjs').enterAdultDemo(page);assert.equal(await page.locator('nav a').count(),4);}
   assert.equal(await page.evaluate(()=>__spoken.length),0);assert.equal(await page.evaluate(()=>document.getAnimations().length),0);
   assert(!(await page.locator('#avatarSettings').isVisible()));await page.locator('#avatarSettingsToggle').click();assert.equal(await page.locator('#avatarSettingsToggle').getAttribute('aria-expanded'),'true');

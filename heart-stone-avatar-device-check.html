@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HEART STONE — device voice check</title>
+<style>body{font:18px/1.6 system-ui;background:#fff9ed;color:#47352b;max-width:720px;margin:auto;padding:24px}button,select{font:inherit;padding:12px;margin:8px 0;max-width:100%}button{cursor:pointer}section{border:2px solid #bd2945;border-radius:20px;padding:24px;margin:24px 0}label{display:block}:focus-visible{outline:3px solid #163f85;outline-offset:3px}[hidden]{display:none!important}#meetHeartStone{display:block;width:100%;max-width:300px;overflow:hidden}#meetHeartStone svg{display:block;margin:12px auto}#meetHeartStone span{display:block}#heartStoneMotion,#heartStoneMotionStatus{display:none!important}</style>
+<h1>Meet HEART STONE</h1><aside id="deviceCheckInstructions"><h2>Try HEART STONE on this device</h2><ol><li>Open Voice &amp; movement, enable voice, and choose an available voice.</li><li>Press Hear greeting. Confirm that you hear it, then try Stop voice and Quiet mode.</li><li>Open the tour and try Hear this step. If you want movement, invite a short stroll or explicitly start wandering.</li></ol><p>This file asks for no sign-in or microphone and saves no test results. Available voices depend on your device. Only you can confirm whether audio is audible; the page does not mark that test as passed.</p></aside><p>Development rehearsal — optional voice for your heart companion.</p>
+<button type="button" id="avatarQuiet">Quiet mode</button><p id="avatarQuietStatus" role="status"></p>
+<section id="heartStoneCompanion" data-guide="welcome" aria-label="HEART STONE companion"></section>
+<button type="button" id="avatarSettingsToggle" aria-expanded="false" aria-controls="avatarSettings">Voice &amp; movement</button>
+<div id="avatarSettings" hidden>
+<section id="avatarVoicePreview" aria-label="Optional voice"><h2>A voice, when you invite it</h2>
+<p>Prefer a female voice? Choose one you like from your device’s available voices. Names and availability vary; a female voice cannot be guaranteed.</p>
+<p>This rehearsal reads only the greeting below or the current welcome-tour step when you press Hear this step. Your browser or selected voice provider may process those public words online. No microphone is requested.</p>
+<label><input type="checkbox" data-enable> Enable voice for this page</label><label>Voice <select aria-label="Voice"></select></label>
+<button type="button" data-play>Hear greeting</button> <button type="button" data-stop>Stop voice</button><p role="status">HEART STONE is silent.</p>
+<blockquote>Hi, I’m HEART STONE. A little help, when you want it. You choose what happens next.</blockquote>
+<p>Voice stops when you leave or hide this page. Escape also stops it. These controls apply only to this rehearsal.</p></section>
+<section id="avatarMotionPreview" aria-label="Optional movement"><h2>A little room to explore</h2><p>Invite one short stroll. The same HEART STONE above takes a short stroll inside its button. Your controls stay still.</p>
+
+<label><input type="checkbox" data-wander> Allow continuous wandering in this space</label><p>Choose Start wandering to begin. Pause or Quiet stops it. It never moves over your other controls.</p><button type="button" aria-pressed="false">Take a little stroll</button><p role="status">HEART STONE is resting.</p></section>
+</div>
+<script>
+/* Invited, in-flow companion shell. No audio, automatic animation, storage,
+   profile access or network requests. Tour progress lasts only in this page. */
+(function(){
+ 'use strict';
+ const host=document.getElementById('heartStoneCompanion');if(!host)return;
+ host.innerHTML='<button type="button" id="meetHeartStone" aria-expanded="false" aria-controls="heartStoneGuide"><svg aria-hidden="true" width="72" height="72" viewBox="0 0 100 100"><path d="M21 51L9 57M79 51L91 46M38 76L34 91M63 76L68 91" stroke="#47352b" stroke-width="5" stroke-linecap="round"/><path d="M50 81C39 72 15 56 15 36C15 14 41 11 50 29C59 11 85 14 85 36C85 56 61 72 50 81" fill="#bd2945" stroke="#7e1930" stroke-width="3"/><circle cx="38" cy="42" r="3" fill="#fff9ed"/><circle cx="62" cy="42" r="3" fill="#fff9ed"/><path d="M38 55Q50 66 62 55" fill="none" stroke="#fff9ed" stroke-width="3" stroke-linecap="round"/></svg><span>Meet HEART STONE</span></button><button type="button" id="heartStoneMotion" aria-pressed="false">Allow playful motion</button><p id="heartStoneMotionStatus" role="status"></p><button type="button" id="hideHeartStone">Hide HEART STONE</button><button type="button" id="restoreHeartStone" hidden>Show HEART STONE</button><div id="heartStoneGuide" hidden><h2 id="heartStoneGuideTitle" tabindex="-1">A little help, when you want it.</h2><p id="heartStoneGuideMessage" aria-live="polite"></p><button type="button" id="startHeartStoneTour">Show me around</button><button type="button" id="nextHeartStoneStep" hidden>Next</button><button type="button" id="closeHeartStoneGuide">Maybe later</button><p>Silent and optional. Motion starts off; you can choose a little playful movement. This short tour remembers your place only while this page stays open.</p></div>';
+ const $=id=>document.getElementById(id);
+ const welcome=host.dataset.guide==='welcome';
+ const steps=welcome?[
+  'Let’s Connect opens invitations. Let’s Have an Adventure opens the date builder. You choose what happens next; an invitation still needs explicit approval.',
+  'Our World opens your Living Story Book. Your own words belong in twelve monthly chapters, with private drafts and separate account-save confirmation.',
+  'Explore opens saved wishes and ideas. You can also review adventure preferences. This development preview does not automatically book, buy, share or send anything.'
+ ]:[
+  'Your book is an annual volume with twelve monthly chapters. Start with your own words; no memories are generated for you.',
+  'Capture a moment with the date it happened. You can edit your words later, and the moment stays in its original month. Cancel keeps the existing draft unchanged.',
+  'Preview notes are unsaved until you explicitly save to your signed-in account and receive confirmation. My saved volumes reopens your own books. Nothing here is shared or published.'
+ ];
+ let step=-1,motion=false,animation=null;
+ const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+ function stopMotion(){animation?.cancel();animation=null;}
+ function motionLabel(){
+  $('heartStoneMotion').setAttribute('aria-pressed',String(motion));
+  $('heartStoneMotion').textContent=motion?'Sit still':'Allow playful motion';
+  $('heartStoneMotionStatus').textContent=reduced.matches?'Your reduced-motion setting keeps HEART STONE still.':motion?'Playful motion enabled for this page only.':'HEART STONE stays still.';
+ }
+ function react(celebrate=false){
+  stopMotion();if(!motion||reduced.matches)return;
+  const frames=celebrate?[{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(0)'}]:[{transform:'rotate(0deg)'},{transform:'rotate(-5deg)'},{transform:'rotate(5deg)'},{transform:'rotate(0deg)'}];
+  animation=$('meetHeartStone').querySelector('svg').animate(frames,{duration:700,iterations:1,easing:'ease-in-out'});
+ }
+ $('heartStoneMotion').onclick=()=>{motion=!motion&&!reduced.matches;motionLabel();if(motion)react();else stopMotion();};
+ reduced.addEventListener('change',()=>{if(reduced.matches){motion=false;stopMotion();}motionLabel();});
+ motionLabel();
+ function close(){ stopMotion();$('heartStoneGuide').hidden=true;$('meetHeartStone').setAttribute('aria-expanded','false');$('meetHeartStone').focus(); }
+ function render(){
+  $('heartStoneGuideMessage').textContent=step<0?(welcome?'Hi, I’m HEART STONE. Would you like help to choose where to begin?':'Hi, I’m HEART STONE. Would you like a short tour of your Living Story Book?'):steps[step];
+  $('startHeartStoneTour').hidden=step>=0;$('nextHeartStoneStep').hidden=step<0;
+  $('nextHeartStoneStep').textContent=step===steps.length-1?'Finish tour':'Next';
+  $('closeHeartStoneGuide').textContent=step<0?'Maybe later':'Pause tour';
+ }
+ $('meetHeartStone').onclick=()=>{$('heartStoneGuide').hidden=false;$('meetHeartStone').setAttribute('aria-expanded','true');render();$('heartStoneGuideTitle').focus();react();};
+ $('startHeartStoneTour').onclick=()=>{step=0;render();};
+ $('nextHeartStoneStep').onclick=()=>{if(step===steps.length-1){close();$('meetHeartStone').querySelector('span').textContent='Ask HEART STONE';react(true);}else{step++;render();}};
+ $('closeHeartStoneGuide').onclick=close;
+ $('hideHeartStone').onclick=()=>{close();$('meetHeartStone').hidden=true;$('hideHeartStone').hidden=true;$('heartStoneMotion').hidden=true;$('heartStoneMotionStatus').hidden=true;$('restoreHeartStone').hidden=false;$('restoreHeartStone').focus();};
+ $('restoreHeartStone').onclick=()=>{$('meetHeartStone').hidden=false;$('hideHeartStone').hidden=false;$('heartStoneMotion').hidden=false;$('heartStoneMotionStatus').hidden=false;$('restoreHeartStone').hidden=true;$('meetHeartStone').focus();};
+ host.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('heartStoneGuide').hidden){event.preventDefault();close();}});
+})();
+
+</script><script>
+/* Preview-only movement. Never moves controls or covers page content. */
+(function(){
+ 'use strict';
+ const host=document.getElementById('avatarMotionPreview');if(!host)return;
+ const wander=host.querySelector('[data-wander]');
+ const button=host.querySelector('button'),status=host.querySelector('[role=status]');
+ const figure=document.getElementById('meetHeartStone')?.querySelector('svg');if(!figure)return;
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ let animation=null;
+ function stop(message='HEART STONE is resting.'){const current=animation;animation=null;current?.cancel();button.textContent=wander?.checked?'Start wandering':'Take a little stroll';button.setAttribute('aria-pressed','false');status.textContent=message;}
+ function rest(){if(wander)wander.checked=false;stop();}
+ if(wander)wander.onchange=()=>stop();
+ function sync(){if(reduced.matches&&wander)wander.checked=false;stop(reduced.matches?'Your reduced-motion setting keeps HEART STONE still.':'HEART STONE is resting.');button.disabled=reduced.matches||typeof figure.animate!=='function';if(wander)wander.disabled=button.disabled;}
+ button.onclick=()=>{
+  if(animation){stop();return;}
+  if(reduced.matches||document.hidden)return;
+  try{
+   animation=figure.animate([{transform:'translateX(0)'},{transform:'translateX(18px)',offset:.35},{transform:'translateX(-18px)',offset:.7},{transform:'translateX(0)'}],{duration:3200,iterations:wander?.checked?Infinity:1,easing:'ease-in-out'});
+   const current=animation;current.onfinish=()=>{if(animation===current)stop();};
+   button.textContent='Pause movement';button.setAttribute('aria-pressed','true');status.textContent=wander?.checked?'Wandering inside this space until you pause.':'Taking a little stroll inside this space.';
+  }catch(e){stop('Movement is unavailable. HEART STONE can stay still.');}
+ };
+ const visibility=()=>{if(document.hidden)rest();};
+ reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',visibility);
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')rest();});
+ // A cached page may return; preserve its reduced-motion and visibility listeners.
+ window.addEventListener('pagehide',rest);
+ document.addEventListener('heartstone:quiet',rest);
+ sync();
+})();
+
+</script><script>
+/* Optional public-script voice rehearsal. No microphone, private text or storage. */
+(function(root){
+ 'use strict';
+ const GREETING='Hi, I’m HEART STONE. A little help, when you want it. You choose what happens next.';
+ const TOUR_TEXT=[
+  'Hi, I’m HEART STONE. Would you like help to choose where to begin?',
+  'Let’s Connect opens invitations. Let’s Have an Adventure opens the date builder. You choose what happens next; an invitation still needs explicit approval.',
+  'Our World opens your Living Story Book. Your own words belong in twelve monthly chapters, with private drafts and separate account-save confirmation.',
+  'Explore opens saved wishes and ideas. You can also review adventure preferences. This development preview does not automatically book, buy, share or send anything.',
+  'Hi, I’m HEART STONE. Would you like a short tour of your Living Story Book?',
+  'Your book is an annual volume with twelve monthly chapters. Start with your own words; no memories are generated for you.',
+  'Capture a moment with the date it happened. You can edit your words later, and the moment stays in its original month. Cancel keeps the existing draft unchanged.',
+  'Preview notes are unsaved until you explicitly save to your signed-in account and receive confirmation. My saved volumes reopens your own books. Nothing here is shared or published.'
+ ];
+ function createVoice(synth,Utterance,onState){
+  let enabled=false,voice=null,owned=null,disposed=false;
+  const supported=!!(synth&&Utterance);
+  function report(state){if(!disposed)onState(state);}
+  function stop(){const had=owned;owned=null;if(had)synth.cancel();report('silent');}
+  return {
+   supported,
+   voices:()=>supported?synth.getVoices().filter(v=>v.lang&&/^en(?:-|$)/i.test(v.lang)):[],
+   enable(value){stop();enabled=!!value&&supported&&!disposed;report(enabled?'ready':'silent');},
+   select(value){stop();voice=value||null;},
+   speak(text=GREETING){
+    if(disposed||!enabled||!voice||![GREETING,...TOUR_TEXT].includes(text))return false;
+    stop();const utterance=new Utterance(text);owned=utterance;
+    utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=0.95;
+    utterance.onstart=()=>{if(owned===utterance)report('speaking');};
+    utterance.onend=()=>{if(owned===utterance){owned=null;report('ready');}};
+    utterance.onerror=()=>{if(owned===utterance){owned=null;report('error');}};
+    try{report('waiting');synth.speak(utterance);return true;}catch(e){owned=null;report('error');return false;}
+   },
+   stop,
+   dispose(){stop();enabled=false;disposed=true;}
+  };
+ }
+ if(typeof module==='object'&&module.exports){module.exports={createVoice};return;}
+ const host=document.getElementById('avatarVoicePreview');if(!host)return;
+ const toggle=host.querySelector('[data-enable]'),select=host.querySelector('select'),play=host.querySelector('[data-play]'),stop=host.querySelector('[data-stop]'),status=host.querySelector('[role=status]');
+ const engine=createVoice(root.speechSynthesis,root.SpeechSynthesisUtterance,state=>{status.textContent={silent:'HEART STONE is silent.',ready:'Voice is ready. Choose Hear greeting to listen.',waiting:'Waiting for your device’s voice. If nothing plays, stop or choose another voice.',speaking:'Speaking. Stop is always available.',error:'Voice could not play. You can try Hear again, choose another voice, or continue silently.'}[state];});
+ const guide=document.getElementById('heartStoneGuide'),message=document.getElementById('heartStoneGuideMessage');
+ const hearStep=document.createElement('button');hearStep.type='button';hearStep.textContent='Hear this step';hearStep.disabled=true;
+ if(guide&&message)message.insertAdjacentElement('afterend',hearStep);
+ function updateStep(){hearStep.disabled=!toggle.checked||select.value===''||!guide||guide.hidden||!TOUR_TEXT.includes(message?.textContent);}
+ hearStep.onclick=()=>{if(!hearStep.disabled)engine.speak(message.textContent);};
+ const changed=()=>{engine.stop();updateStep();};
+ if(guide&&message){new MutationObserver(changed).observe(message,{childList:true,subtree:true,characterData:true});new MutationObserver(changed).observe(guide,{attributes:true,attributeFilter:['hidden']});}
+ let available=[];
+ function voiceKey(v){return v?JSON.stringify([v.voiceURI||'',v.name,v.lang,!!v.localService]):'';}
+ function availability(){
+  select.disabled=!toggle.checked||available.length===0;
+  play.disabled=!toggle.checked||select.value==='';updateStep();
+  if(available.length===0)status.textContent='No English voices are available yet. You can continue silently; voices will appear here if your browser loads them.';
+ }
+ function refresh(){
+  const previous=select.value===''?'':voiceKey(available[Number(select.value)]);
+  available=engine.voices();select.replaceChildren(new Option('Choose a voice',''));
+  available.forEach((v,i)=>select.add(new Option(v.name+' ('+v.lang+')'+(v.localService?' — on device':' — may use an online service'),String(i))));
+  const index=previous?available.findIndex(v=>voiceKey(v)===previous):-1;
+  select.value=index<0?'':String(index);engine.select(index<0?null:available[index]);availability();
+  if(previous&&index<0&&available.length)status.textContent='Your selected voice is no longer available. Choose another voice to listen.';
+ }
+ toggle.disabled=!engine.supported;select.disabled=true;play.disabled=true;stop.disabled=!engine.supported;
+ if(!engine.supported)status.textContent='Voice is unavailable in this browser. HEART STONE remains silent.';
+ toggle.onchange=()=>{engine.enable(toggle.checked);if(!toggle.checked){select.value='';engine.select(null);}availability();};
+ select.onchange=()=>{engine.select(available[Number(select.value)]&&select.value!==''?available[Number(select.value)]:null);availability();};
+ play.onclick=()=>engine.speak();stop.onclick=()=>engine.stop();
+ const visibility=()=>{if(document.hidden)engine.stop();};
+ document.addEventListener('visibilitychange',visibility);
+ host.addEventListener('keydown',event=>{if(event.key==='Escape')engine.stop();});
+ // Keep listeners alive for browser back/forward cache restores; require fresh opt-in.
+ function quiet(){engine.enable(false);toggle.checked=false;select.value='';select.disabled=true;play.disabled=true;engine.select(null);updateStep();}
+ root.addEventListener('pagehide',quiet);
+ document.addEventListener('heartstone:quiet',quiet);
+ if(engine.supported){refresh();root.speechSynthesis.addEventListener('voiceschanged',refresh);}
+})(typeof window==='object'?window:globalThis);
+
+</script><script>
+/* Preview coordinator. Does not change the shared companion implementation. */
+(function(){
+ 'use strict';
+ const quietButton=document.getElementById('avatarQuiet');if(!quietButton)return;
+ const voice=document.getElementById('avatarVoicePreview'),motion=document.getElementById('avatarMotionPreview'),status=document.getElementById('avatarQuietStatus');
+ function quiet(){
+  document.dispatchEvent(new Event('heartstone:quiet'));
+  const playful=document.getElementById('heartStoneMotion');
+  if(playful?.getAttribute('aria-pressed')==='true')playful.click();
+  status.textContent='HEART STONE is quiet and still. Voice and movement need a new invitation.';
+ }
+ const settings=document.getElementById('avatarSettings'),settingsToggle=document.getElementById('avatarSettingsToggle');
+ function setSettings(open){
+  if(!settings||!settingsToggle)return;
+  settings.hidden=!open;settingsToggle.setAttribute('aria-expanded',String(open));
+ }
+ if(settingsToggle)settingsToggle.onclick=()=>{const open=settings.hidden;if(!open)quiet();setSettings(open);};
+ quietButton.onclick=quiet;
+ document.getElementById('hideHeartStone')?.addEventListener('click',()=>{quiet();setSettings(false);if(settingsToggle)settingsToggle.hidden=true;if(voice)voice.hidden=true;if(motion)motion.hidden=true;});
+ document.getElementById('restoreHeartStone')?.addEventListener('click',()=>{if(voice)voice.hidden=false;if(motion)motion.hidden=false;if(settingsToggle)settingsToggle.hidden=false;});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'){const focusInside=settings?.contains(document.activeElement);quiet();setSettings(false);if(focusInside)settingsToggle?.focus();}});
+})();
+
+</script></html>
