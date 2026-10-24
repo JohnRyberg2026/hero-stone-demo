@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HEART STONE — device voice check</title>
-<style>body{font:18px/1.6 system-ui;background:#fff9ed;color:#47352b;max-width:720px;margin:auto;padding:24px}button,select{font:inherit;padding:12px;margin:8px 0;max-width:100%}button{cursor:pointer}section{border:2px solid #bd2945;border-radius:20px;padding:24px;margin:24px 0}label{display:block}:focus-visible{outline:3px solid #163f85;outline-offset:3px}[hidden]{display:none!important}#meetHeartStone{display:block;width:100%;max-width:300px;overflow:hidden}#meetHeartStone svg{display:block;margin:12px auto}#meetHeartStone span{display:block}#heartStoneMotion,#heartStoneMotionStatus{display:none!important}</style>
+<style>body{font:18px/1.6 system-ui;background:#fff9ed;color:#47352b;max-width:720px;margin:auto;padding:24px}button,select{font:inherit;padding:12px;margin:8px 0;max-width:100%}button{cursor:pointer}section{border:2px solid #bd2945;border-radius:20px;padding:24px;margin:24px 0}label{display:block}:focus-visible{outline:3px solid #163f85;outline-offset:3px}[hidden]{display:none!important}#meetHeartStone{display:block;width:100%;max-width:300px;overflow:hidden}#meetHeartStone svg{display:block;margin:12px auto}#meetHeartStone span{display:block}#heartStoneMotion,#heartStoneMotionStatus{display:none!important}#meetHeartStone{background:linear-gradient(145deg,#fffdf8,#eee5d7);border:1px solid #bea171;border-radius:22px;box-shadow:0 8px 24px #40312d12;color:#48352e}#meetHeartStone svg{width:190px;height:225px;max-width:100%;display:block;margin:auto}#meetHeartStone span{display:block;font-weight:600;letter-spacing:.03em}</style>
 <h1>Meet HEART STONE</h1><aside id="deviceCheckInstructions"><h2>Try HEART STONE on this device</h2><ol><li>Open Voice &amp; movement, enable voice, and choose an available voice.</li><li>Press Hear greeting. Confirm that you hear it, then try Stop voice and Quiet mode.</li><li>Open the tour and try Hear this step. If you want movement, invite a short stroll or explicitly start wandering.</li></ol><p>This file asks for no sign-in or microphone and saves no test results. Available voices depend on your device. Only you can confirm whether audio is audible; the page does not mark that test as passed.</p></aside><p>Development rehearsal — optional voice for your heart companion.</p>
 <button type="button" id="avatarQuiet">Quiet mode</button><p id="avatarQuietStatus" role="status"></p>
 <section id="heartStoneCompanion" data-guide="welcome" aria-label="HEART STONE companion"></section>
@@ -18,12 +18,51 @@
 <label><input type="checkbox" data-wander> Allow continuous wandering in this space</label><p>Choose Start wandering to begin. Pause or Quiet stops it. It never moves over your other controls.</p><button type="button" aria-pressed="false">Take a little stroll</button><p role="status">HEART STONE is resting.</p></section>
 </div>
 <script>
+/* Articulated two-bone gait. Stance feet are anchored in world coordinates;
+   swing feet lift and land, with small weight shifts and opposing arms. */
+(function(root){
+ 'use strict';
+ const cycle=1.28,travel=t=>28*Math.sin(2*Math.PI*t/5.12),facing=t=>Math.cos(2*Math.PI*t/5.12)>=0?1:-1;
+ function leg(t,side){
+  const shifted=t+(side==='right'?cycle/2:0),n=Math.floor(shifted/cycle),phase=shifted/cycle-n;
+  const contact=n*cycle-(side==='right'?cycle/2:0),offset=side==='left'?-15:15;
+  const anchor=time=>travel(time)+offset+facing(time)*6;
+  let x=anchor(contact),y=245,angle=0;
+  if(phase<.62){angle=phase<.12?-7*(1-phase/.12):phase>.49?10*(phase-.49)/.13:0;}
+  else{const p=(phase-.62)/.38,e=p*p*(3-2*p);x+=(anchor(contact+cycle)-x)*e;y-=16*Math.sin(Math.PI*p);angle=-9*Math.sin(Math.PI*p);}
+  const hx=120+travel(t)+offset,hy=170-1.1*Math.cos(4*Math.PI*t/cycle),dx=x+120-hx,dy=y-hy,dist=Math.min(83.5,Math.hypot(dx,dy));
+  const h=Math.sqrt(Math.max(0,42*42-dist*dist/4));
+  const kneeX=(hx+x+120)/2+facing(t)*dy/Math.max(1,dist)*h,kneeY=(hy+y)/2-facing(t)*dx/Math.max(1,dist)*h;
+  return {hip:[hx,hy],knee:[kneeX,kneeY],foot:[x+120,y],angle,stance:phase<.62};
+ }
+ function pose(t){return{body:[travel(t),-1.1*Math.cos(4*Math.PI*t/cycle)],left:leg(t,'left'),right:leg(t,'right'),arm:Math.sin(2*Math.PI*t/cycle)};}
+ function mount(svg){
+  const parts={};for(const name of ['body','leftLeg','rightLeg','leftFoot','rightFoot','leftArm','rightArm','leftHand','rightHand']){parts[name]=svg.querySelector('[data-rig="'+name+'"]');if(!parts[name])return null;}
+  const originals=Object.values(parts).map(el=>[el,el.getAttribute('transform'),Array.from(el.querySelectorAll('path')).map(p=>[p,p.getAttribute('d')])]);
+  function path(group,points){const d='M'+points.map(p=>p.map(v=>v.toFixed(2)).join(' ')).join('L');for(const el of group.querySelectorAll('path'))el.setAttribute('d',d);}
+  return{frame(t){const p=pose(t);parts.body.setAttribute('transform',`translate(${p.body[0]} ${p.body[1]})`);
+   for(const [side,sign]of [['left',-1],['right',1]]){const l=p[side];path(parts[side+'Leg'],[l.hip,l.knee,l.foot]);parts[side+'Foot'].setAttribute('transform',`translate(${l.foot[0]} ${l.foot[1]}) rotate(${l.angle})`);
+    const x=120+p.body[0]+sign*44,swing=p.arm*sign;const points=[[x,121+p.body[1]],[x+sign*13+swing*5,145+p.body[1]],[x+sign*8+swing*10,169-2*Math.abs(swing)+p.body[1]]];path(parts[side+'Arm'],points);parts[side+'Hand'].setAttribute('transform',`translate(${points[2][0]} ${points[2][1]}) rotate(${-swing*8})`);
+   }
+  },reset(){for(const [el,tr,paths]of originals){if(tr===null)el.removeAttribute('transform');else el.setAttribute('transform',tr);for(const [p,d]of paths)p.setAttribute('d',d);}}};
+ }
+ function animate(svg,options){
+  const rig=mount(svg),player=svg.animate([{opacity:1},{opacity:1}],options),cancel=player.cancel.bind(player);let frameId=null,ended=false;
+  function cleanup(){ended=true;if(frameId!==null)root.cancelAnimationFrame(frameId);rig?.reset();}
+  function tick(){if(ended)return;rig?.frame(((Number(player.currentTime)||0)/1000)%5.12);frameId=root.requestAnimationFrame(tick);}
+  player.cancel=()=>{cleanup();cancel();};player.addEventListener?.('finish',cleanup,{once:true});
+  if(rig)frameId=root.requestAnimationFrame(tick);return player;
+ }
+ if(typeof module==='object'&&module.exports)module.exports={pose};else root.HeartStoneGait={mount,animate};
+})(typeof window==='object'?window:globalThis);
+
+</script><script>
 /* Invited, in-flow companion shell. No audio, automatic animation, storage,
    profile access or network requests. Tour progress lasts only in this page. */
 (function(){
  'use strict';
  const host=document.getElementById('heartStoneCompanion');if(!host)return;
- host.innerHTML='<button type="button" id="meetHeartStone" aria-expanded="false" aria-controls="heartStoneGuide"><svg aria-hidden="true" width="72" height="72" viewBox="0 0 100 100"><path d="M21 51L9 57M79 51L91 46M38 76L34 91M63 76L68 91" stroke="#47352b" stroke-width="5" stroke-linecap="round"/><path d="M50 81C39 72 15 56 15 36C15 14 41 11 50 29C59 11 85 14 85 36C85 56 61 72 50 81" fill="#bd2945" stroke="#7e1930" stroke-width="3"/><circle cx="38" cy="42" r="3" fill="#fff9ed"/><circle cx="62" cy="42" r="3" fill="#fff9ed"/><path d="M38 55Q50 66 62 55" fill="none" stroke="#fff9ed" stroke-width="3" stroke-linecap="round"/></svg><span>Meet HEART STONE</span></button><button type="button" id="heartStoneMotion" aria-pressed="false">Allow playful motion</button><p id="heartStoneMotionStatus" role="status"></p><button type="button" id="hideHeartStone">Hide HEART STONE</button><button type="button" id="restoreHeartStone" hidden>Show HEART STONE</button><div id="heartStoneGuide" hidden><h2 id="heartStoneGuideTitle" tabindex="-1">A little help, when you want it.</h2><p id="heartStoneGuideMessage" aria-live="polite"></p><button type="button" id="startHeartStoneTour">Show me around</button><button type="button" id="nextHeartStoneStep" hidden>Next</button><button type="button" id="closeHeartStoneGuide">Maybe later</button><p>Silent and optional. Motion starts off; you can choose a little playful movement. This short tour remembers your place only while this page stays open.</p></div>';
+ host.innerHTML='<button type="button" id="meetHeartStone" aria-expanded="false" aria-controls="heartStoneGuide"><svg aria-hidden="true" width="190" height="225" viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hsRuby" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#ff8c83"/><stop offset=".25" stop-color="#d53c57"/><stop offset=".65" stop-color="#861d3e"/><stop offset="1" stop-color="#380f2d"/></linearGradient><linearGradient id="hsMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f6dfad"/><stop offset=".3" stop-color="#b99359"/><stop offset=".65" stop-color="#705038"/><stop offset="1" stop-color="#e4c78d"/></linearGradient><linearGradient id="hsLimb" x1="0" y1="0" x2="1" y2=".3"><stop stop-color="#514d52"/><stop offset=".45" stop-color="#a7a09a"/><stop offset="1" stop-color="#494149"/></linearGradient><radialGradient id="hsGlow" cx=".35" cy=".15" r=".8"><stop stop-color="#fff1d0" stop-opacity=".5"/><stop offset="1" stop-color="#fff1d0" stop-opacity="0"/></radialGradient></defs><ellipse cx="120" cy="255" rx="48" ry="7" fill="#392e38" opacity=".13"/><g data-rig="leftLeg"><path d="M104 169Q99 205 105 243" fill="none" stroke="#382d35" stroke-width="20" stroke-linecap="round"/><path d="M104 169Q99 205 105 243" fill="none" stroke="url(#hsLimb)" stroke-width="15" stroke-linecap="round"/></g><g data-rig="rightLeg"><path d="M136 169Q141 205 135 243" fill="none" stroke="#382d35" stroke-width="20" stroke-linecap="round"/><path d="M136 169Q141 205 135 243" fill="none" stroke="url(#hsLimb)" stroke-width="15" stroke-linecap="round"/></g><g data-rig="leftFoot" transform="translate(105 245)"><path d="M-10-4Q-9-9-2-8L12-3Q17 2 13 5H-10Q-14 3-10-4" fill="url(#hsMetal)" stroke="#463333" stroke-width="2"/></g><g data-rig="rightFoot" transform="translate(135 245)"><path d="M-10-4Q-9-9-2-8L12-3Q17 2 13 5H-10Q-14 3-10-4" fill="url(#hsMetal)" stroke="#463333" stroke-width="2"/></g><g data-rig="leftArm"><path d="M76 121Q58 145 68 169" fill="none" stroke="#40313a" stroke-width="17" stroke-linecap="round"/><path d="M76 121Q58 145 68 169" fill="none" stroke="url(#hsLimb)" stroke-width="12" stroke-linecap="round"/></g><g data-rig="rightArm"><path d="M164 121Q182 145 172 169" fill="none" stroke="#40313a" stroke-width="17" stroke-linecap="round"/><path d="M164 121Q182 145 172 169" fill="none" stroke="url(#hsLimb)" stroke-width="12" stroke-linecap="round"/></g><g data-rig="leftHand" transform="translate(68 169)"><ellipse rx="9" ry="12" fill="url(#hsMetal)" stroke="#483139" stroke-width="2"/><path d="M-4-2L-3 5M1-3L2 5" stroke="#705039" stroke-width="1.3" stroke-linecap="round"/></g><g data-rig="rightHand" transform="translate(172 169)"><ellipse rx="9" ry="12" fill="url(#hsMetal)" stroke="#483139" stroke-width="2"/><path d="M-4-2L-3 5M1-3L2 5" stroke="#705039" stroke-width="1.3" stroke-linecap="round"/></g><g data-rig="body"><path d="M99 155L96 175Q120 186 144 175L141 155" fill="url(#hsMetal)" stroke="#4c3037" stroke-width="3"/><path d="M120 169C103 158 64 133 64 97C64 65 100 55 120 78C140 55 176 65 176 97C176 133 137 158 120 169Z" fill="url(#hsMetal)" stroke="#523039" stroke-width="3"/><path d="M120 160C103 148 73 126 73 98C73 72 102 65 120 89C138 65 167 72 167 98C167 126 137 148 120 160Z" fill="url(#hsRuby)" stroke="#f6c2a0" stroke-opacity=".55" stroke-width="1.5"/><path d="M78 98L105 79L120 90L143 78L162 99L151 129L120 155L91 132Z" fill="none" stroke="#ffbdad" stroke-opacity=".15" stroke-width="1.4"/><path d="M77 97Q78 74 100 77Q108 78 112 84" fill="none" stroke="#fff1d8" stroke-opacity=".65" stroke-width="3" stroke-linecap="round"/><path d="M120 160C103 148 73 126 73 98C73 72 102 65 120 89C138 65 167 72 167 98C167 126 137 148 120 160Z" fill="url(#hsGlow)"/><path d="M94 108Q100 103 106 108M134 108Q140 103 146 108" fill="none" stroke="#3c1429" stroke-width="4" stroke-linecap="round"/><ellipse cx="101" cy="113" rx="3.5" ry="5" fill="#fff0da"/><ellipse cx="139" cy="113" rx="3.5" ry="5" fill="#fff0da"/><path d="M109 132Q120 138 131 132" fill="none" stroke="#ffd0ad" stroke-width="2.4" stroke-linecap="round"/><circle cx="77" cy="121" r="9" fill="url(#hsMetal)" stroke="#69413d" stroke-width="2"/><circle cx="163" cy="121" r="9" fill="url(#hsMetal)" stroke="#69413d" stroke-width="2"/></g></svg><span>Meet HEART STONE</span></button><button type="button" id="heartStoneMotion" aria-pressed="false">Allow playful motion</button><p id="heartStoneMotionStatus" role="status"></p><button type="button" id="hideHeartStone">Hide HEART STONE</button><button type="button" id="restoreHeartStone" hidden>Show HEART STONE</button><div id="heartStoneGuide" hidden><h2 id="heartStoneGuideTitle" tabindex="-1">A little help, when you want it.</h2><p id="heartStoneGuideMessage" aria-live="polite"></p><button type="button" id="startHeartStoneTour">Show me around</button><button type="button" id="nextHeartStoneStep" hidden>Next</button><button type="button" id="closeHeartStoneGuide">Maybe later</button><p>Silent and optional. Motion starts off; you can choose a little playful movement. This short tour remembers your place only while this page stays open.</p></div>';
  const $=id=>document.getElementById(id);
  const welcome=host.dataset.guide==='welcome';
  const steps=welcome?[
@@ -45,8 +84,8 @@
  }
  function react(celebrate=false){
   stopMotion();if(!motion||reduced.matches)return;
-  const frames=celebrate?[{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(0)'}]:[{transform:'rotate(0deg)'},{transform:'rotate(-5deg)'},{transform:'rotate(5deg)'},{transform:'rotate(0deg)'}];
-  animation=$('meetHeartStone').querySelector('svg').animate(frames,{duration:700,iterations:1,easing:'ease-in-out'});
+  const svg=$('meetHeartStone').querySelector('svg');
+  animation=window.HeartStoneGait?window.HeartStoneGait.animate(svg,{duration:5120,iterations:1,easing:'linear'}):null;
  }
  $('heartStoneMotion').onclick=()=>{motion=!motion&&!reduced.matches;motionLabel();if(motion)react();else stopMotion();};
  reduced.addEventListener('change',()=>{if(reduced.matches){motion=false;stopMotion();}motionLabel();});
@@ -85,7 +124,8 @@
   if(animation){stop();return;}
   if(reduced.matches||document.hidden)return;
   try{
-   animation=figure.animate([{transform:'translateX(0)'},{transform:'translateX(18px)',offset:.35},{transform:'translateX(-18px)',offset:.7},{transform:'translateX(0)'}],{duration:3200,iterations:wander?.checked?Infinity:1,easing:'ease-in-out'});
+   const options={duration:5120,iterations:wander?.checked?Infinity:1,easing:'linear'};
+   animation=window.HeartStoneGait?window.HeartStoneGait.animate(figure,options):figure.animate([{opacity:1},{opacity:1}],options);
    const current=animation;current.onfinish=()=>{if(animation===current)stop();};
    button.textContent='Pause movement';button.setAttribute('aria-pressed','true');status.textContent=wander?.checked?'Wandering inside this space until you pause.':'Taking a little stroll inside this space.';
   }catch(e){stop('Movement is unavailable. HEART STONE can stay still.');}

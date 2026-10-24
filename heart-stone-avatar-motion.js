@@ -15,7 +15,8 @@
   if(animation){stop();return;}
   if(reduced.matches||document.hidden)return;
   try{
-   animation=figure.animate([{transform:'translateX(0)'},{transform:'translateX(18px)',offset:.35},{transform:'translateX(-18px)',offset:.7},{transform:'translateX(0)'}],{duration:3200,iterations:wander?.checked?Infinity:1,easing:'ease-in-out'});
+   const options={duration:5120,iterations:wander?.checked?Infinity:1,easing:'linear'};
+   animation=window.HeartStoneGait?window.HeartStoneGait.animate(figure,options):figure.animate([{opacity:1},{opacity:1}],options);
    const current=animation;current.onfinish=()=>{if(animation===current)stop();};
    button.textContent='Pause movement';button.setAttribute('aria-pressed','true');status.textContent=wander?.checked?'Wandering inside this space until you pause.':'Taking a little stroll inside this space.';
   }catch(e){stop('Movement is unavailable. HEART STONE can stay still.');}
