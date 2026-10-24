@@ -29,6 +29,18 @@ const action=(id,op='review',hash=null,decision=null)=>`select public.review_rel
  holder.child.stdin.end(actor(ids[1])+action(ids[1],'respond',hash,'withdrawn')+'commit;\n');assert.equal((await holder.done).code,0);
  const result=await review.done;assert.equal(result.code,0,result.err);assert.equal(result.out.trim(),'false');
  assert.equal(await query(actor(ids[0])+action(ids[0])),'false');
- console.log('PASS: simultaneous Story Book approvals persist independently; a withdrawal committed ahead of a queued review prevents readiness.');
+ // A stale queued approval must not append a response after a committed edit.
+ const countBefore=await query(`select count(*) from hs_storybook_consent.responses;`);
+ holder=await hold();const stale=session(actor(ids[0])+action(ids[0],'respond',hash,'approved'),'storybook-stale-response');stale.child.stdin.end();await waiting(['storybook-stale-response']);
+ holder.child.stdin.end(`update public.storybook_entries set caption='Fictional concurrent edit' where volume_id='${volume}';commit;\n`);assert.equal((await holder.done).code,0);
+ const staleResult=await stale.done;assert.notEqual(staleResult.code,0);assert(staleResult.err.includes('Review the current content, audience and action'),staleResult.err);
+ assert.equal(await query(`select count(*) from hs_storybook_consent.responses;`),countBefore);
+ assert.equal(await query(actor(ids[0])+action(ids[0])),'false');
+ // Removing a required participant cannot turn the remaining account into full consent.
+ holder=await hold();const changedRoster=session(actor(ids[0])+action(ids[0]),'storybook-roster-review');changedRoster.child.stdin.end();await waiting(['storybook-roster-review']);
+ holder.child.stdin.end(`update public.heart_stone_memberships set status='left' where user_id='${ids[1]}';commit;\n`);assert.equal((await holder.done).code,0);
+ const rosterResult=await changedRoster.done;assert.notEqual(rosterResult.code,0);assert(rosterResult.err.includes('Participant scope requires explicit reconciliation'),rosterResult.err);
+ assert.equal(await query(`select count(*) from hs_storybook_consent.responses;`),countBefore);
+ console.log('PASS: simultaneous approvals persist independently; queued reviews respect withdrawal; committed edits reject stale queued approvals without writes; participant removal requires reconciliation.');
  }finally{for(const child of children)child.kill('SIGKILL');if(created)command('dropdb',[...base,'--force',db]);const cleanup=spawnSync('psql',[...base,'-d','postgres','-X','-v','ON_ERROR_STOP=1','-c','drop role if exists authenticated,anon;'],{encoding:'utf8',timeout:20000});assert.equal(cleanup.status,0,cleanup.stderr);console.log('PASS: disposable Story Book database and fixture roles removed.');}
 })().catch(e=>{console.error(e);process.exitCode=1;});
