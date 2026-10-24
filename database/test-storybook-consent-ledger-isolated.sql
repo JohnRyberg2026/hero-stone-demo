@@ -4,10 +4,13 @@ begin;
 create role authenticated;create role anon;create schema auth;
 create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 grant usage on schema auth to authenticated,anon;
+-- Enum labels verified by catalog-only inspection on 24 October 2026.
+create type public.membership_status as enum('pending_connection','active','left');
+create type public.storybook_volume_state as enum('draft','assembling','ready','published','archived');
 create table public.profiles(id uuid primary key,account_status text);
 create table public.heart_stones(id uuid primary key);
-create table public.heart_stone_memberships(heart_stone_id uuid references public.heart_stones,user_id uuid references public.profiles,status text);
-create table public.storybook_volumes(id uuid primary key,heart_stone_id uuid references public.heart_stones,title text,state text default 'draft');
+create table public.heart_stone_memberships(heart_stone_id uuid references public.heart_stones,user_id uuid references public.profiles,status public.membership_status);
+create table public.storybook_volumes(id uuid primary key,heart_stone_id uuid references public.heart_stones,title text,state public.storybook_volume_state default 'draft');
 create table public.story_seeds(id uuid primary key,heart_stone_id uuid references public.heart_stones,source_occurred_at timestamptz);
 create table public.storybook_entries(id uuid primary key,volume_id uuid references public.storybook_volumes,story_seed_id uuid references public.story_seeds,caption text);
 insert into public.profiles values('11111111-0000-4000-8000-000000000001','active'),('11111111-0000-4000-8000-000000000002','active'),('11111111-0000-4000-8000-000000000003','active');

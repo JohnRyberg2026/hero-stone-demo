@@ -10,7 +10,7 @@ Status: prepared, not installed or approved for release. The latest development 
 | --- | --- |
 | Database major | 17 |
 | Required column names | All 18 present; observed types returned for review |
-| Membership status / volume state | Existing enum types, unlike simplified text fixtures |
+| Membership status / volume state | Existing enum types; reader/ledger fixtures now use their observed labels |
 | Inspected tables | RLS enabled on all five reported tables |
 | Candidate schemas | Personal, relationship reader and consent ledger absent |
 | Supabase development branches | None returned |
@@ -20,7 +20,7 @@ No schemas, grants, records, approval responses or publication state changed. Ex
 ## Staging sequence
 
 1. Identify or provision a separately authorized disposable staging target. Record its project identity and isolation before any installation. Do not use the connected project's existing books as test fixtures or copy personal data into staging.
-2. Reproduce the complete existing schema without user data: enum types, constraints, indexes, RLS policies, grants, views, function bodies, enabled triggers and dependencies. Track the source revision. Minimal CI fixtures are not a substitute. Review service-role paths and every writer of books, entries, seeds, memberships and eligibility.
+2. Reproduce the complete existing schema without user data: enum types, constraints, indexes, RLS policies, grants, views, function bodies, enabled triggers and dependencies. Track the source revision. Minimal CI fixtures are not a substitute. The reader and ledger fixtures now reproduce the observed membership and volume-state enums (including the concurrency runner, which reuses the ledger setup), but still omit other baseline constraints and dependencies. Review service-role paths and every writer of books, entries, seeds, memberships and eligibility.
 3. Run the preflight on staging and inspect types and dependencies, not just the column-presence boolean. Reproduce legacy authorized/unauthorized reader behavior before adding candidates. Preserve the observed view/base-grant mismatch as evidence rather than fixing it with broad grants.
 4. Rehearse reviewed candidate installation on a clean staging copy. Relationship summary reader is separate from the personal draft schema. Install the consent ledger and publication guard together in one reviewed transaction after confirming the baseline; never leave the candidate ledger presented as enforcement without the guard. Existing-object conflicts require inspection, not a blind rerun or DROP. Prepare recorded migrations only after the rehearsal is accepted.
 5. Seed fictional adult accounts and relationships. Keep trusted adult verification separate from profile claims. Use at least an owner, another required participant, an unrelated account and a former member, plus two independent relationships for isolation checks.
@@ -44,3 +44,8 @@ The CI ledger runner currently covers four defined races with relationship-lock 
 ## Resume
 
 Next substantive integration gate: obtain a complete schema-only baseline in an isolated staging target and exercise the actual legacy writers against the candidates. Until that target is authorized and identified, continue only source preparation and local/disposable verification. Do not enable new shared approvals merely because a status screen exists.
+
+
+## Export availability check
+
+The connected tools expose catalog queries, migrations and branch operations, but no schema-export operation. Neither Supabase CLI nor `pg_dump` is available in this workspace. No connection credentials were requested, inspected or printed. A canonical schema-only export or a separately authorized isolated target is still required; reproducing selected catalog objects does not constitute a complete baseline. Catalog enum labels verified: membership `pending_connection / active / left`; book state `draft / assembling / ready / published / archived`.

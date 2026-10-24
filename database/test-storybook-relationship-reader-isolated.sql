@@ -4,10 +4,13 @@ begin;
 create role authenticated;create role anon;create schema auth;
 create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 grant usage on schema auth to authenticated,anon;
+-- Enum labels verified by catalog-only inspection on 24 October 2026.
+create type public.membership_status as enum('pending_connection','active','left');
+create type public.storybook_volume_state as enum('draft','assembling','ready','published','archived');
 create table public.profiles(id uuid primary key,account_status text,first_name text);
 create table public.heart_stones(id uuid primary key,display_name text);
-create table public.heart_stone_memberships(user_id uuid,heart_stone_id uuid,status text);
-create table public.storybook_volumes(id uuid primary key,heart_stone_id uuid,title text,volume_year integer,state text);
+create table public.heart_stone_memberships(user_id uuid,heart_stone_id uuid,status public.membership_status);
+create table public.storybook_volumes(id uuid primary key,heart_stone_id uuid,title text,volume_year integer,state public.storybook_volume_state);
 alter table public.storybook_volumes enable row level security;
 create view public.storybook_shared with(security_invoker=true) as select * from public.storybook_volumes;
 grant select on public.storybook_shared to authenticated;
