@@ -22,9 +22,9 @@ const {enterAdultDemo,isolateBrowser}=require('./tools/browser-adult-entry.cjs')
     return {data:structuredClone(state.date)};
    }};
   });
-  await page.goto('http://127.0.0.1:8765/shared-dates.html');await enterAdultDemo(page);
+  await page.goto('http://127.0.0.1:8765/date-store.html');await enterAdultDemo(page);await page.getByRole('button',{name:'Add to our moment',exact:true}).first().click();await page.locator('#planTitle').fill('Our planner date');await page.locator('#planDay').fill('2026-11-07');await page.locator('#planMeet').fill('Meet at home');await page.locator('#localPlanStops textarea').fill('PRIVATE planning note');await page.locator('#localReviewButton').click();await page.locator('#localPrepareInvitation').click();await page.locator('#localUseSharedInvitation').click();await page.waitForURL('**/shared-dates.html?from=plan');await enterAdultDemo(page);
   assert.equal(await page.evaluate(()=>__sharedFixture.calls.length),0);
-  await page.locator('#connectSharedAccount').click();await page.locator('#newAccountDate').click();
+  assert(await page.locator('#accountPlanOffer').isHidden());await page.locator('#connectSharedAccount').click();await page.locator('#accountPlanOffer').waitFor({state:'visible'});assert.equal(await page.locator('#accountDateEditor').isVisible(),false);assert.equal(await page.evaluate(()=>sessionStorage.getItem('hs_plan_invitation_transfer_v1')),null);assert(!(await page.locator('#accountPlanPreview').textContent()).includes('PRIVATE'));await page.locator('#applyAccountPlan').click();assert.equal(await page.locator('#accountDateTitle').inputValue(),'Our planner date');assert((await page.locator('#accountDateWhen').inputValue()).includes('Time zone to confirm'));assert.equal(await page.locator('#accountDateMeeting').inputValue(),'Meet at home');assert.equal(await page.locator('#accountPeople input:checked').count(),0);assert.equal(await page.evaluate(()=>__sharedFixture.calls.filter(c=>['create','send'].includes(c.args.p_operation)).length),0);
   await page.locator('#accountDateTitle').fill('Fictional dinner <script>');
   await page.locator('#accountDateWhen').fill('Friday 6 PM Eastern');await page.locator('#accountDateMeeting').fill('Fictional park');
   await page.locator('#accountPeople input').nth(0).check();await page.locator('#accountPeople input').nth(1).check();

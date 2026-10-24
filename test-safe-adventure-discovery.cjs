@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const ctx=vm.createContext({module:{exports:{}}});
+for(const file of ['recommendation-inputs.js','recommendation-safety.js','safe-adventure-discovery.js'])vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file});
+const S=ctx.module.exports;
+const args={enabled:true,accountId:'A',profile:{ownerId:'A',loaded:true,revision:3},participants:[{authorized:true,loaded:true,boundariesVerified:true,accepted:true,boundaries:{minimalWalking:true}}],wishes:[{ownerId:'A',authorized:true,permitted:true,category:'outdoors',notes:'secret'}],catalog:[{id:'trail',category:'outdoors',walkingLevel:'long',accessibilityVerified:true,cost:0},{id:'drive',category:'outdoors',walkingLevel:'minimal',accessibilityVerified:true,cost:0}]};
+assert.equal(S.recommend({...args,enabled:false}).status,'disabled');
+assert.equal(S.recommend(args).suggestions[0].id,'drive');
+assert.equal(S.recommend({...args,profile:{...args.profile,loaded:false}}).status,'needs_confirmation');
+assert.equal(S.recommend({...args,catalog:[args.catalog[0]]}).status,'no_verified_matches');
+assert.equal(JSON.stringify(S.recommend(args)).includes('secret'),false);
+console.log('PASS: opt-in adventure bridge, safe ranking, fail-closed missing profile, no matches, privacy.');
