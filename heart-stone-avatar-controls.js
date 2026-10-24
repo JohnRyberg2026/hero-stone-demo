@@ -16,7 +16,7 @@
  }
  if(settingsToggle)settingsToggle.onclick=()=>{const open=settings.hidden;if(!open)quiet();setSettings(open);};
  quietButton.onclick=quiet;
- document.getElementById('hideHeartStone')?.addEventListener('click',()=>{quiet();setSettings(false);if(settingsToggle)settingsToggle.hidden=true;voice.hidden=true;motion.hidden=true;});
- document.getElementById('restoreHeartStone')?.addEventListener('click',()=>{voice.hidden=false;motion.hidden=false;if(settingsToggle)settingsToggle.hidden=false;});
+ document.getElementById('hideHeartStone')?.addEventListener('click',()=>{quiet();setSettings(false);if(settingsToggle)settingsToggle.hidden=true;if(voice)voice.hidden=true;if(motion)motion.hidden=true;});
+ document.getElementById('restoreHeartStone')?.addEventListener('click',()=>{if(voice)voice.hidden=false;if(motion)motion.hidden=false;if(settingsToggle)settingsToggle.hidden=false;});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'){const focusInside=settings?.contains(document.activeElement);quiet();setSettings(false);if(focusInside)settingsToggle?.focus();}});
 })();

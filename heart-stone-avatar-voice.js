@@ -6,7 +6,11 @@
   'Hi, I’m HEART STONE. Would you like help to choose where to begin?',
   'Let’s Connect opens invitations. Let’s Have an Adventure opens the date builder. You choose what happens next; an invitation still needs explicit approval.',
   'Our World opens your Living Story Book. Your own words belong in twelve monthly chapters, with private drafts and separate account-save confirmation.',
-  'Explore opens saved wishes and ideas. You can also review adventure preferences. This development preview does not automatically book, buy, share or send anything.'
+  'Explore opens saved wishes and ideas. You can also review adventure preferences. This development preview does not automatically book, buy, share or send anything.',
+  'Hi, I’m HEART STONE. Would you like a short tour of your Living Story Book?',
+  'Your book is an annual volume with twelve monthly chapters. Start with your own words; no memories are generated for you.',
+  'Capture a moment with the date it happened. You can edit your words later, and the moment stays in its original month. Cancel keeps the existing draft unchanged.',
+  'Preview notes are unsaved until you explicitly save to your signed-in account and receive confirmation. My saved volumes reopens your own books. Nothing here is shared or published.'
  ];
  function createVoice(synth,Utterance,onState){
   let enabled=false,voice=null,owned=null,disposed=false;
