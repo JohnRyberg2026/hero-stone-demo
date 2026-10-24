@@ -1,8 +1,8 @@
 (function(){
  'use strict';
- const $=id=>document.getElementById(id);let consentStore=null,consentVersion=0,consentPending=false;let store=null,account=null,version=0,pending=false,personalBusy=false;
- function resetConsent(clearBooks=true){consentVersion++;consentPending=false;consentStore?.invalidate();if(clearBooks){$('consentBook').replaceChildren(new Option('Choose a listed book',''));$('consentAction').value='';}$('bookConsentStatus').textContent='No consent status checked.';}
- function controls(){ $('consentBook').disabled=!account||pending||personalBusy||!$('consentBook').options[1];$('consentAction').disabled=!account||pending||personalBusy;$('checkBookConsent').disabled=!account||pending||personalBusy||consentPending||!$('consentBook').value||!$('consentAction').value; $('refreshBookRelationships').disabled=!account||pending||personalBusy;$('bookRelationship').disabled=!account||personalBusy;$('listRelationshipBooks').disabled=!account||!$('bookRelationship').value||pending||personalBusy; }
+ const $=id=>document.getElementById(id);let checkedConsent=null;let consentStore=null,consentVersion=0,consentPending=false;let store=null,account=null,version=0,pending=false,personalBusy=false;
+ function resetConsent(clearBooks=true){checkedConsent=null;consentVersion++;consentPending=false;consentStore?.invalidate();if(clearBooks){$('consentBook').replaceChildren(new Option('Choose a listed book',''));$('consentAction').value='';}$('bookConsentStatus').textContent='No consent status checked.';}
+ function controls(){ $('withdrawBookConsent').disabled=!account||pending||personalBusy||consentPending||checkedConsent?.ownResponse!=='approved'; $('consentBook').disabled=!account||pending||personalBusy||!$('consentBook').options[1];$('consentAction').disabled=!account||pending||personalBusy;$('checkBookConsent').disabled=!account||pending||personalBusy||consentPending||!$('consentBook').value||!$('consentAction').value; $('refreshBookRelationships').disabled=!account||pending||personalBusy;$('bookRelationship').disabled=!account||personalBusy;$('listRelationshipBooks').disabled=!account||!$('bookRelationship').value||pending||personalBusy; }
  function clear(){resetConsent();version++;account=null;pending=false;store?.invalidate();$('bookRelationship').replaceChildren(new Option('Choose a relationship',''));$('relationshipBookList').replaceChildren();$('relationshipBookStatus').textContent='Account changed. Connect again to view relationship books.';controls();}
  window.addEventListener('storybook:account-cleared',clear);
  window.addEventListener('storybook:controls',event=>{personalBusy=event.detail.busy;controls();});
@@ -25,13 +25,22 @@
  $('checkBookConsent').onclick=async()=>{
   const book=$('consentBook').value,relationship=$('bookRelationship').value,action=$('consentAction').value;
   if(!account||!book||!relationship||!action||pending||personalBusy||consentPending)return;
-  const token=++consentVersion,owner=account;consentPending=true;controls();$('bookConsentStatus').textContent='Checking current consent status…';
+  checkedConsent=null;const token=++consentVersion,owner=account;consentPending=true;controls();$('bookConsentStatus').textContent='Checking current consent status…';
   const result=await consentStore.review(owner,book,relationship,action);
   if(token!==consentVersion||owner!==account||book!==$('consentBook').value||relationship!==$('bookRelationship').value||action!==$('consentAction').value)return;
   consentPending=false;
   if(!result.ok)$('bookConsentStatus').textContent='Consent status could not be verified. Do not treat this as approval. Check access or try again.';
-  else {const own={approved:'approved',declined:'declined',withdrawn:'withdrawn'}[result.status.ownResponse]||'no response recorded';$('bookConsentStatus').textContent='Your response for this version: '+own+'. '+(result.status.allApproved?'All required responses are recorded as approved for this version.':'Full consent is not recorded for this version.')+' Status checked now; it can change. Publication and export remain unavailable.';}
+  else {checkedConsent=result.status;const own={approved:'approved',declined:'declined',withdrawn:'withdrawn'}[result.status.ownResponse]||'no response recorded';$('bookConsentStatus').textContent='Your response for this version: '+own+'. '+(result.status.allApproved?'All required responses are recorded as approved for this version.':'Full consent is not recorded for this version.')+' Status checked now; it can change. Publication and export remain unavailable.';}
   controls();
+ };
+ $('withdrawBookConsent').onclick=async()=>{
+  if(!account||pending||personalBusy||consentPending||checkedConsent?.ownResponse!=='approved')return;
+  const book=$('consentBook').value,relationship=$('bookRelationship').value,action=$('consentAction').value,fingerprint=checkedConsent.fingerprint,owner=account;
+  if(!window.confirm('Withdraw your recorded approval for this book version and selected action? This does not remove copies already shared or exported.'))return;
+  checkedConsent=null;const token=++consentVersion;consentPending=true;controls();$('bookConsentStatus').textContent='Requesting withdrawal…';
+  const result=await consentStore.withdraw(owner,book,relationship,action,fingerprint);
+  if(token!==consentVersion||owner!==account)return;
+  consentPending=false;$('bookConsentStatus').textContent=result.ok?'Your approval was withdrawn for this version and action. Publication and export remain unavailable.':'Withdrawal could not be confirmed; it may have been recorded. Check consent status again before trying another withdrawal.';controls();
  };
  controls();
 })();
