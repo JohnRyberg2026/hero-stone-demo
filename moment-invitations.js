@@ -233,6 +233,7 @@
       scene.append(node('p','Follow the moment. Make it yours. Put the phones aside when you can.','cinemaClosing'));
       action(intro,'Step Into Our Moment ❤️',()=>{intro.hidden=true;scene.hidden=false;sceneHeading.focus();dialog.scrollTop=0;}).className='primary';
       const progress=node('p',latest.started_at?'Your shared moment is underway. You can return here whenever you need the details.':'When you are ready together, begin your shared moment. Both of you will see it as underway.','notice');progress.setAttribute('role','status');scene.append(progress);
+      let memoryNote=null;const mayLeave=()=>!memoryNote||memoryNote.value===memory||confirm('Leave without saving these private memory edits? They will not be copied into the Living Story Book.');
       let starting=false,finishing=false,finish;
       const begin=action(scene,'Begin Our Moment Together ❤️',async()=>{
         if(starting)return;
@@ -266,29 +267,34 @@
       if(latest.completed_at){
         progress.textContent='Your shared moment has come to a close. Keep a little of it in your own words, whenever you are ready.';
         const label=node('label','What would you like to remember? (optional)'),note=node('textarea');
-        note.maxLength=4000;note.value=memory;note.placeholder='A laugh, a discovery, a small detail…';label.append(note);scene.append(label);
+        memoryNote=note;note.maxLength=4000;note.value=memory;note.placeholder='A laugh, a discovery, a small detail…';label.append(note);scene.append(label);
         scene.append(node('p','Only you can read these words. Your partner can save their own perspective.','helper'));
         let saving=false;
         const save=action(scene,'Save My Private Memory ❤️',async()=>{
-          if(saving)return;saving=true;save.disabled=true;progress.textContent='Saving your private memory…';
+          if(saving)return;const submittedNote=note.value;saving=true;save.disabled=true;progress.textContent='Saving your private memory…';
           try{
             const fresh=await context();
             if(fresh.user.id!==c.user.id||fresh.hs!==c.hs)throw Error('Your account changed. Refresh invitations to continue.');
-            const result=await fresh.sb.rpc('my_shared_moment_memory',{p_invitation_id:latest.id,p_expected_user:c.user.id,p_note:note.value});
+            const result=await fresh.sb.rpc('my_shared_moment_memory',{p_invitation_id:latest.id,p_expected_user:c.user.id,p_note:submittedNote});
             const checked=await fresh.sb.auth.getUser();
             if(version!==momentVersion)return;
             if(result.error||checked.error||checked.data?.user?.id!==c.user.id)throw Error('We couldn’t confirm the save. Your words are still here; try again or reopen to check.');
-            progress.textContent='Your memory is saved privately. You can return here to read or edit it.';
+            memory=submittedNote;progress.textContent=note.value===memory?'Your memory is saved privately. You can return here to read or edit it.':'Your submitted memory was saved privately. Your newer edits are still unsaved.';
           }catch(e){progress.textContent=e.message;}finally{saving=false;save.disabled=false;}
         });save.className='primary';
+        scene.append(node('p','Your annual Living Story Book is separate from this private invitation memory. Open it only if you want to capture something there, choose the date it actually happened and write your own words. Nothing is copied, saved or shared automatically.','helper'));
+        action(scene,'Open My Living Story Book',()=>{if(mayLeave()){dialog.close();location.href='storybook-preview.html';}});
       }
       action(scene,'Back — Our Invitation',()=>{scene.hidden=true;intro.hidden=false;heading.focus();dialog.scrollTop=0;});
       dialog.append(intro,scene);
       const exits=node('div',undefined,'actions');
-      action(exits,'Back — Invitations',()=>dialog.close());
+      action(exits,'Back — Invitations',()=>{if(mayLeave())dialog.close();});
+      dialog.addEventListener('cancel',event=>{if(!mayLeave())event.preventDefault();});
       if(!latest.completed_at)action(exits,'Stop This Invitation',()=>{if(confirm('Close this invitation for both of you?')){dialog.close();updateInvitation(c,latest,'cancelled','',card);}});
       dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
-      dialog.addEventListener('close',()=>{dialog.remove();if(momentDialog===dialog)momentDialog=null;});
+      const protectEdits=event=>{if(dialog.open&&memoryNote&&memoryNote.value!==memory){event.preventDefault();event.returnValue='';}};
+      window.addEventListener('beforeunload',protectEdits);
+      dialog.addEventListener('close',()=>{window.removeEventListener('beforeunload',protectEdits);dialog.remove();if(momentDialog===dialog)momentDialog=null;});
       document.body.append(dialog);dialog.showModal();(latest.started_at?sceneHeading:heading).focus();
       el('sharedInvitationStatus').textContent='Your accepted moment is ready to open.';
     }catch(e){if(version===momentVersion)el('sharedInvitationStatus').textContent=e.message;}

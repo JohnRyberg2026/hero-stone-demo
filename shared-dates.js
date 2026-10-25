@@ -1,18 +1,20 @@
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
- let service=null,loading=null,account=null,self=null,people=[],current=null,reviewed=null,busy=false,dirty=false;
+ let service=null,loading=null,account=null,self=null,people=[],current=null,reviewed=null,busy=false,dirty=false,pendingPlan=null;
  const states={draft:'Private draft · Only you can see it.',pending:'Waiting for everyone to decide.',confirmed:'Everyone included has accepted this version.',closed:'This invitation round is closed.',needs_revision:'A different time was requested. A revised invitation is needed.',started:'This date is underway.',stopped:'Participation in this shared date has stopped.'};
  const responseLabels={pending:'Waiting for your answer',accepted:'You accepted',declined:'You declined',reschedule:'You requested another time',withdrawn:'You withdrew your acceptance'};
  function node(tag,text){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;}
  function clear(){
-  account=null;self=null;people=[];current=null;reviewed=null;dirty=false;
+  account=null;self=null;people=[];current=null;reviewed=null;dirty=false;pendingPlan=null;$('accountPlanOffer').hidden=true;$('accountPlanPreview').textContent='';$('accountPlanStatus').textContent='';
   $('sharedAccountIdentity').textContent='Account changed. Connect this screen again.';
   ['accountDateList','accountDateEditor','accountDateDetail'].forEach(id=>$(id).hidden=true);
   ['accountPeople','accountDateButtons','accountRoster','accountSendSnapshot'].forEach(id=>$(id).replaceChildren());
   ['accountDateTitle','accountDateWhen','accountDateMeeting','accountDetailTitle','accountDetailWhen','accountDetailMeeting','accountSelf','accountDateRevision','accountDetailState'].forEach(id=>{if('value' in $(id))$(id).value='';$(id).textContent='';});
   if($('accountSendReview').open)$('accountSendReview').close();
  }
+ // Browsers may restore form values after scripts run during back navigation.
+ window.addEventListener('pageshow',()=>{clear();$('sharedAccountFeedback').textContent='Connect your account to view shared dates. Nothing is loaded automatically.';});
  function client(){
   if(service)return Promise.resolve(service);
   if(!loading)loading=new Promise((resolve,reject)=>{
@@ -74,6 +76,7 @@
   });
   $('beginAccountDate').hidden=date.state!=='confirmed'||!!date.eligibility_required;
   $('stopAccountDate').hidden=date.state!=='started';
+  $('sharedStorybookOffer').hidden=date.state!=='stopped'||!!date.eligibility_required;
  }
  async function refresh(){
   const rows=await service.action('list');if(!Array.isArray(rows))throw Error('Your date list could not be verified.');
@@ -81,10 +84,18 @@
   if(!rows.length)$('accountDateButtons').append(node('p','No shared dates are waiting here.'));
   for(const date of rows){const b=node('button',(date.title||'Shared date')+' · '+(states[date.state]||date.state));b.type='button';b.dataset.sharedControl='';b.onclick=()=>run(async()=>{if(!discard())return;detail(await service.action('view',{date}));$('sharedAccountFeedback').textContent='Current invitation loaded.';});$('accountDateButtons').append(b);}
  }
+ function offerPlannerDetails(){
+  if(typeof sessionStorage==='undefined')return;
+  try{const raw=sessionStorage.getItem(InvitationStorePlan.key);if(!raw)return;sessionStorage.removeItem(InvitationStorePlan.key);if(raw.length>12000)throw Error('too large');pendingPlan=InvitationStorePlan.clean(JSON.parse(raw));
+   $('accountPlanPreview').textContent=[pendingPlan.title,'Day: '+(pendingPlan.day||'Decide together'),'Start: '+(pendingPlan.time||'Decide together')+' · Time zone to confirm','Meeting: '+(pendingPlan.meet||'Decide together')].join('\n');$('accountPlanOffer').hidden=false;$('applyAccountPlan').disabled=false;
+  }catch{$('accountPlanOffer').hidden=false;$('applyAccountPlan').disabled=true;$('accountPlanStatus').textContent='Transferred details could not be read. Create a fresh draft or return to the planner.';}
+ }
+ $('dismissAccountPlan').onclick=()=>{pendingPlan=null;$('accountPlanPreview').textContent='';$('accountPlanOffer').hidden=true;};
+ $('applyAccountPlan').onclick=()=>{if(busy||!account||!pendingPlan||!discard())return;const p=pendingPlan;current=null;$('accountDateDetail').hidden=true;editor(null);$('accountDateTitle').value=p.title;$('accountDateWhen').value=[p.day||'Day to decide',p.time||'Time to decide','Time zone to confirm'].join(' · ');$('accountDateMeeting').value=p.meet||'We’ll decide together';dirty=true;$('dismissAccountPlan').onclick();$('sharedAccountFeedback').textContent='Reviewed details are in your open draft. Choose guests and confirm practical details. Nothing saved or sent.';};
  $('connectSharedAccount').onclick=()=>run(async()=>{
   if(!discard())return;clear();const api=await client(),context=await api.connect();account=context.account;self=context.self;people=context.people;
   $('sharedAccountIdentity').textContent='Signed in as '+(account.email||self.name||'your account');$('accountDateList').hidden=false;
-  await refresh();$('sharedAccountFeedback').textContent='Your account is connected. Choose a date or make a new one.';
+  await refresh();offerPlannerDetails();$('sharedAccountFeedback').textContent='Your account is connected. Choose a date or make a new one.';
  });
  $('refreshAccountDates').onclick=()=>run(async()=>{
   if(!discard())return;

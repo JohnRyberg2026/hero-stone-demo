@@ -1,0 +1,194 @@
+name: Recommendation safety checks
+on:
+  push:
+    paths:
+      - '*.js'
+      - '*.cjs'
+      - '*.html'
+      - '*.css'
+      - 'tests/**'
+      - 'tools/**'
+      - 'heart-stone-welcome-preview.html'
+      - 'test-heart-stone-welcome-browser.cjs'
+      - 'heart-stone-companion.js'
+      - 'test-heart-stone-companion-browser.cjs'
+      - 'storybook-account-ui.js'
+      - 'test-storybook-account-browser.cjs'
+      - 'storybook-preview.html'
+      - 'storybook-preview.js'
+      - 'test-storybook-browser.cjs'
+      - 'database/storybook-draft-server.sql'
+      - 'database/test-storybook-draft-isolated.sql'
+      - 'database/shared-date-server.sql'
+      - 'database/shared-date-candidates.sql'
+      - 'database/shared-date-server-test.sql'
+      - 'database/test-shared-dates-isolated.sql'
+      - 'database/storybook-relationship-reader.sql'
+      - 'database/storybook-consent-ledger.sql'
+      - 'database/storybook-publication-guard.sql'
+      - 'database/test-storybook-consent-ledger-isolated.sql'
+      - 'database/test-storybook-relationship-reader-isolated.sql'
+      - 'storybook-account-store.js'
+      - 'test-storybook-account-store.cjs'
+      - 'storybook-drafts.js'
+      - 'test-storybook-drafts.cjs'
+      - 'recommendation-safety.js'
+      - 'recommendation-inputs.js'
+      - 'test-recommendation-safety.cjs'
+      - 'test-recommendation-inputs.cjs'
+      - 'safe-adventure-discovery.js'
+      - 'test-safe-adventure-discovery.cjs'
+      - 'recommendation-profile-boundary.js'
+      - 'test-recommendation-profile-boundary.cjs'
+      - 'adventure-preferences-store.js'
+      - 'test-adventure-preferences-store.cjs'
+      - 'adventure-preferences-setup.js'
+      - 'test-adventure-preferences-setup.cjs'
+      - 'adventure-profile-flow.js'
+      - 'test-adventure-profile-flow.cjs'
+      - 'adventure-profile-view.js'
+      - 'test-adventure-profile-view.cjs'
+      - 'private-plan-review.js'
+      - 'private-plan-review-ui.js'
+      - 'test-private-plan-review.cjs'
+      - 'test-private-plan-review-browser.cjs'
+      - 'date-store.html'
+      - 'local-date-builder.js'
+      - 'test-local-date-builder.cjs'
+      - 'invitation-store-plan.js'
+      - 'moment-invitations.js'
+      - 'tests/moment-invitations.cjs'
+      - 'test-moment-storybook-browser.cjs'
+      - 'invitation-opening.html'
+      - 'test-invitation-store-plan.cjs'
+      - 'test-plan-invitation-browser.cjs'
+      - 'adventure-profile-screen.js'
+      - 'database/adventure-preferences-guard.sql'
+      - 'database/test-adventure-preferences-isolated.sql'
+      - 'supabase/migrations/20261022213100_adventure_preferences_draft.sql'
+      - 'test-profile-planning-journey-browser.cjs'
+      - 'adventure-profile-preview.html'
+      - 'test-adventure-profile-browser-load.cjs'
+      - 'test-adventure-profile-browser.cjs'
+      - 'tools/check-date-release.cjs'
+      - '.github/workflows/recommendation-safety.yml'
+  pull_request:
+    paths:
+      - '*.js'
+      - '*.cjs'
+      - '*.html'
+      - '*.css'
+      - 'tests/**'
+      - 'tools/**'
+      - 'heart-stone-welcome-preview.html'
+      - 'test-heart-stone-welcome-browser.cjs'
+      - 'heart-stone-companion.js'
+      - 'test-heart-stone-companion-browser.cjs'
+      - 'storybook-account-ui.js'
+      - 'test-storybook-account-browser.cjs'
+      - 'storybook-preview.html'
+      - 'storybook-preview.js'
+      - 'test-storybook-browser.cjs'
+      - 'database/storybook-draft-server.sql'
+      - 'database/test-storybook-draft-isolated.sql'
+      - 'database/shared-date-server.sql'
+      - 'database/shared-date-candidates.sql'
+      - 'database/shared-date-server-test.sql'
+      - 'database/test-shared-dates-isolated.sql'
+      - 'database/storybook-relationship-reader.sql'
+      - 'database/storybook-consent-ledger.sql'
+      - 'database/storybook-publication-guard.sql'
+      - 'database/test-storybook-consent-ledger-isolated.sql'
+      - 'database/test-storybook-relationship-reader-isolated.sql'
+      - 'storybook-account-store.js'
+      - 'test-storybook-account-store.cjs'
+      - 'storybook-drafts.js'
+      - 'test-storybook-drafts.cjs'
+      - 'recommendation-safety.js'
+      - 'recommendation-inputs.js'
+      - 'test-recommendation-safety.cjs'
+      - 'test-recommendation-inputs.cjs'
+      - 'private-plan-review.js'
+      - 'private-plan-review-ui.js'
+      - 'test-private-plan-review.cjs'
+      - 'test-private-plan-review-browser.cjs'
+      - 'date-store.html'
+      - 'local-date-builder.js'
+      - 'test-local-date-builder.cjs'
+      - 'invitation-store-plan.js'
+      - 'moment-invitations.js'
+      - 'tests/moment-invitations.cjs'
+      - 'test-moment-storybook-browser.cjs'
+      - 'invitation-opening.html'
+      - 'test-invitation-store-plan.cjs'
+      - 'test-plan-invitation-browser.cjs'
+      - 'adventure-profile-screen.js'
+      - 'database/adventure-preferences-guard.sql'
+      - 'database/test-adventure-preferences-isolated.sql'
+      - 'supabase/migrations/20261022213100_adventure_preferences_draft.sql'
+      - 'test-profile-planning-journey-browser.cjs'
+      - 'adventure-profile-preview.html'
+      - 'test-adventure-profile-browser-load.cjs'
+      - 'test-adventure-profile-browser.cjs'
+      - 'tools/check-date-release.cjs'
+      - '.github/workflows/recommendation-safety.yml'
+permissions:
+  contents: read
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Combined product regression checks
+        run: node tools/check-date-release.cjs
+      - name: Install browser runtime
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Combined browser journeys (fictional services)
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/profile-preview-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8765/adventure-profile-preview.html >/dev/null; then break; fi
+            sleep 0.25
+          done
+          node tools/check-date-release.cjs --browser-only
+  storybook-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: fictional-ci-only
+          POSTGRES_DB: storybook_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Check private drafts and consent in disposable PostgreSQL 17
+        env:
+          PGPASSWORD: fictional-ci-only
+        run: |
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-draft-isolated.sql
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-adventure-preferences-isolated.sql
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-shared-dates-isolated.sql
+          node tools/test-shared-date-concurrency.cjs
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-relationship-reader-isolated.sql
+          psql -h 127.0.0.1 -U postgres -d storybook_test -v ON_ERROR_STOP=1 -f database/test-storybook-consent-ledger-isolated.sql
+          node tools/test-storybook-consent-concurrency.cjs

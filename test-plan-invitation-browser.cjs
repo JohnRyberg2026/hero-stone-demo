@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),{chromium}=require('playwright'),{isolateBrowser,enterAdultDemo}=require('./tools/browser-adult-entry.cjs');
+(async()=>{const browser=await chromium.launch({headless:true});try{
+ const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());await isolateBrowser(page);
+ await page.goto('http://127.0.0.1:8765/date-store.html');await enterAdultDemo(page);
+ await page.getByRole('button',{name:'Add to our moment',exact:true}).first().click();await page.locator('#planTitle').fill('Our reviewed evening');await page.locator('#planDay').fill('2026-11-07');await page.locator('#planMeet').fill('Meet at home');
+ await page.locator('#localPlanStops textarea').fill('PRIVATE planning note');await page.locator('#planLimit').fill('137');
+ await page.locator('#localReviewButton').click();await page.locator('#localPrepareInvitation').click();await page.locator('#invitationPlanStory').fill('Our reviewed invitation words');
+ await page.locator('#planMeet').fill('Meet at the cafe');await page.locator('#localUseInvitation').click();assert(await page.locator('#localStatus').textContent().then(x=>x.includes('plan changed')));assert(await page.locator('#invitationTransfer').isHidden());assert.equal(await page.evaluate(()=>sessionStorage.getItem('hs_plan_invitation_transfer_v1')),null);
+ await page.locator('#localPrepareInvitation').click();await page.locator('#invitationPlanStory').fill('Our reviewed invitation words');await page.locator('#localUseInvitation').click();await page.waitForURL('**/invitation-opening.html?from=plan');await enterAdultDemo(page);
+ assert(await page.locator('#storePlanOffer').isVisible());assert.equal(await page.locator('#experienceTitle').inputValue(),'');assert.equal(await page.evaluate(()=>localStorage.getItem('hs_moment_opening_preview_v1')),null);
+ const payload=await page.evaluate(()=>sessionStorage.getItem('hs_plan_invitation_transfer_v1'));assert(!payload.includes('PRIVATE'));assert(!payload.includes('137'));
+ await page.locator('#applyStorePlan').click();assert.equal(await page.locator('#experienceTitle').inputValue(),'Our reviewed evening');assert.equal(await page.locator('#experienceStory').inputValue(),'Our reviewed invitation words');assert.equal(await page.locator('#momentDate').inputValue(),'2026-11-07');assert.equal(await page.locator('#meetPlace').inputValue(),'Meet at the cafe');
+ assert.equal(await page.evaluate(()=>sessionStorage.getItem('hs_plan_invitation_transfer_v1')),null);assert.equal(await page.evaluate(()=>localStorage.getItem('hs_moment_opening_preview_v1')),null);assert(await page.locator('#sendInvitationDialog').isHidden());assert.equal(errors.length,0,errors.join('; '));
+ console.log('PASS: changed plans require renewed preparation; explicit reviewed invitation handoff preserves practical details, excludes private notes/budget, consumes transfer, and never saves/sends automatically.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
