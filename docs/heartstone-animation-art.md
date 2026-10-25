@@ -15,3 +15,8 @@ This generated strip still requires visual review for registration and likeness;
 
 ## Blink inspection controls
 Added quarter-speed inspection and explicit still-pose buttons for open, half-closed and closed eyelids. Selecting a still pose cancels scheduled playback; Quiet/Stop restore open eyes. Still-pose inspection remains available with reduced motion enabled, while timed playback stays disabled. These controls aid visual review and do not establish production animation quality.
+
+## Speech activity rehearsal
+Added speech-strip-v1.webp and heart-stone-speech-preview.html. The existing allowlisted public-greeting voice module emits state-only events; no text or account data is included. Mouth poses cycle only after an actual speech-start callback and a separate mouth-movement opt-in. Waiting, Stop, end/error, Quiet, Hide, Escape, page exit and reduced motion restore the resting mouth. Quiet/Hide/Escape reset voice and movement opt-ins. Show never starts playback. Playback is bounded to 15 seconds of mouth movement.
+
+This is a speech-activity illustration, not phoneme or viseme synchronization. Generated frames still need visual registration review. Browser checks use simulated speech callbacks and do not prove real-device audio timing, female voice availability or lip-sync quality. No main app or database changes.

@@ -38,7 +38,7 @@
  if(typeof module==='object'&&module.exports){module.exports={createVoice};return;}
  const host=document.getElementById('avatarVoicePreview');if(!host)return;
  const toggle=host.querySelector('[data-enable]'),select=host.querySelector('select'),play=host.querySelector('[data-play]'),stop=host.querySelector('[data-stop]'),status=host.querySelector('[role=status]');
- const engine=createVoice(root.speechSynthesis,root.SpeechSynthesisUtterance,state=>{status.textContent={silent:'HEART STONE is silent.',ready:'Voice is ready. Choose Hear greeting to listen.',waiting:'Waiting for your device’s voice. If nothing plays, stop or choose another voice.',speaking:'Speaking. Stop is always available.',error:'Voice could not play. You can try Hear again, choose another voice, or continue silently.'}[state];});
+ const engine=createVoice(root.speechSynthesis,root.SpeechSynthesisUtterance,state=>{status.textContent={silent:'HEART STONE is silent.',ready:'Voice is ready. Choose Hear greeting to listen.',waiting:'Waiting for your device’s voice. If nothing plays, stop or choose another voice.',speaking:'Speaking. Stop is always available.',error:'Voice could not play. You can try Hear again, choose another voice, or continue silently.'}[state];host.dispatchEvent(new CustomEvent('heartstone:voice-state',{detail:{state}}));});
  const guide=document.getElementById('heartStoneGuide'),message=document.getElementById('heartStoneGuideMessage');
  const hearStep=document.createElement('button');hearStep.type='button';hearStep.textContent='Hear this step';hearStep.disabled=true;
  if(guide&&message)message.insertAdjacentElement('afterend',hearStep);

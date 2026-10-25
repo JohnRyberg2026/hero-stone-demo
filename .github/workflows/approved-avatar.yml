@@ -25,3 +25,5 @@ jobs:
           node test-heart-stone-avatar-appearance.cjs
           node test-heart-stone-blink.cjs
           node test-heart-stone-blink-browser.cjs
+          node test-heart-stone-speech-motion.cjs
+          node test-heart-stone-speech-browser.cjs
