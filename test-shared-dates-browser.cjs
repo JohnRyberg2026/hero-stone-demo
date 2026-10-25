@@ -19,6 +19,7 @@ const {enterAdultDemo,isolateBrowser}=require('./tools/browser-adult-entry.cjs')
     if(op==='create'||op==='revise')state.date={...args.p_payload,id:'fictional-date',revision:(state.date?.revision||0)+1,organizer:'one',state:'draft',participants:args.p_payload.participants.map(id=>({id,name:names[id],response:id==='one'?'pending':null}))};
     if(op==='send')state.date={...state.date,state:'pending',participants:state.date.participants.map(p=>({...p,response:p.id==='one'?'accepted':null}))};
     if(op==='respond')state.date={...state.date,state:'closed'};
+    if(op==='stop')state.date={...state.date,state:'stopped'};
     return {data:structuredClone(state.date)};
    }};
   });
@@ -29,7 +30,7 @@ const {enterAdultDemo,isolateBrowser}=require('./tools/browser-adult-entry.cjs')
   await page.locator('#accountDateWhen').fill('Friday 6 PM Eastern');await page.locator('#accountDateMeeting').fill('Fictional park');
   await page.locator('#accountPeople input').nth(0).check();await page.locator('#accountPeople input').nth(1).check();
   await page.locator('#saveAccountDate').click();await page.locator('#accountDateDetail').waitFor({state:'visible'});
-  assert.equal(await page.locator('#accountRoster li').count(),3);assert.equal(await page.locator('#accountDetailTitle').textContent(),'Fictional dinner <script>');
+  assert(await page.locator('#sharedStorybookOffer').isHidden());assert.equal(await page.locator('#accountRoster li').count(),3);assert.equal(await page.locator('#accountDetailTitle').textContent(),'Fictional dinner <script>');
   assert.equal(await page.evaluate(()=>__sharedFixture.calls.filter(c=>c.args.p_operation==='send').length),0);
   await page.locator('#reviewAccountSend').click();await page.locator('#accountSendReview').waitFor({state:'visible'});
   assert.equal(await page.locator('#accountSendSnapshot li').count(),3);
@@ -45,6 +46,8 @@ const {enterAdultDemo,isolateBrowser}=require('./tools/browser-adult-entry.cjs')
   await page.evaluate(()=>{__sharedFixture.fail=true;});await page.locator('[data-account-response=withdrawn]').click();
   await page.waitForFunction(()=>document.querySelector('#sharedAccountFeedback').textContent.includes('uncertain'));
   assert.equal(await page.locator('#accountDetailState').textContent(),'Waiting for everyone to decide.');
+  await page.evaluate(()=>{__sharedFixture.fail=false;__sharedFixture.date.state='closed';});await page.locator('#refreshAccountDates').click();await page.waitForFunction(()=>document.querySelector('#accountDetailState').textContent.includes('round is closed'));assert(await page.locator('#sharedStorybookOffer').isHidden());
+  await page.evaluate(()=>{__sharedFixture.date.state='started';});await page.locator('#refreshAccountDates').click();await page.locator('#stopAccountDate').waitFor({state:'visible'});await page.locator('#stopAccountDate').click();await page.locator('#sharedStorybookOffer').waitFor({state:'visible'});assert((await page.locator('#sharedStorybookOffer').textContent()).includes('Nothing is copied'));assert.equal(await page.locator('#sharedStorybookLink').getAttribute('href'),'storybook-preview.html');await page.locator('#sharedStorybookLink').click();await page.waitForURL('**/storybook-preview.html');assert.equal(await page.locator('#moments article').count(),0);assert(await page.locator('#bookSetup').isVisible());assert.equal(await page.locator('#bookTitle').inputValue(),'My Living Story Book');assert.equal(await page.evaluate(()=>__sharedFixture.calls.length),0);await page.goBack();
   await page.evaluate(()=>{__sharedFixture.user='other';__sharedFixture.listeners.forEach(fn=>fn('SIGNED_IN',{user:{id:'other'}}));});
   assert(!(await page.locator('#accountDateDetail').isVisible()));assert.equal(await page.locator('#accountRoster li').count(),0);
   assert.equal(await page.locator('#accountDateTitle').inputValue(),'');assert.equal(await page.locator('#accountSendSnapshot li').count(),0);

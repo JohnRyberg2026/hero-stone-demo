@@ -74,6 +74,7 @@
   });
   $('beginAccountDate').hidden=date.state!=='confirmed'||!!date.eligibility_required;
   $('stopAccountDate').hidden=date.state!=='started';
+  $('sharedStorybookOffer').hidden=date.state!=='stopped'||!!date.eligibility_required;
  }
  async function refresh(){
   const rows=await service.action('list');if(!Array.isArray(rows))throw Error('Your date list could not be verified.');
