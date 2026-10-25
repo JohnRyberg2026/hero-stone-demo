@@ -7,3 +7,8 @@ Expressions: rest, blink, listen, speak, smile, curious. Preserve adult identity
 Before animation: separate aligned facial layers or produce a consistent deformable rig. The six portraits vary in head position; do not swap complete panels as animation frames. The speaking portrait is an expression reference, not phoneme/viseme coverage or synchronized speech. Listening expression does not indicate microphone capture.
 
 Next deliverable: registered eyes-open/half/closed layers and neutral plus speech mouth shapes for one fixed head pose, with an explicit play/stop rehearsal. Preserve Quiet, Hide, Escape, reduced-motion and page-exit cancellation. No automatic audio or animated whole-image bouncing. No changes to application or account flows in this art step.
+
+## Blink prototype — October 25
+Added blink-strip-v1.webp and heart-stone-blink-preview.html, an isolated canvas playback of open/half/closed eyelids. Playback requires Play one blink, runs once in about 205 ms, and resets on Stop, Quiet, Escape, Hide, page exit, or reduced-motion activation. Show never resumes playback. Unit tests cover cancellation, stale callbacks and ordered poses. Browser checks are added to the approved-avatar workflow.
+
+This generated strip still requires visual review for registration and likeness; it does not replace approved-casual.webp or implement lip sync, gestures, continuous idle animation or production rigging. No microphone, audio, measurement data, account or purchase behavior is connected.
