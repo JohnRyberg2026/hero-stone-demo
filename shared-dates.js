@@ -13,6 +13,8 @@
   ['accountDateTitle','accountDateWhen','accountDateMeeting','accountDetailTitle','accountDetailWhen','accountDetailMeeting','accountSelf','accountDateRevision','accountDetailState'].forEach(id=>{if('value' in $(id))$(id).value='';$(id).textContent='';});
   if($('accountSendReview').open)$('accountSendReview').close();
  }
+ // Browsers may restore form values after scripts run during back navigation.
+ window.addEventListener('pageshow',()=>{clear();$('sharedAccountFeedback').textContent='Connect your account to view shared dates. Nothing is loaded automatically.';});
  function client(){
   if(service)return Promise.resolve(service);
   if(!loading)loading=new Promise((resolve,reject)=>{
