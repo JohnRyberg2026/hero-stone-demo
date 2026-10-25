@@ -20,3 +20,6 @@ Added quarter-speed inspection and explicit still-pose buttons for open, half-cl
 Added speech-strip-v1.webp and heart-stone-speech-preview.html. The existing allowlisted public-greeting voice module emits state-only events; no text or account data is included. Mouth poses cycle only after an actual speech-start callback and a separate mouth-movement opt-in. Waiting, Stop, end/error, Quiet, Hide, Escape, page exit and reduced motion restore the resting mouth. Quiet/Hide/Escape reset voice and movement opt-ins. Show never starts playback. Playback is bounded to 15 seconds of mouth movement.
 
 This is a speech-activity illustration, not phoneme or viseme synchronization. Generated frames still need visual registration review. Browser checks use simulated speech callbacks and do not prove real-device audio timing, female voice availability or lip-sync quality. No main app or database changes.
+
+## Speech pause and resume
+The speech rehearsal now exposes Pause voice and Resume voice when the browser supports them. Mouth activity stops immediately while a pause is requested, stays at rest while paused or awaiting resume, and restarts only on the owned utterance's resume callback. Canceled/replaced utterance callbacks cannot resume mouth movement. Unit and simulated browser checks cover these transitions; real-device pause/resume behavior remains to be checked.
