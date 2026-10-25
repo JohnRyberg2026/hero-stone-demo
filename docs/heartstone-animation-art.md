@@ -12,3 +12,6 @@ Next deliverable: registered eyes-open/half/closed layers and neutral plus speec
 Added blink-strip-v1.webp and heart-stone-blink-preview.html, an isolated canvas playback of open/half/closed eyelids. Playback requires Play one blink, runs once in about 205 ms, and resets on Stop, Quiet, Escape, Hide, page exit, or reduced-motion activation. Show never resumes playback. Unit tests cover cancellation, stale callbacks and ordered poses. Browser checks are added to the approved-avatar workflow.
 
 This generated strip still requires visual review for registration and likeness; it does not replace approved-casual.webp or implement lip sync, gestures, continuous idle animation or production rigging. No microphone, audio, measurement data, account or purchase behavior is connected.
+
+## Blink inspection controls
+Added quarter-speed inspection and explicit still-pose buttons for open, half-closed and closed eyelids. Selecting a still pose cancels scheduled playback; Quiet/Stop restore open eyes. Still-pose inspection remains available with reduced motion enabled, while timed playback stays disabled. These controls aid visual review and do not establish production animation quality.

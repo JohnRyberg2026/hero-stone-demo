@@ -12,7 +12,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('n
  await page.locator('#playBlink').click();if(action==='escape')await page.keyboard.press('Escape');else if(action==='pagehide')await page.evaluate(()=>window.dispatchEvent(new Event('pagehide')));else await page.locator('#'+({stop:'stopBlink',quiet:'quietBlink',hide:'hideBlink'}[action])).click();
  assert.equal(await page.locator('canvas').getAttribute('data-frame'),'0');if(action==='hide'){assert(await page.locator('#blinkStage').isHidden());await page.locator('#showBlink').click();assert(await page.locator('canvas').isVisible());}
  }
+ await page.locator('#slowBlink').click();await page.getByRole('button',{name:'Eyes closed',exact:true}).click();assert.equal(await page.locator('canvas').getAttribute('data-frame'),'2');assert.equal(await page.getByRole('button',{name:'Eyes closed',exact:true}).getAttribute('aria-pressed'),'true');await page.locator('#quietBlink').click();assert.equal(await page.locator('canvas').getAttribute('data-frame'),'0');
  await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>document.getElementById('playBlink').disabled);assert.equal(await page.locator('canvas').getAttribute('data-frame'),'0');
+ assert(await page.locator('#slowBlink').isDisabled());await page.getByRole('button',{name:'Half-closed',exact:true}).click();assert.equal(await page.locator('canvas').getAttribute('data-frame'),'1');await page.locator('#stopBlink').click();
  await page.emulateMedia({reducedMotion:'no-preference'});await page.waitForFunction(()=>!document.getElementById('playBlink').disabled);assert.equal(await page.locator('canvas').getAttribute('data-frame'),'0');assert.deepEqual(errors,[]);
  await page.close();console.log('PASS blink browser',width,'entry, frames, stop, quiet, Escape, hide/show, page exit, reduced motion');
  }}finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
