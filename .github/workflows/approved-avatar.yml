@@ -1,0 +1,25 @@
+name: Approved avatar appearance
+on:
+  push:
+    branches: [codex/approved-avatar-20261024]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  appearance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix /tmp/avatar-tools --no-package-lock playwright@1.61.1
+      - run: /tmp/avatar-tools/node_modules/.bin/playwright install --with-deps --only-shell chromium
+      - name: Check appearance and consent controls
+        env:
+          NODE_PATH: /tmp/avatar-tools/node_modules
+        run: |
+          node test-heart-stone-avatar-voice.cjs
+          node test-heart-stone-avatar-motion.cjs
+          node test-heart-stone-avatar-appearance.cjs
