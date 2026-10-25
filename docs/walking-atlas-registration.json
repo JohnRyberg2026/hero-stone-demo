@@ -1,0 +1,64 @@
+{
+  "source": "images/heartstone/walking-study-v1.png",
+  "sourceWidth": 1024,
+  "sourceHeight": 1536,
+  "frames": [
+    {
+      "x": 51,
+      "y": 10,
+      "w": 270,
+      "h": 405,
+      "hip": 123.0
+    },
+    {
+      "x": 393,
+      "y": 10,
+      "w": 229,
+      "h": 404,
+      "hip": 112.0
+    },
+    {
+      "x": 748,
+      "y": 10,
+      "w": 196,
+      "h": 405,
+      "hip": 101.5
+    },
+    {
+      "x": 63,
+      "y": 416,
+      "w": 240,
+      "h": 400,
+      "hip": 124.0
+    },
+    {
+      "x": 391,
+      "y": 416,
+      "w": 278,
+      "h": 399,
+      "hip": 129.0
+    },
+    {
+      "x": 757,
+      "y": 416,
+      "w": 203,
+      "h": 400,
+      "hip": 106.5
+    },
+    {
+      "x": 87,
+      "y": 815,
+      "w": 198,
+      "h": 381,
+      "hip": 102.0
+    },
+    {
+      "x": 409,
+      "y": 816,
+      "w": 248,
+      "h": 380,
+      "hip": 133.5
+    }
+  ],
+  "note": "First eight complete poses; third-row contact duplicate and clipped bottom row excluded. Rectangles from alpha-component bounds; hips from largest opaque torso run. Last ROI bottom padding removed to exclude adjacent-row hair."
+}
