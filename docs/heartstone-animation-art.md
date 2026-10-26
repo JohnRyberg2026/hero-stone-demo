@@ -1,0 +1,49 @@
+# HEART STONE animation art — first reference
+
+The approved base identity remains approved-casual.webp. expression-reference-v1.webp is a proposed six-expression reference sheet, not approved replacement identity art, not a rig and not production animation frames.
+
+Expressions: rest, blink, listen, speak, smile, curious. Preserve adult identity, auburn hair, natural approved body proportions and visible heart compass. Keep facial movement restrained and approachable.
+
+Before animation: separate aligned facial layers or produce a consistent deformable rig. The six portraits vary in head position; do not swap complete panels as animation frames. The speaking portrait is an expression reference, not phoneme/viseme coverage or synchronized speech. Listening expression does not indicate microphone capture.
+
+Next deliverable: registered eyes-open/half/closed layers and neutral plus speech mouth shapes for one fixed head pose, with an explicit play/stop rehearsal. Preserve Quiet, Hide, Escape, reduced-motion and page-exit cancellation. No automatic audio or animated whole-image bouncing. No changes to application or account flows in this art step.
+
+## Blink prototype — October 25
+Added blink-strip-v1.webp and heart-stone-blink-preview.html, an isolated canvas playback of open/half/closed eyelids. Playback requires Play one blink, runs once in about 205 ms, and resets on Stop, Quiet, Escape, Hide, page exit, or reduced-motion activation. Show never resumes playback. Unit tests cover cancellation, stale callbacks and ordered poses. Browser checks are added to the approved-avatar workflow.
+
+This generated strip still requires visual review for registration and likeness; it does not replace approved-casual.webp or implement lip sync, gestures, continuous idle animation or production rigging. No microphone, audio, measurement data, account or purchase behavior is connected.
+
+## Blink inspection controls
+Added quarter-speed inspection and explicit still-pose buttons for open, half-closed and closed eyelids. Selecting a still pose cancels scheduled playback; Quiet/Stop restore open eyes. Still-pose inspection remains available with reduced motion enabled, while timed playback stays disabled. These controls aid visual review and do not establish production animation quality.
+
+## Speech activity rehearsal
+Added speech-strip-v1.webp and heart-stone-speech-preview.html. The existing allowlisted public-greeting voice module emits state-only events; no text or account data is included. Mouth poses cycle only after an actual speech-start callback and a separate mouth-movement opt-in. Waiting, Stop, end/error, Quiet, Hide, Escape, page exit and reduced motion restore the resting mouth. Quiet/Hide/Escape reset voice and movement opt-ins. Show never starts playback. Playback is bounded to 15 seconds of mouth movement.
+
+This is a speech-activity illustration, not phoneme or viseme synchronization. Generated frames still need visual registration review. Browser checks use simulated speech callbacks and do not prove real-device audio timing, female voice availability or lip-sync quality. No main app or database changes.
+
+## Speech pause and resume
+The speech rehearsal now exposes Pause voice and Resume voice when the browser supports them. Mouth activity stops immediately while a pause is requested, stays at rest while paused or awaiting resume, and restarts only on the owned utterance's resume callback. Canceled/replaced utterance callbacks cannot resume mouth movement. Unit and simulated browser checks cover these transitions; real-device pause/resume behavior remains to be checked.
+
+## Stable speaking portrait
+The speaking renderer now keeps the rest portrait as its fixed base and composites only an elliptical mouth patch from alternate poses, feathering the edge. Eyes, hair, shoulders and compass use identical base pixels throughout speaking animation. Browser checks compare pixels outside the mouth area and require a visible change inside it. This removes whole-frame drift, but visual review of mouth alignment and the blend remains pending; it is still approximate speech activity.
+
+## Rendered image review — October 26, 2026
+Inspected CI-captured rest and speaking portraits, closed-eye blink portrait, and full speaking pages at 390px and 1280px from workflow run 40290697677 (passed). The sampled speaking images show no obvious mouth-mask seam; page controls fit both widths. These are still-image observations, not certification of smooth animation or audio synchronization.
+
+The blink and speaking strips have different portrait framing and cannot be switched as complete portraits without a jump. Before combined blink/speech, use one common base with registered independent eye and mouth regions. Continuous motion, actual-device audio timing, lip sync and live-app release remain pending. CI now retains rendered review images as a 14-day workflow artifact; source assets and scripts remain in the repository.
+
+## Combined blink and speech prototype
+The speaking portrait now uses speech-eyes-v1.webp for matching eye patches over the same fixed rest base as the mouth patches. One short blink accompanies a speech-start/resume callback when facial movement is enabled; Try one blink also explicitly plays it without audio. Eye and mouth timers are independent. Pause/wait/end/error, Quiet, Hide, Escape, page exit and reduced motion return both to rest. No idle animation starts on load or Show.
+
+Generated eye artwork must match the base dimensions to load. The old standalone blink remains a separate inspection reference. Combined facial alignment still requires rendered review; exact sound-to-mouth synchronization and body animation remain pending.
+
+## Common portrait review and standalone device rehearsal
+Reviewed rest, speaking and blink capture images from passing workflow 40291508016. Sampled eye and mouth alignment appears consistent; captures alone do not certify temporal smoothness.
+
+heart-stone-facial-device-check.html embeds the matching eye/mouth assets and current controllers in a single HTML file. It offers the same adult entry confirmation, explicit voice and movement opt-ins, Try one blink, Pause/Resume, Stop, Quiet and Hide/Show. It needs no account and saves no data; the selected browser voice can still use an online provider. tools/export-heartstone-facial.cjs regenerates the file and --check rejects a stale export. Browser tests run against both source and standalone versions with simulated voice callbacks. Actual-device voice and motion review remains pending.
+
+## Approved wardrobe controls
+The voice and welcome appearance previews now offer Everyday hearts, Store outfit preview and an explicit Surprise me action. Both approved full-body images retain the compass. No outfit changes occur automatically or persist across page loads. Outfit assets preload before replacing the current image; failed or superseded loads cannot overwrite the current selection. Hide cancels pending changes and hides wardrobe controls, while Show restores the current outfit. These are static outfit illustrations, not personalized fitting, live catalog integration or clothing animation. The combined facial rehearsal continues to use its matching heart-print outfit.
+
+## Wardrobe verification — October 26, 2026
+Workflow 40296716534 passed approved-appearance/wardrobe checks at 390px and 1280px, including failed image loading, outfit changes, explicit surprise, retained compass descriptions, Hide/Show and static legacy motion. Blink, speech lifecycle, combined facial rendering and standalone device export checks also passed. The workflow uses a bounded headless-only browser install to avoid the prior stalled system package step. Failure injection targets an outfit before its first load so the test is independent of the browser's decoded image cache. No live-app release or personalized sizing is claimed.
