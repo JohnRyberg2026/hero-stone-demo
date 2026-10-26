@@ -15,7 +15,9 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --prefix /tmp/avatar-tools --no-package-lock playwright@1.61.1
-      - run: /tmp/avatar-tools/node_modules/.bin/playwright install --with-deps --only-shell chromium
+      - name: Install headless Chromium
+        timeout-minutes: 3
+        run: /tmp/avatar-tools/node_modules/.bin/playwright install --only-shell chromium
       - name: Check appearance and consent controls
         env:
           NODE_PATH: /tmp/avatar-tools/node_modules
