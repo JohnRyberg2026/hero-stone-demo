@@ -1,0 +1,34 @@
+name: Avatar rehearsal checks
+on:
+  push:
+    branches: [codex/avatar-voice-20261023]
+permissions:
+  contents: read
+jobs:
+  avatar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated test tools
+        run: npm install --prefix /tmp/avatar-browser --no-package-lock playwright@1.61.1 jsdom@26.1.0
+      - name: Check components and DOM integration
+        env:
+          NODE_PATH: /tmp/avatar-browser/node_modules
+        run: |
+          node tools/check-avatar-release.cjs --dom
+      - name: Install headless Chromium
+        run: /tmp/avatar-browser/node_modules/.bin/playwright install --only-shell chromium
+      - name: Check application and avatar browser journeys
+        env:
+          NODE_PATH: /tmp/avatar-browser/node_modules
+        run: |
+          python3 -m http.server 8765 > /tmp/avatar-server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/heart-stone-avatar-voice-preview.html > /dev/null; then break; fi
+            sleep 1
+          done
+          node tools/check-avatar-release.cjs --browser-only
