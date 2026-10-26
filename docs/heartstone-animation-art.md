@@ -31,3 +31,8 @@ The speaking renderer now keeps the rest portrait as its fixed base and composit
 Inspected CI-captured rest and speaking portraits, closed-eye blink portrait, and full speaking pages at 390px and 1280px from workflow run 40290697677 (passed). The sampled speaking images show no obvious mouth-mask seam; page controls fit both widths. These are still-image observations, not certification of smooth animation or audio synchronization.
 
 The blink and speaking strips have different portrait framing and cannot be switched as complete portraits without a jump. Before combined blink/speech, use one common base with registered independent eye and mouth regions. Continuous motion, actual-device audio timing, lip sync and live-app release remain pending. CI now retains rendered review images as a 14-day workflow artifact; source assets and scripts remain in the repository.
+
+## Combined blink and speech prototype
+The speaking portrait now uses speech-eyes-v1.webp for matching eye patches over the same fixed rest base as the mouth patches. One short blink accompanies a speech-start/resume callback when facial movement is enabled; Try one blink also explicitly plays it without audio. Eye and mouth timers are independent. Pause/wait/end/error, Quiet, Hide, Escape, page exit and reduced motion return both to rest. No idle animation starts on load or Show.
+
+Generated eye artwork must match the base dimensions to load. The old standalone blink remains a separate inspection reference. Combined facial alignment still requires rendered review; exact sound-to-mouth synchronization and body animation remain pending.

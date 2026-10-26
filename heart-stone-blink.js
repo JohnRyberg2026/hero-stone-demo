@@ -12,6 +12,7 @@
   return {play,stop,pose};
  }
  if(typeof module==='object'&&module.exports){module.exports={createBlink};return;}
+ root.HeartStoneBlink=createBlink;
  const canvas=document.getElementById('blinkPortrait');if(!canvas)return;
  const ctx=canvas.getContext('2d'),image=new Image(),play=document.getElementById('playBlink'),status=document.getElementById('blinkStatus'),portrait=document.getElementById('blinkStage'),show=document.getElementById('showBlink'),reduced=matchMedia('(prefers-reduced-motion: reduce)');let ready=false;
  const draw=frame=>{if(!ready)return;canvas.dataset.frame=String(frame);document.querySelectorAll('[data-blink-pose]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.blinkPose)===frame)));ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,frame*canvas.width,0,canvas.width,canvas.height,0,0,canvas.width,canvas.height);};
