@@ -26,3 +26,8 @@ The speech rehearsal now exposes Pause voice and Resume voice when the browser s
 
 ## Stable speaking portrait
 The speaking renderer now keeps the rest portrait as its fixed base and composites only an elliptical mouth patch from alternate poses, feathering the edge. Eyes, hair, shoulders and compass use identical base pixels throughout speaking animation. Browser checks compare pixels outside the mouth area and require a visible change inside it. This removes whole-frame drift, but visual review of mouth alignment and the blend remains pending; it is still approximate speech activity.
+
+## Rendered image review — October 26, 2026
+Inspected CI-captured rest and speaking portraits, closed-eye blink portrait, and full speaking pages at 390px and 1280px from workflow run 40290697677 (passed). The sampled speaking images show no obvious mouth-mask seam; page controls fit both widths. These are still-image observations, not certification of smooth animation or audio synchronization.
+
+The blink and speaking strips have different portrait framing and cannot be switched as complete portraits without a jump. Before combined blink/speech, use one common base with registered independent eye and mouth regions. Continuous motion, actual-device audio timing, lip sync and live-app release remain pending. CI now retains rendered review images as a 14-day workflow artifact; source assets and scripts remain in the repository.
