@@ -27,6 +27,8 @@ jobs:
           node test-heart-stone-blink-browser.cjs
           node test-heart-stone-speech-motion.cjs
           node test-heart-stone-speech-browser.cjs
+          node tools/export-heartstone-facial.cjs --check
+          SPEECH_DEVICE=1 node test-heart-stone-speech-browser.cjs
 
       - name: Save rendered avatar review images
         if: always()

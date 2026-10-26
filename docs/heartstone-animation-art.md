@@ -36,3 +36,8 @@ The blink and speaking strips have different portrait framing and cannot be swit
 The speaking portrait now uses speech-eyes-v1.webp for matching eye patches over the same fixed rest base as the mouth patches. One short blink accompanies a speech-start/resume callback when facial movement is enabled; Try one blink also explicitly plays it without audio. Eye and mouth timers are independent. Pause/wait/end/error, Quiet, Hide, Escape, page exit and reduced motion return both to rest. No idle animation starts on load or Show.
 
 Generated eye artwork must match the base dimensions to load. The old standalone blink remains a separate inspection reference. Combined facial alignment still requires rendered review; exact sound-to-mouth synchronization and body animation remain pending.
+
+## Common portrait review and standalone device rehearsal
+Reviewed rest, speaking and blink capture images from passing workflow 40291508016. Sampled eye and mouth alignment appears consistent; captures alone do not certify temporal smoothness.
+
+heart-stone-facial-device-check.html embeds the matching eye/mouth assets and current controllers in a single HTML file. It offers the same adult entry confirmation, explicit voice and movement opt-ins, Try one blink, Pause/Resume, Stop, Quiet and Hide/Show. It needs no account and saves no data; the selected browser voice can still use an online provider. tools/export-heartstone-facial.cjs regenerates the file and --check rejects a stale export. Browser tests run against both source and standalone versions with simulated voice callbacks. Actual-device voice and motion review remains pending.
