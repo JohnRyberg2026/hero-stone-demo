@@ -13,9 +13,9 @@
   'Preview notes are unsaved until you explicitly save to your signed-in account and receive confirmation. My saved volumes reopens your own books. Nothing here is shared or published.'
  ];
  function createVoice(synth,Utterance,onState){
-  let enabled=false,voice=null,owned=null,disposed=false;
+  let enabled=false,voice=null,owned=null,disposed=false,phase='silent';
   const supported=!!(synth&&Utterance);
-  function report(state){if(!disposed)onState(state);}
+  function report(state){phase=state;if(!disposed)onState(state);}
   function stop(){const had=owned;owned=null;if(had)synth.cancel();report('silent');}
   return {
    supported,
@@ -27,10 +27,14 @@
     stop();const utterance=new Utterance(text);owned=utterance;
     utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=0.95;
     utterance.onstart=()=>{if(owned===utterance)report('speaking');};
+    utterance.onpause=()=>{if(owned===utterance)report('paused');};
+    utterance.onresume=()=>{if(owned===utterance)report('speaking');};
     utterance.onend=()=>{if(owned===utterance){owned=null;report('ready');}};
     utterance.onerror=()=>{if(owned===utterance){owned=null;report('error');}};
     try{report('waiting');synth.speak(utterance);return true;}catch(e){owned=null;report('error');return false;}
    },
+   pause(){if(!owned||phase!=='speaking'||typeof synth.pause!=='function')return false;report('pausing');try{synth.pause();return true;}catch{stop();report('error');return false;}},
+   resume(){if(!owned||phase!=='paused'||typeof synth.resume!=='function')return false;report('resuming');try{synth.resume();return true;}catch{stop();report('error');return false;}},
    stop,
    dispose(){stop();enabled=false;disposed=true;}
   };
@@ -38,7 +42,7 @@
  if(typeof module==='object'&&module.exports){module.exports={createVoice};return;}
  const host=document.getElementById('avatarVoicePreview');if(!host)return;
  const toggle=host.querySelector('[data-enable]'),select=host.querySelector('select'),play=host.querySelector('[data-play]'),stop=host.querySelector('[data-stop]'),status=host.querySelector('[role=status]');
- const engine=createVoice(root.speechSynthesis,root.SpeechSynthesisUtterance,state=>{status.textContent={silent:'HEART STONE is silent.',ready:'Voice is ready. Choose Hear greeting to listen.',waiting:'Waiting for your device’s voice. If nothing plays, stop or choose another voice.',speaking:'Speaking. Stop is always available.',error:'Voice could not play. You can try Hear again, choose another voice, or continue silently.'}[state];});
+ const engine=createVoice(root.speechSynthesis,root.SpeechSynthesisUtterance,state=>{status.textContent={silent:'HEART STONE is silent.',ready:'Voice is ready. Choose Hear greeting to listen.',waiting:'Waiting for your device’s voice. If nothing plays, stop or choose another voice.',speaking:'Speaking. Stop is always available.',pausing:'Pausing voice…',paused:'Voice is paused. Choose Resume voice or Stop voice.',resuming:'Waiting for voice to resume…',error:'Voice could not play. You can try Hear again, choose another voice, or continue silently.'}[state];const pause=host.querySelector('[data-pause]'),resume=host.querySelector('[data-resume]');if(pause)pause.disabled=state!=='speaking'||typeof root.speechSynthesis?.pause!=='function';if(resume)resume.disabled=state!=='paused'||typeof root.speechSynthesis?.resume!=='function';host.dispatchEvent(new CustomEvent('heartstone:voice-state',{detail:{state}}));});
  const guide=document.getElementById('heartStoneGuide'),message=document.getElementById('heartStoneGuideMessage');
  const hearStep=document.createElement('button');hearStep.type='button';hearStep.textContent='Hear this step';hearStep.disabled=true;
  if(guide&&message)message.insertAdjacentElement('afterend',hearStep);
@@ -66,6 +70,7 @@
  toggle.onchange=()=>{engine.enable(toggle.checked);if(!toggle.checked){select.value='';engine.select(null);}availability();};
  select.onchange=()=>{engine.select(available[Number(select.value)]&&select.value!==''?available[Number(select.value)]:null);availability();};
  play.onclick=()=>engine.speak();stop.onclick=()=>engine.stop();
+ const pause=host.querySelector('[data-pause]'),resume=host.querySelector('[data-resume]');if(pause)pause.onclick=()=>engine.pause();if(resume)resume.onclick=()=>engine.resume();
  const visibility=()=>{if(document.hidden)engine.stop();};
  document.addEventListener('visibilitychange',visibility);
  host.addEventListener('keydown',event=>{if(event.key==='Escape')engine.stop();});

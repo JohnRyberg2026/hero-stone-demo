@@ -28,3 +28,8 @@ const pending=utterances[0];pending.onstart();assert.equal(playbackStates.at(-1)
 playback.speak();const superseded=utterances[1];playback.speak();superseded.onstart();superseded.onerror();assert.equal(playbackStates.at(-1),'waiting');
 utterances[2].onerror();assert.equal(playbackStates.at(-1),'error');const calls=utterances.length;playback.speak();assert.equal(utterances.length,calls+1);utterances.at(-1).onstart();assert.equal(playbackStates.at(-1),'speaking');utterances.at(-1).onend();assert.equal(playbackStates.at(-1),'ready');playback.dispose();
 console.log('PASS voice playback: waiting/start/end/error, late callbacks after Stop/replacement, and explicit retry.');
+
+let paused=0,resumed=0,pauseStates=[],pauseUtterances=[];
+const pausable=createVoice({...synth,speak:u=>pauseUtterances.push(u),pause:()=>paused++,resume:()=>resumed++},Utterance,s=>pauseStates.push(s));
+pausable.enable(true);pausable.select(synth.getVoices()[0]);assert.equal(pausable.pause(),false);assert.equal(pausable.resume(),false);pausable.speak();const current=pauseUtterances[0];assert.equal(pausable.pause(),false);current.onstart();assert(pausable.pause());assert.equal(paused,1);assert.equal(pauseStates.at(-1),'pausing');current.onpause();assert.equal(pauseStates.at(-1),'paused');assert(pausable.resume());assert.equal(resumed,1);assert.equal(pauseStates.at(-1),'resuming');current.onresume();assert.equal(pauseStates.at(-1),'speaking');pausable.stop();current.onpause();current.onresume();assert.equal(pauseStates.at(-1),'silent');assert.equal(pausable.resume(),false);
+console.log('PASS voice pause/resume: actual playback events, pending states, guarded methods and stale callbacks');
