@@ -5,23 +5,15 @@
  const play=document.getElementById('walk'),status=document.getElementById('status');
  const figure=document.getElementById('character'),hide=document.getElementById('hide');
  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),sheet=new Image();
- // Audited alpha bounds, not assumed equal grid cells. See docs/walking-atlas-registration.json.
- const atlas=[
-  {x:51,y:10,w:270,h:405,hip:123},{x:393,y:10,w:229,h:404,hip:112},
-  {x:748,y:10,w:196,h:405,hip:101.5},{x:63,y:416,w:240,h:400,hip:124},
-  {x:391,y:416,w:278,h:399,hip:129},{x:757,y:416,w:203,h:400,hip:106.5},
-  {x:87,y:815,w:198,h:381,hip:102},{x:409,y:816,w:248,h:380,hip:133.5}
- ];
- const frames=atlas.length,duration=2800,cycles=2;
+ const timing=HeartStoneWalkTiming,{atlas,duration}=timing;
  let ready=false,active=false,request=0,start=null,elapsed=0,failed=false;
  function draw(time){
-  const t=Math.max(0,Math.min(1,time/duration)),progress=t*t*t*(10+t*(-15+6*t));
-  const frame=Math.floor(progress*frames*cycles)%frames,cell=atlas[frame];
-  const scale=460/cell.h,x=230+440*progress;
+  const pose=timing.sample(time),{frame,x}=pose,cell=atlas[frame],scale=460/cell.h;
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.strokeStyle='#b7a58d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(25,530);ctx.lineTo(875,530);ctx.stroke();
   ctx.drawImage(sheet,cell.x,cell.y,cell.w,cell.h,x-cell.hip*scale,530-cell.h*scale,cell.w*scale,cell.h*scale);
   canvas.dataset.frame=String(frame);canvas.dataset.position=String(x);canvas.dataset.elapsed=String(time);
+  canvas.dataset.contact=String(pose.contact);canvas.dataset.stance=String(pose.stance);
  }
  function available(){play.disabled=!ready||reduced.matches||figure.hidden||document.hidden;}
  function stop(message='Walk paused. Press Play short walk to begin again.'){
