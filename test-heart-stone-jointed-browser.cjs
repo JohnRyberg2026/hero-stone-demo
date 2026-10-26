@@ -47,6 +47,15 @@ const assert=require('node:assert/strict'),path=require('node:path'),{chromium}=
    return Array.from(c.getContext('2d').getImageData(x,y,1,1).data);
   });assert(skin[3]>200&&skin[0]>skin[1]*1.1&&skin[0]>skin[2]*1.2,'near forearm must remain visible in front of torso');
   await page.locator('#soften').check();assert.equal(await page.locator('#walk').getAttribute('aria-pressed'),'false');
+  await page.locator('#walk').click();
+  for(let step=0;step<10;step++){
+   await page.clock.runFor(250);
+   const joins=await page.locator('canvas').evaluate(c=>{
+    const p=HeartStoneJointedGait.pose(Number(c.dataset.elapsed)),ctx=c.getContext('2d'),points=[];
+    for(const name of ['near','far']){points.push([p.arms[name].shoulder[0],p.arms[name].shoulder[1]+8]);points.push([p.legs[name].hip[0],p.legs[name].hip[1]+10]);}
+    return points.map(([x,y])=>ctx.getImageData(Math.round(x),Math.round(y),1,1).data[3]);
+   });assert(joins.every(a=>a>230),'shoulder and hip attachment centers must remain filled through the stride');
+  }
   await page.close();console.log('PASS continuous rendered motion and stable planted-shoe pixels');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
