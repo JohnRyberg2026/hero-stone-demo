@@ -27,3 +27,11 @@ jobs:
           node test-heart-stone-blink-browser.cjs
           node test-heart-stone-speech-motion.cjs
           node test-heart-stone-speech-browser.cjs
+
+      - name: Save rendered avatar review images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: avatar-visual-review
+          path: avatar-qa/
+          retention-days: 14
