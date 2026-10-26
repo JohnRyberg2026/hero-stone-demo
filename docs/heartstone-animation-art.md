@@ -23,3 +23,6 @@ This is a speech-activity illustration, not phoneme or viseme synchronization. G
 
 ## Speech pause and resume
 The speech rehearsal now exposes Pause voice and Resume voice when the browser supports them. Mouth activity stops immediately while a pause is requested, stays at rest while paused or awaiting resume, and restarts only on the owned utterance's resume callback. Canceled/replaced utterance callbacks cannot resume mouth movement. Unit and simulated browser checks cover these transitions; real-device pause/resume behavior remains to be checked.
+
+## Stable speaking portrait
+The speaking renderer now keeps the rest portrait as its fixed base and composites only an elliptical mouth patch from alternate poses, feathering the edge. Eyes, hair, shoulders and compass use identical base pixels throughout speaking animation. Browser checks compare pixels outside the mouth area and require a visible change inside it. This removes whole-frame drift, but visual review of mouth alignment and the blend remains pending; it is still approximate speech activity.
