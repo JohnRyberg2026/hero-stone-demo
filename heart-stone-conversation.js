@@ -15,6 +15,8 @@
     const input = form.querySelector('textarea'), send = form.querySelector('button'), status = section.querySelector('[role=status]');
     const draftBox = section.querySelector('[data-draft]'), draft = draftBox.querySelector('textarea');
     let messages = [], version = 0, busy = false, owner = null;
+    let sessionAccount;
+    let connection = typeof heartStoneId === "undefined" ? null : heartStoneId;
     function reset() {version++; messages = []; owner = null; busy = false; input.value = ''; draft.value = ''; draftBox.hidden = true; log.replaceChildren(); panel.hidden = true; status.textContent = ''; send.disabled = false; root.dataset.state = 'idle';}
     function append(role, text) {const p = document.createElement('p'); const name = document.createElement('strong'); name.textContent = role === 'user' ? 'You: ' : 'Heart Stone: '; p.append(name, document.createTextNode(text)); log.append(p);}
     section.querySelector('[data-chat-open]').onclick = () => {panel.hidden = false; input.focus();};
@@ -53,8 +55,20 @@
       try {sessionStorage.setItem('hs_reviewed_invitation_v1',JSON.stringify({text:words,owner,created:Date.now()})); location.href = 'invitation-opening.html#heart-stone-reviewed';}
       catch {status.textContent = 'Could not open the invitation. Copy your edited words and open invitations.';}
     };
-    window.addEventListener('heartstone:home-state', reset);
+    window.addEventListener('heartstone:home-state', event => {
+      const detail = event.detail;
+      const next = detail?.heartStoneId ?? (typeof heartStoneId === 'undefined' ? null : heartStoneId);
+      if (!detail?.connected || next !== connection) reset();
+      connection = detail?.connected ? next : null;
+    });
     window.addEventListener('pagehide', reset);
-    if (typeof sb !== 'undefined') sb.auth.onAuthStateChange(event => {if (event === 'SIGNED_OUT' || event === 'USER_UPDATED' || event === 'SIGNED_IN') reset();});
+    if (typeof sb !== 'undefined') sb.auth.onAuthStateChange((event, session) => {
+      // SIGNED_IN can confirm the existing session after a tab regains focus.
+      // Compare identity instead of treating every notification as a new user.
+      const next = session?.user?.id || null;
+      const previous = sessionAccount === undefined ? owner : sessionAccount;
+      if (event === 'SIGNED_OUT' || !next || (previous !== null && previous !== next)) reset();
+      sessionAccount = next;
+    });
   });
 })();
