@@ -2,8 +2,8 @@
 // A bounded opening interaction. No AI, microphone, storage or account access.
 (function () {
   const paths = {
-    plan: {title: 'Make a little time for each other.', copy: 'Start with what you would like to share. You can review your invitation before choosing to send it.', label: 'Create a moment', href: 'invitation-opening.html'},
-    reconnect: {title: 'A small invitation can be a beginning.', copy: 'You might say: “I’d like a little time together. Would tonight or later this week feel better?” Make it sound like you. The other person can choose when they are ready.', label: 'Prepare an invitation', href: 'invitation-opening.html'},
+    plan: {title: 'Make a little time for each other.', copy: 'Start with what you would like to share. You can review your invitation before choosing to send it.', label: 'Create a moment', href: 'invitation-opening.html#heart-stone-plan'},
+    reconnect: {title: 'A small invitation can be a beginning.', copy: 'You might say: “I’d like a little time together. Would tonight or later this week feel better?” Make it sound like you. The other person can choose when they are ready.', label: 'Prepare an invitation', href: 'invitation-opening.html#heart-stone-reconnect'},
     continue: {title: 'Pick up a moment already in motion.', copy: 'Open your invitations and replies to choose the moment you want to continue.', label: 'Open our invitations', href: 'invitation-opening.html#shared-invitations'}
   };
   function mount(root) {
