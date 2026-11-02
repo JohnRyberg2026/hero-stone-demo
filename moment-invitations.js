@@ -65,12 +65,18 @@
         client.auth.onAuthStateChange((event,session)=>{
           const next=session?.user?.id||null;
           if(accountId!==null&&accountId!==next)clearShared();
+          if (accountId !== null && accountId !== next) window.dispatchEvent(new Event("heartstone:invitation-account"));
           accountId=next;
         });
       }
       return client;
     });
   }
+  window.heartStoneCurrentAccount = async () => {
+    const sb = await loadClient();
+    const {data,error} = await sb.auth.getUser();
+    return error ? null : data.user?.id || null;
+  };
   async function context(){
     const sb=await loadClient();
     const {data,error}=await sb.auth.getUser();
