@@ -954,7 +954,7 @@ async function loadHeartStoneHome(){
 
 function setConnectedUI(connected){
   if(!connected) homeRestingMode=false;
-  window.dispatchEvent(new CustomEvent("heartstone:home-state",{detail:{connected}}));
+  window.dispatchEvent(new CustomEvent("heartstone:home-state",{detail:{connected,heartStoneId}}));
   $("dateQuestApp").classList.toggle("signed-out",!connected);
   ["email","password","signInBtn","authStatus"].forEach(id=>show(id,!connected));
   show("signOutBtn",false);
@@ -3145,6 +3145,6 @@ $("worldRestartQuestBtn").onclick=()=>{
 
 <script src="date-home.js?v=availability-2"></script>
 <script src="heart-stone-avatar.js?v=1"></script>
-<script src="heart-stone-conversation.js?v=1"></script>
+<script src="heart-stone-conversation.js?v=2"></script>
 </body>
 </html>
