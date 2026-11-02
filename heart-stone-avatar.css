@@ -1,0 +1,32 @@
+.hs-guide{display:grid;grid-template-columns:minmax(0,1fr);border:1px solid #ddc7af;border-radius:24px;overflow:hidden;background:#fffcf7;color:#30251f;text-align:left;margin:24px 0}
+.hs-guide [hidden]{display:none!important}
+.hs-guide-scene{position:relative;background:#452519;overflow:hidden;display:grid;place-items:center;min-height:300px}
+.hs-guide-sprite{width:240px;aspect-ratio:3/4;background-image:url('images/heart-stone-greeting.webp');background-size:400% 200%;background-position:0 0;transform-origin:50% 85%}
+.hs-guide[data-state=greeting][data-motion=on] .hs-guide-sprite{animation:hs-welcome 1.6s step-end 1}
+.hs-guide[data-state=idle][data-motion=on] .hs-guide-sprite{animation:hs-breathe 5s ease-in-out infinite}
+.hs-guide[data-state=listening] .hs-guide-sprite{background-position:66.6667% 0}
+.hs-guide[data-state=responding] .hs-guide-sprite{background-position:33.3333% 100%}
+.hs-guide-signature{position:absolute;bottom:14px;left:18px;color:#fff2d3;font-size:11px;letter-spacing:.2em}
+.hs-guide-body{padding:24px;min-width:0}
+.hs-guide-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:#8d2534;font-weight:750;margin:0 0 12px}
+.hs-guide h2{font-family:Georgia,serif;font-size:30px;line-height:1.12;margin:0 0 14px;color:#422720}
+.hs-guide-message,.hs-guide-result p{line-height:1.65;font-size:15px;color:#65544a}
+.hs-guide-choices{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
+.hs-guide button{font:inherit;cursor:pointer;width:auto;margin:0;border:1px solid #ceb39c;border-radius:12px;background:#fff8ef;color:#652735;padding:11px 13px;font-size:14px;font-weight:650}
+.hs-guide button:hover{background:#f3e4d3}
+.hs-guide :is(button,a,input):focus-visible{outline:3px solid #247566;outline-offset:3px}
+.hs-guide-form label{display:block;font-size:13px;font-weight:650;color:#58453c}
+.hs-guide-form input{display:block;box-sizing:border-box;width:100%;margin:9px 0 10px;padding:12px;border:1px solid #ceb39c;border-radius:10px;background:#fff;color:#30251f;font:inherit;font-size:16px}
+.hs-guide-form button,.hs-guide-result a{display:inline-block;background:#7c2839;color:#fff;border:0;text-decoration:none;padding:13px 16px;border-radius:10px;font-size:14px;font-weight:650}
+.hs-guide-form button:hover{background:#642030}
+.hs-guide-result{border-top:1px solid #e6d7c7;padding-top:16px;margin-top:18px}
+.hs-guide-result h3{font-family:Georgia,serif;font-size:24px;line-height:1.25;margin:0;color:#422720}
+.hs-guide .hs-guide-back{display:block;border:0;background:transparent;text-decoration:underline;padding:14px 0;font-weight:500}
+.hs-guide-footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #e6d7c7;margin-top:24px;padding-top:14px}
+.hs-guide-state{font-size:11px;color:#65544a}
+.hs-guide .hs-guide-motion{padding:5px 0;border:0;background:transparent;font-size:11px;text-decoration:underline}
+.hs-guide-note{font-size:11px;line-height:1.5;color:#756256;margin:12px 0 0}
+@keyframes hs-welcome{0%{background-position:0 0}12.5%{background-position:33.3333% 0}25%{background-position:66.6667% 0}37.5%{background-position:100% 0}50%{background-position:0 100%}62.5%{background-position:33.3333% 100%}75%{background-position:66.6667% 100%}87.5%{background-position:100% 100%}}
+@keyframes hs-breathe{50%{transform:translateY(-2px)}}
+@media(min-width:760px){.hs-guide{grid-template-columns:270px minmax(0,1fr)}.hs-guide-scene{min-height:480px}.hs-guide-sprite{width:270px}}
+@media(prefers-reduced-motion:reduce){.hs-guide-sprite{animation:none!important;transform:none!important}}
