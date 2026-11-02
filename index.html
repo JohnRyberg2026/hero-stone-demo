@@ -5,6 +5,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>HEART STONE™ · DATE QUEST</title><link rel="stylesheet" href="date-home.css?v=three-parts-1">
+<link rel="stylesheet" href="heart-stone-avatar.css?v=1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -666,6 +667,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button class="secondary" id="homeProfileBtn">Profile & Settings</button>
     </div>
     <section class="dq-home-part dq-welcome" aria-labelledby="dqGreeting"><p class="dq-eyebrow">01 · HEART STONE welcomes you</p><div class="dq-stone" aria-hidden="true">♡</div><h1 id="dqGreeting">Welcome back.</h1><p class="dq-lead">A little time can become something treasured. What would you like to make room for today?</p><div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div></section>
+    <section class="hs-guide" data-heart-stone-guide aria-label="Heart Stone opening guide"></section>
     <section class="dq-home-part" aria-labelledby="dqMomentsTitle"><p class="dq-eyebrow">02 · Your DATE QUEST moments</p><h2 id="dqMomentsTitle">Something to look forward to.</h2><p>Time chosen for each other. A WILD ADVENTURE™ with as much surprise as you choose.</p><div id="dqMoments"></div><p id="dqMomentsStatus" role="status"></p><button type="button" class="secondary" id="dqRefreshMoments">Refresh my moments</button><a class="dq-main-link" href="invitation-opening.html">Create a moment ♡</a><a class="dq-main-link dq-green" href="invitation-opening.html#shared-invitations">💌 A Moment Is Calling</a><p class="small">Open your invitations and replies. Nothing is accepted automatically.</p>
     <div class="status hidden" id="invitationResponseNotice" role="status" aria-live="polite" style="border:2px solid var(--accent2);padding:16px">
       <h2>Not tonight ❤️</h2>
@@ -3142,5 +3144,6 @@ $("worldRestartQuestBtn").onclick=()=>{
 </script>
 
 <script src="date-home.js?v=availability-2"></script>
+<script src="heart-stone-avatar.js?v=1"></script>
 </body>
 </html>
