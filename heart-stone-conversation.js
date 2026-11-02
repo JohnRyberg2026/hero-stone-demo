@@ -1,0 +1,60 @@
+'use strict';
+(() => {
+  document.querySelectorAll('[data-heart-stone-guide]').forEach(root => {
+    const body = root.querySelector('.hs-guide-body');
+    if (!body) return;
+    const section = document.createElement('section');
+    section.className = 'hs-conversation';
+    section.innerHTML = `<h3>Talk it through with Heart Stone</h3><p class="hs-guide-note">AI conversation · Your messages and this session’s replies are sent to OpenAI to generate a response. This version does not save chat history or read your partner’s information.</p>
+      <button type="button" data-chat-open>Start a conversation</button>
+      <div data-chat-panel hidden><div role="log" aria-label="Conversation with Heart Stone" aria-live="polite"></div>
+      <form><label>What brings you here?<textarea maxlength="1500" rows="3" required placeholder="I’d like some simple time together tonight."></textarea></label><button type="submit">Talk with Heart Stone</button></form>
+      <p role="status"></p><div data-draft hidden><label>Suggested invitation · edit before continuing<textarea rows="4" maxlength="1000"></textarea></label><button type="button" data-review>Review in invitations</button><p class="hs-guide-note">Only this edited invitation is carried forward. Your conversation stays here.</p></div><button type="button" data-clear>End and clear conversation</button></div>`;
+    body.append(section);
+    const panel = section.querySelector('[data-chat-panel]'), log = section.querySelector('[role=log]'), form = section.querySelector('form');
+    const input = form.querySelector('textarea'), send = form.querySelector('button'), status = section.querySelector('[role=status]');
+    const draftBox = section.querySelector('[data-draft]'), draft = draftBox.querySelector('textarea');
+    let messages = [], version = 0, busy = false, owner = null;
+    function reset() {version++; messages = []; owner = null; busy = false; input.value = ''; draft.value = ''; draftBox.hidden = true; log.replaceChildren(); panel.hidden = true; status.textContent = ''; send.disabled = false; root.dataset.state = 'idle';}
+    function append(role, text) {const p = document.createElement('p'); const name = document.createElement('strong'); name.textContent = role === 'user' ? 'You: ' : 'Heart Stone: '; p.append(name, document.createTextNode(text)); log.append(p);}
+    section.querySelector('[data-chat-open]').onclick = () => {panel.hidden = false; input.focus();};
+    section.querySelector('[data-clear]').onclick = reset;
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (busy || !input.value.trim()) return;
+      if (messages.length >= 18) {status.textContent = 'End and clear this conversation to start a fresh one.'; return;}
+      const words = input.value.trim(), v = version;
+      busy = true; send.disabled = true; draftBox.hidden = true; status.textContent = 'Heart Stone is thinking…'; root.dataset.state = 'listening';
+      try {
+        if (typeof sb === 'undefined') throw Error('Open DATE QUEST and sign in to use conversation.');
+        const {data:auth,error:authError} = await sb.auth.getUser();
+        if (v !== version) return;
+        if (authError || !auth.user) throw Error('Sign in to talk with Heart Stone.');
+        if (owner && owner !== auth.user.id) {reset(); return;}
+        owner = auth.user.id;
+        const next = [...messages,{role:'user',content:words}];
+        const {data,error} = await sb.functions.invoke('heartstone-conversation',{body:{messages:next}});
+        if (v !== version) return;
+        const {data:verify} = await sb.auth.getUser();
+        if (v !== version) return;
+        if (verify.user?.id !== owner) {reset(); return;}
+        if (error) throw Error('Conversation is unavailable or is not connected yet. Your message remains here to retry.');
+        if (!data || typeof data.reply !== 'string' || !data.reply.trim() || data.reply.length > 3000 || (data.draft !== null && (typeof data.draft !== 'string' || data.draft.length > 1000))) throw Error('Heart Stone could not respond. Please try again.');
+        messages = [...next,{role:'assistant',content:data.reply}]; append('user',words); append('assistant',data.reply);
+        input.value = ''; root.dataset.state = 'responding'; status.textContent = 'You choose the next step.';
+        draft.value = data.draft || ''; draftBox.hidden = !draft.value;
+      } catch (error) {if (v === version) {status.textContent = error.message; root.dataset.state = 'idle';}}
+      finally {if (v === version) {busy = false; send.disabled = false;}}
+    });
+    section.querySelector('[data-review]').onclick = () => {
+      const words = draft.value.trim();
+      if (!words || words.length > 1000) {status.textContent = 'Write an invitation of up to 1,000 characters.'; return;}
+      // Same-tab, one-use handoff; no chat history, URL text or automatic sending.
+      try {sessionStorage.setItem('hs_reviewed_invitation_v1',JSON.stringify({text:words,owner,created:Date.now()})); location.href = 'invitation-opening.html#heart-stone-reviewed';}
+      catch {status.textContent = 'Could not open the invitation. Copy your edited words and open invitations.';}
+    };
+    window.addEventListener('heartstone:home-state', reset);
+    window.addEventListener('pagehide', reset);
+    if (typeof sb !== 'undefined') sb.auth.onAuthStateChange(event => {if (event === 'SIGNED_OUT' || event === 'USER_UPDATED' || event === 'SIGNED_IN') reset();});
+  });
+})();

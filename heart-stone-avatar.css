@@ -30,3 +30,11 @@
 @keyframes hs-breathe{50%{transform:translateY(-2px)}}
 @media(min-width:760px){.hs-guide{grid-template-columns:270px minmax(0,1fr)}.hs-guide-scene{min-height:480px}.hs-guide-sprite{width:270px}}
 @media(prefers-reduced-motion:reduce){.hs-guide-sprite{animation:none!important;transform:none!important}}
+.hs-conversation{border-top:1px solid #ddc7af;margin-top:24px;padding-top:18px}
+.hs-conversation h3{font:24px Georgia,serif;margin:0 0 10px}
+.hs-conversation label{display:block;font-size:14px;margin-top:16px}
+.hs-conversation textarea{box-sizing:border-box;display:block;width:100%;font:16px/1.5 system-ui,sans-serif;padding:12px;margin:8px 0 12px;border:1px solid #b69e88;border-radius:10px;color:#30251f;background:#fff;resize:vertical}
+.hs-conversation [role=log]{max-height:320px;overflow:auto;overflow-wrap:anywhere}
+.hs-conversation [role=log] p{white-space:pre-wrap;line-height:1.6}
+.hs-conversation textarea:focus-visible{outline:3px solid #247566;outline-offset:3px}
+.hs-conversation button:disabled{opacity:.6;cursor:wait}

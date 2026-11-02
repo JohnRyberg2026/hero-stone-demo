@@ -21,11 +21,29 @@
   offer.hidden = true;
   offer.innerHTML = '<h2 style="margin-top:0"></h2><p></p><blockquote class="quote"></blockquote><button type="button" class="secondary">Use this opening in my message</button><button type="button" class="textbutton">I’ll write my own</button><p class="helper" role="status" aria-live="polite"></p>';
   feelings.insertBefore(offer, feelings.querySelector('h2'));
-  let opening;
+  let opening, reviewed, revision = 0;
+  const transferKey = "hs_reviewed_invitation_v1";
+  try {
+    const raw = sessionStorage.getItem(transferKey);
+    sessionStorage.removeItem(transferKey);
+    if (raw && raw.length < 8000) {
+      const value = JSON.parse(raw);
+      if (typeof value.text === "string" && value.text.trim() && value.text.length <= 1000 && typeof value.owner === "string" && Number.isFinite(value.created) && Date.now() - value.created >= 0 && Date.now() - value.created < 600000) reviewed = value;
+    }
+  } catch {}
   const [use, own] = offer.querySelectorAll('button');
   const status = offer.querySelector('[role=status]');
-  function showOpening() {
-    opening = openings[location.hash];
+  async function showOpening() {
+    const v = ++revision;
+    opening = undefined; offer.hidden = true;
+    if (location.hash === "#heart-stone-reviewed" && reviewed) {
+      try {
+        const id = await window.heartStoneCurrentAccount();
+        if (v !== revision) return;
+        if (id !== reviewed.owner) {reviewed = undefined; return;}
+        opening = {title:"Your invitation, ready to review.",copy:"Check these words before using them. Nothing has been sent or saved.",words:reviewed.text};
+      } catch {return;}
+    } else opening = openings[location.hash];
     offer.hidden = !opening;
     if (!opening) return;
     offer.querySelector('h2').textContent = opening.title;
@@ -33,8 +51,13 @@
     offer.querySelector('blockquote').textContent = opening.words;
     status.textContent = 'Your open message and saved beginning stay as they are until you choose.';
   }
-  use.addEventListener('click', () => {
+  use.addEventListener('click', async () => {
     if (!opening) return;
+    const selected = opening, v = revision;
+    if (location.hash === '#heart-stone-reviewed') {
+      try {if (!reviewed || await window.heartStoneCurrentAccount() !== reviewed.owner) {reviewed = undefined; opening = undefined; offer.hidden = true; return;}} catch {return;}
+      if (v !== revision || selected !== opening) return;
+    }
     if (message.value.trim() && message.value !== opening.words &&
         !window.confirm('Replace the message currently open on this screen with the suggested opening? Your saved beginning will not change unless you save again.')) return;
     message.value = opening.words;
@@ -44,6 +67,7 @@
     message.focus();
   });
   own.addEventListener('click', () => { offer.hidden = true; message.focus(); });
+  window.addEventListener('heartstone:invitation-account', () => {revision++; opening = undefined; reviewed = undefined; offer.hidden = true; offer.querySelector('blockquote').textContent = '';});
   window.addEventListener('hashchange', showOpening);
   showOpening();
 })();
