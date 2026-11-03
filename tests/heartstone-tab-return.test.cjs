@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 function setup(){
- function element(){return {hidden:false,value:'',disabled:false,dataset:{},textContent:'',children:[],events:{},addEventListener(n,f){this.events[n]=f},append(...nodes){this.children.push(...nodes)},replaceChildren(){this.children=[]},focus(){},querySelector(s){return this.nodes[s]}};}
+ function element(){return {hidden:false,value:'',disabled:false,dataset:{},textContent:'',children:[],events:{},addEventListener(n,f){this.events[n]=f},prepend(...nodes){this.children.unshift(...nodes)},append(...nodes){this.children.push(...nodes)},replaceChildren(){this.children=[]},focus(){},querySelector(s){return this.nodes[s]}};}
  const root=element(),body=element(),section=element(),panel=element(),log=element(),form=element(),input=element(),send=element(),status=element(),draftBox=element(),draft=element(),open=element(),clear=element(),review=element();
  root.nodes={'.hs-guide-body':body};section.nodes={'[data-chat-panel]':panel,'[role=log]':log,form,'[role=status]':status,'[data-draft]':draftBox,'[data-chat-open]':open,'[data-clear]':clear,'[data-review]':review};form.nodes={textarea:input,button:send};draftBox.nodes={textarea:draft};panel.hidden=true;
  const events={};let authCallback,user='john',finish,hold=false;const calls=[];
