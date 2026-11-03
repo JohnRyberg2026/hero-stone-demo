@@ -54,3 +54,10 @@ Next confirmed engineering gap: the conversational handler still has no distribu
 
 ## Conversation usage limits implemented — November 3, 2026
 Server reservations now enforce 6 requests per rolling minute and 100 per UTC day/account before OpenAI calls. Existing pilot access is unchanged. Parallel database tests verified no burst/daily overshoot; all temporary counters were removed before activation. See CONVERSATION_USAGE_LIMITS.md. Automated checks passed; no repeated user walkthrough is required. Home-flow simplification is the next recommended product work. Avatar animation remains paused.
+
+
+## 2026-11-03 — Home navigation
+
+Added persistent home shortcuts for Conversation, Moments, Calendar, and My planning preferences. Internal shortcuts use unique section anchors; preferences opens the dedicated editor. The conversation button stays directly below the avatar. Existing calendar and invitation behavior is unchanged.
+
+Validation: calendar/account isolation checks and both conversation-to-draft handoff tests passed; internal anchor targets and preferences destination verified; git diff whitespace check passed. Authenticated home visual review remains for John.
