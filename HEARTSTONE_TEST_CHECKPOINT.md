@@ -61,3 +61,7 @@ Server reservations now enforce 6 requests per rolling minute and 100 per UTC da
 Added persistent home shortcuts for Conversation, Moments, Calendar, and My planning preferences. Internal shortcuts use unique section anchors; preferences opens the dedicated editor. The conversation button stays directly below the avatar. Existing calendar and invitation behavior is unchanged.
 
 Validation: calendar/account isolation checks and both conversation-to-draft handoff tests passed; internal anchor targets and preferences destination verified; git diff whitespace check passed. Authenticated home visual review remains for John.
+
+## 2026-11-03 — Shared time and place
+
+Implemented accepted invitation scheduling; see SHARED_MOMENT_SCHEDULING.md. Both partners can propose and the other confirms. No existing live invitation was changed. Focused invitation UI checks and rollback database assertions passed. More repeated user walkthroughs are not required to continue development.

@@ -192,6 +192,46 @@
       await refreshInbox();
     }catch(e){el('sharedInvitationStatus').textContent=e.message;buttons.forEach(b=>b.disabled=false);}
   }
+  async function scheduleEditor(c,item,container,onPlan){
+    const box=node('section'),title=node('h3','Choose Our Time and Place'),status=node('p','Loading your shared details…','notice');
+    status.setAttribute('role','status');box.append(title,status);container.append(box);
+    let state,busy=false;
+    async function call(action,details){
+      const fresh=await context();
+      if(fresh.user.id!==c.user.id||fresh.hs!==c.hs)throw Error('Your account changed. Refresh invitations.');
+      const result=await fresh.sb.rpc('shared_moment_schedule',{p_invitation_id:item.id,p_expected_user:c.user.id,p_action:action,p_version:state?.version??null,p_details:details||null});
+      const checked=await fresh.sb.auth.getUser();
+      if(checked.error||checked.data?.user?.id!==c.user.id||!box.isConnected)throw Error('Your account changed. Refresh invitations.');
+      if(result.error)throw Error(result.error.message||'Could not save details. Refresh before trying again.');
+      return result.data;
+    }
+    async function save(action,details){
+      if(busy)return;busy=true;box.querySelectorAll('button').forEach(b=>b.disabled=true);
+      try{state=await call(action,details);render();onPlan(state.plan,state.proposal?.status==='pending',state.revision);}
+      catch(e){status.textContent=e.message;}
+      finally{busy=false;box.querySelectorAll('button').forEach(b=>b.disabled=false);}
+    }
+    function render(){
+      box.replaceChildren(title,status);
+      const p=state.proposal||{},pending=p.status==='pending';
+      status.textContent=pending?(p.proposed_by===c.user.id?'Your suggestion is waiting for your partner’s confirmation.':'Your partner suggested these details. Confirm them or suggest a change.'):p.status==='confirmed'?'You both agreed on these details.':'Suggest a time and place for your partner to review.';
+      if(p.status)box.append(node('div',[p.date,p.time,p.zone,p.place,p.duration].filter(Boolean).join(' · '),'quote'));
+      if(pending&&p.proposed_by!==c.user.id)action(box,'Confirm Our Time and Place ❤️',()=>{if(confirm('Confirm these details with your partner?'))save('confirm');}).className='primary';
+      if(pending)action(box,p.proposed_by===c.user.id?'Withdraw My Suggestion':'Keep Deciding — Clear This Suggestion',()=>{if(confirm('Clear this proposed schedule? Your invitation stays accepted.'))save('withdraw');});
+      const form=node('form'),fields={};
+      for(const [key,label,type,max] of [['date','Day','date'],['time','Time','time'],['zone','Time zone (for example, America/New_York)','text',100],['place','Where we’ll meet','text',240],['duration','Time together (optional)','text',120]]){
+        const wrap=node('label',label),input=node('input');input.type=type;input.required=key!=='duration';if(max)input.maxLength=max;
+        input.value=p[key]||({date:state.plan?.momentDate,time:state.plan?.momentTime,zone:state.plan?.momentZone||Intl.DateTimeFormat().resolvedOptions().timeZone,place:state.plan?.meetPlace,duration:state.plan?.length}[key]||'');
+        wrap.append(input);form.append(wrap);fields[key]=input;
+      }
+      const submit=node('button',pending?'Suggest Different Details':'Propose Our Time and Place');submit.type='submit';form.append(submit);
+      form.append(node('p','These details are shared inside Heart Stone. Your partner must confirm each new proposal. No email or text message is sent.','helper'));
+      form.onsubmit=e=>{e.preventDefault();if(confirm('Share these proposed details with your partner?'))save('propose',Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,v.value.trim()])));};
+      const toggle=action(box,p.status==='confirmed'?'Suggest a Change':'Add My Suggestion',()=>{form.hidden=!form.hidden;toggle.setAttribute('aria-expanded',String(!form.hidden));if(!form.hidden)fields.date.focus();});toggle.setAttribute('aria-expanded','false');form.hidden=true;box.append(form);
+      action(box,'Refresh Shared Details',async()=>{if(busy)return;busy=true;try{state=await call('load');render();onPlan(state.plan,state.proposal?.status==='pending',state.revision);}catch(e){status.textContent=e.message;}finally{busy=false;}});
+    }
+    try{state=await call('load');render();onPlan(state.plan,state.proposal?.status==='pending',state.revision);}catch(e){status.textContent=e.message;onPlan(item.plan,true);}
+  }
   async function openMoment(c,item,card){
     const version=++momentVersion;
     el('sharedInvitationStatus').textContent='Opening your moment…';
@@ -219,9 +259,10 @@
       intro.append(node('div','A new chapter','eyebrow'),node('div','♡','cinemaHeart'));
       const heading=node('h2','We said yes.');heading.setAttribute('tabindex','-1');intro.append(heading);
       intro.append(node('p','A little time chosen for each other. A memory waiting to happen.','cinemaLead'));
-      intro.append(node('div',latest.message,'quote'),node('div',planText(latest.plan),'quote'));
+      const introPlan=node('div',planText(latest.plan),'quote');intro.append(node('div',latest.message,'quote'),introPlan);
+      const scheduleBox=node('div');intro.append(scheduleBox);
       const sceneHeading=node('h2',latest.completed_at?'A little time, now part of your story':latest.started_at?'Our moment is underway':'Our moment begins');sceneHeading.setAttribute('tabindex','-1');
-      scene.append(node('div','Make room for us','eyebrow'),sceneHeading,node('h3',latest.title,'cinemaTitle'),node('p',latest.story,'cinemaLead'),node('div',planText(latest.plan),'quote'));
+      const scenePlan=node('div',planText(latest.plan),'quote');scene.append(node('div','Make room for us','eyebrow'),sceneHeading,node('h3',latest.title,'cinemaTitle'),node('p',latest.story,'cinemaLead'),scenePlan);
       scene.append(node('p','Follow the moment. Make it yours. Put the phones aside when you can.','cinemaClosing'));
       action(intro,'Step Into Our Moment ❤️',()=>{intro.hidden=true;scene.hidden=false;sceneHeading.focus();dialog.scrollTop=0;}).className='primary';
       const progress=node('p',latest.started_at?'Your shared moment is underway. You can return here whenever you need the details.':'When you are ready together, begin your shared moment. Both of you will see it as underway.','notice');progress.setAttribute('role','status');scene.append(progress);
@@ -282,6 +323,7 @@
       dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
       dialog.addEventListener('close',()=>{dialog.remove();if(momentDialog===dialog)momentDialog=null;});
       document.body.append(dialog);dialog.showModal();(latest.started_at?sceneHeading:heading).focus();
+      if(!latest.started_at&&!latest.completed_at){begin.disabled=true;scheduleEditor(c,latest,scheduleBox,(plan,pending,revision)=>{latest.plan=plan;if(Number.isInteger(revision))latest.revision=revision;introPlan.textContent=scenePlan.textContent=planText(plan);begin.disabled=pending;progress.textContent=pending?'Agree on your proposed time and place before beginning.':'When you are ready together, begin your shared moment. Both of you will see it as underway.';});}
       el('sharedInvitationStatus').textContent='Your accepted moment is ready to open.';
     }catch(e){if(version===momentVersion)el('sharedInvitationStatus').textContent=e.message;}
   }
@@ -338,6 +380,7 @@
         card.append(node('div',item.message,'quote'));
         card.append(node('div',planText(item.plan),'quote'));
         if(item.status==='accepted'){
+          if(!item.started_at&&!item.completed_at)action(card,'Choose Our Time and Place',()=>openMoment(c,item,card));
           action(card,item.completed_at?'Revisit Our Moment ❤️':item.started_at?'Return to Our Moment ❤️':'Reveal Our Moment ❤️',()=>openMoment(c,item,card)).className='primary';
           if(!item.completed_at)card.append(node('p','Saying yes to time together leaves room to change your mind or stop.','helper'));
         }else{card.append(node('p',item.story));}
