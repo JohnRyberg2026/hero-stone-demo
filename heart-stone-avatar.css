@@ -42,7 +42,9 @@
 @keyframes hs-think{50%{transform:translateY(-3px) rotate(-1deg)}}
 @keyframes hs-reply{50%{transform:translateX(-5px) rotate(-1deg)}}
 @media(prefers-reduced-motion:reduce){.hs-guide-sprite{animation:none!important;transform:none!important}}
-.hs-conversation{border-top:1px solid #ddc7af;margin-top:24px;padding-top:18px}
+.hs-conversation{border-bottom:1px solid #ddc7af;margin:0 0 24px;padding:0 0 22px}
+.hs-conversation [data-chat-open]{display:block;width:100%;background:#7c2839;color:#fff;margin:0 0 16px;padding:14px}
+.hs-conversation [data-chat-open]:hover{background:#642030}
 .hs-conversation h3{font:24px Georgia,serif;margin:0 0 10px}
 .hs-conversation label{display:block;font-size:14px;margin-top:16px}
 .hs-conversation textarea{box-sizing:border-box;display:block;width:100%;font:16px/1.5 system-ui,sans-serif;padding:12px;margin:8px 0 12px;border:1px solid #b69e88;border-radius:10px;color:#30251f;background:#fff;resize:vertical}
