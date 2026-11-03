@@ -50,3 +50,11 @@
 .hs-conversation [role=log] p{white-space:pre-wrap;line-height:1.6}
 .hs-conversation textarea:focus-visible{outline:3px solid #247566;outline-offset:3px}
 .hs-conversation button:disabled{opacity:.6;cursor:wait}
+.hs-preferences{border-bottom:1px solid #ddc7af;padding:0 0 22px;margin:0 0 24px}
+.hs-preferences h3{font:24px Georgia,serif;margin:0 0 10px}
+.hs-preferences label{display:block;font-size:14px;margin:14px 0 8px}
+.hs-preferences input:not([type=checkbox]),.hs-preferences textarea{display:block;box-sizing:border-box;width:100%;padding:12px;margin-top:8px;border:1px solid #b69e88;border-radius:10px;font:16px/1.5 system-ui,sans-serif;background:#fff;color:#30251f}
+.hs-preferences .hs-pref-consent{display:flex;gap:10px;align-items:flex-start;line-height:1.5}
+.hs-preferences input[type=checkbox]{width:20px;height:20px;flex:none;margin:0}
+.hs-preferences button{margin:6px 6px 6px 0}
+.hs-preferences button:disabled{opacity:.6;cursor:wait}

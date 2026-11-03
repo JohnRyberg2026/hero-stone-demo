@@ -5,7 +5,7 @@
     if (!body) return;
     const section = document.createElement('section');
     section.className = 'hs-conversation';
-    section.innerHTML = `<button type="button" data-chat-open>Start a conversation</button><h3>Talk it through with Heart Stone</h3><p class="hs-guide-note">AI conversation · Your messages and this session’s replies are sent to OpenAI to generate a response. This version does not save chat history or read your partner’s information.</p>
+    section.innerHTML = `<button type="button" data-chat-open>Start a conversation</button><h3>Talk it through with Heart Stone</h3><p class="hs-guide-note">AI conversation · Your messages and this session’s replies are sent to OpenAI to generate a response. This version does not save chat history or read your partner’s information. Only preferences you explicitly enable are included with future messages.</p>
       <div data-chat-panel hidden><div role="log" aria-label="Conversation with Heart Stone" aria-live="polite"></div>
       <form><label>What brings you here?<textarea maxlength="1500" rows="3" required placeholder="I’d like some simple time together tonight."></textarea></label><button type="submit">Talk with Heart Stone</button></form>
       <p role="status"></p><div data-draft hidden><label>Suggested invitation · edit before continuing<textarea rows="4" maxlength="1000"></textarea></label><button type="button" data-review>Review in invitations</button><p class="hs-guide-note">Only this edited invitation is carried forward. Your conversation stays here.</p></div><button type="button" data-clear>End and clear conversation</button></div>`;
@@ -64,6 +64,7 @@
       connection = detail?.connected ? next : null;
     });
     window.addEventListener('pagehide', reset);
+    window.addEventListener('heartstone:preferences-changed', reset);
     if (typeof sb !== 'undefined') sb.auth.onAuthStateChange((event, session) => {
       // SIGNED_IN can confirm the existing session after a tab regains focus.
       // Compare identity instead of treating every notification as a new user.

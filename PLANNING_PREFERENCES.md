@@ -1,0 +1,11 @@
+# Approved planning preferences — November 3, 2026
+
+Users explicitly enter their own budget, enjoyable activities and things to avoid. Each field is optional and bounded to 240 characters. Saving privately and allowing AI use are separate decisions; the AI-use checkbox defaults off. No chat content, inferred preferences, partner preferences, calendar data, fit data, or unrelated onboarding answers are imported.
+
+Storage reuses `public.user_onboarding_answers`, which already has owner-only RLS, under the single key `heartstone_planning_preferences_v1`. The new `my_planning_preferences` RPC is authenticated-only and SECURITY INVOKER, requires the expected account and validates the three field names. Save/delete use row locks and expected revision. Delete erases preference content and consent while retaining an empty revision tombstone to reject stale restores. The feature does not delete unrelated onboarding answers.
+
+The Edge Function validates Auth/pilot access, then reads only that user's record with their bearer token. Opted-out fields never enter the model input. Opted-in preferences are bounded descriptive user data; they do not override behavior boundaries or authorize actions. A second read after generation discards a reply if preferences changed in flight. Preference-service errors fail closed. Model storage remains false; chat remains memory-only. Provider retention, prior generated text, and user-sent invitations cannot be retracted by deleting preferences.
+
+Saving or deleting clears the current chat. A BroadcastChannel content-free signal clears other open editors/conversations in supported browsers; revision validation remains the server-side protection. Account changes and leaving erase the editor. The existing conversation pilot allowlist remains unchanged; this does not enable Jessica or public access to AI conversation. Distributed rate limiting remains required before expanding pilot access.
+
+Verification: 23 server/client lifecycle/preference/availability/handoff checks plus existing calendar checks passed. Authenticated SQL tests (rolled back) verified private load/save, opt-in/off, invalid field rejection, revision conflicts, delete/tombstone, cross-account RLS and unauthenticated denial. No new table or broad grant was introduced. Visual browser QA and a live preference-to-model walkthrough remain pending.
