@@ -31,3 +31,6 @@ Baseline: f03eb9c06ad929bedd7105d92b5e99ba75c2426a (PRs 64–66 merged and deplo
 
 ### Working rule
 Use this checkpoint and code evidence before proposing another test. Distinguish completed demonstrations, user-reported tests, missing evidence, planned features and known limitations.
+
+## Shared availability implementation follow-up
+The previously recommended date-only sharing is now implemented in shared-availability.js and database/shared-availability.sql. See SHARED_AVAILABILITY.md for verification and limits. Existing private events/hearts are not migrated. Automated and rollback database checks passed; the new feature's two-account visual walkthrough remains separate from already completed invitation/calendar tests. Avatar animation remains paused.
