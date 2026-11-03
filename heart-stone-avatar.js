@@ -24,8 +24,9 @@
     let paused = reduced.matches, greeting;
     function setState(value) {
       root.dataset.state = value;
-      state.textContent = value === 'listening' ? 'Ready for your words · text only' : value === 'responding' ? 'A starting point for you' : 'Ready when you are · text only';
+      state.textContent = value === 'listening' ? 'Ready for your words · text only' : value === 'thinking' ? 'Thinking about your words…' : value === 'responding' ? 'A response for you · text only' : 'Ready when you are · text only';
     }
+    root.heartStoneState = setState;
     function updateMotion() {
       root.dataset.motion = paused || reduced.matches ? 'paused' : 'on';
       motion.setAttribute('aria-pressed', String(paused || reduced.matches));

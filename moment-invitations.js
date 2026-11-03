@@ -330,7 +330,7 @@
         const card=node('article',undefined,'card invitationLetter'+(item.status==='accepted'?' acceptedLetter':''));card.style.marginTop='16px';
         const identity=node('div',undefined,'person');person(identity,other?.name||'your connected partner',other?.picture,incoming?'From ':'To ');card.append(identity);
         if(item.status==='accepted'){
-          card.append(node('h3',item.completed_at?'A moment for your story. ❤️':item.started_at?'Our moment is underway. ❤️':(incoming?'It’s a date. ❤️':'They said yes. ❤️'),'letterOutcome'));
+          card.append(node('h3',item.completed_at?'A moment for your story. ❤️':item.started_at?'Our moment is underway. ❤️':(incoming?'It’s a date. ❤️':(other?.name ? other.name+' said yes. ❤️' : 'Your partner said yes. ❤️')),'letterOutcome'));
           card.append(node('p',item.completed_at?'Your time together has come to a close. Your own words can keep a little of it.':item.started_at?'Come back to the moment you have begun together.':'You have a little time together to look forward to.','letterAnticipation'));
         }
         card.append(node('h2',item.status==='accepted'&&incoming&&!item.started_at?'A moment waiting for us':item.title));
