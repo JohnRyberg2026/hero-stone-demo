@@ -1,0 +1,13 @@
+# Conversation usage limits — November 3, 2026
+
+Pilot defaults: 6 reserved requests per rolling 60 seconds and 100 per UTC calendar day per verified account. These are request limits, not a dollar-denominated spending guarantee. Existing pilot allowlist, transcript bounds, 900-token output cap and preference consent remain unchanged.
+
+After verifying Auth and pilot membership, parsing the bounded transcript and loading approved preferences, the Edge Function calls `reserve_heartstone_conversation` before OpenAI. That RPC is executable only by service_role and receives only the server-verified account UUID. The service key is the standard Edge Function environment secret; it never reaches the browser or OpenAI input. If configuration or quota verification is unavailable/malformed, the request fails closed without calling OpenAI.
+
+Reservations serialize on the account's database row using SELECT FOR UPDATE. Time is read after acquiring the lock. The row stores account UUID, UTC day, daily count and at most six recent reservation timestamps. It stores no text, IP address, preference data, replies or full request log. Day counters and the rolling window expire lazily on the next reservation. One bounded row is retained per account and removed on account deletion. Client roles have no schema/table/function access; RLS additionally denies direct client access.
+
+Allowed reservations count even if OpenAI fails or an answer is discarded. There are no automatic provider retries/refunds, because ambiguous failures may already have incurred usage. Invalid/unauthorized requests and preference-load failures do not reserve quota. Denied reservations do not increment the count. Opening another tab or clearing the conversation cannot reset the server count.
+
+A denial returns 429, a bounded Retry-After value and a fixed minute/day scope. The client preserves unsent words, explains when to retry, and disables send until its local cooldown expires. The server remains authoritative. Account changes/clear/page exit discard stale timers and private UI.
+
+Verification: 28 automated server/client/privacy/lifecycle checks and the existing calendar check passed. Authenticated/service-role rollback SQL tests verify the minute boundary, daily boundary, rolling expiry, UTC rollover, retry values and denied client access. Before Edge activation, 12 parallel independent database calls admitted exactly 6 at the minute boundary; with the daily count at 99, 12 calls admitted exactly 1. The temporary counter was removed afterward; no OpenAI calls or user messages were created by these tests. Security advisor reported no findings for the new usage objects. A paid live limit-exhaustion walkthrough was intentionally not run.

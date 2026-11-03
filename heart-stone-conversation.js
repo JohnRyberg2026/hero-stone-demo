@@ -14,10 +14,10 @@
     const input = form.querySelector('textarea'), send = form.querySelector('button'), status = section.querySelector('[role=status]');
     const draftBox = section.querySelector('[data-draft]'), draft = draftBox.querySelector('textarea');
     let messages = [], version = 0, busy = false, owner = null;
-    let sessionAccount;
+    let sessionAccount, retryAt = 0, retryTimer;
     let connection = typeof heartStoneId === "undefined" ? null : heartStoneId;
     function avatarState(value) {if (root.heartStoneState) root.heartStoneState(value); else root.dataset.state = value;}
-    function reset() {version++; messages = []; owner = null; busy = false; input.value = ''; draft.value = ''; draftBox.hidden = true; log.replaceChildren(); panel.hidden = true; status.textContent = ''; send.disabled = false; avatarState('idle');}
+    function reset() {window.clearTimeout?.(retryTimer); retryAt=0; version++; messages = []; owner = null; busy = false; input.value = ''; draft.value = ''; draftBox.hidden = true; log.replaceChildren(); panel.hidden = true; status.textContent = ''; send.disabled = false; avatarState('idle');}
     function append(role, text) {const p = document.createElement('p'); const name = document.createElement('strong'); name.textContent = role === 'user' ? 'You: ' : 'Heart Stone: '; p.append(name, document.createTextNode(text)); log.append(p);}
     section.querySelector('[data-chat-open]').onclick = () => {panel.hidden = false; input.focus(); avatarState('listening');};
     input.addEventListener('focus', () => {if (!busy) avatarState('listening');});
@@ -25,7 +25,7 @@
     section.querySelector('[data-clear]').onclick = reset;
     form.addEventListener('submit', async event => {
       event.preventDefault();
-      if (busy || !input.value.trim()) return;
+      if (busy || !input.value.trim() || Date.now()<retryAt) return;
       if (messages.length >= 18) {status.textContent = 'End and clear this conversation to start a fresh one.'; return;}
       const words = input.value.trim(), v = version;
       busy = true; send.disabled = true; draftBox.hidden = true; status.textContent = 'Heart Stone is thinking…'; avatarState('thinking');
@@ -42,13 +42,24 @@
         const {data:verify} = await sb.auth.getUser();
         if (v !== version) return;
         if (verify.user?.id !== owner) {reset(); return;}
-        if (error) throw Error('Conversation is unavailable or is not connected yet. Your message remains here to retry.');
+        if (error) {
+          let quota;
+          if(error.context?.status===429){try{quota=await error.context.clone().json();}catch{}}
+          if(v!==version)return;
+          if(quota?.code==='conversation_limit'&&Number.isInteger(quota.retryAfterSeconds)&&quota.retryAfterSeconds>=1&&quota.retryAfterSeconds<=86400){
+            retryAt=Date.now()+quota.retryAfterSeconds*1000;
+            retryTimer=window.setTimeout?.(()=>{if(v===version){retryAt=0;send.disabled=false;status.textContent='You can try again now. Your message is still here.';}},quota.retryAfterSeconds*1000);
+            const minutes=Math.ceil(quota.retryAfterSeconds/60),wait=minutes>=60?'about '+Math.ceil(minutes/60)+' hour(s)':minutes+' minute(s)';
+            throw Error('Conversation limit reached. Try again in '+wait+'. Your message is still here.');
+          }
+          throw Error(error.context?.status===429?'Heart Stone is busy. Try again shortly. Your message is still here.':'Conversation is unavailable. Your message remains here to retry.');
+        }
         if (!data || typeof data.reply !== 'string' || !data.reply.trim() || data.reply.length > 3000 || (data.draft !== null && (typeof data.draft !== 'string' || data.draft.length > 1000))) throw Error('Heart Stone could not respond. Please try again.');
         messages = [...next,{role:'assistant',content:data.reply}]; append('user',words); append('assistant',data.reply);
         input.value = ''; avatarState('responding'); status.textContent = 'You choose the next step.';
         draft.value = data.draft || ''; draftBox.hidden = !draft.value;
       } catch (error) {if (v === version) {status.textContent = error.message; avatarState('idle');}}
-      finally {if (v === version) {busy = false; send.disabled = false;}}
+      finally {if (v === version) {busy = false; send.disabled = Date.now()<retryAt;}}
     });
     section.querySelector('[data-review]').onclick = () => {
       const words = draft.value.trim();
