@@ -28,7 +28,19 @@
 .hs-guide-note{font-size:11px;line-height:1.5;color:#756256;margin:12px 0 0}
 @keyframes hs-welcome{0%{background-position:0 0}12.5%{background-position:33.3333% 0}25%{background-position:66.6667% 0}37.5%{background-position:100% 0}50%{background-position:0 100%}62.5%{background-position:33.3333% 100%}75%{background-position:66.6667% 100%}87.5%{background-position:100% 100%}}
 @keyframes hs-breathe{50%{transform:translateY(-2px)}}
-@media(min-width:760px){.hs-guide{grid-template-columns:270px minmax(0,1fr)}.hs-guide-scene{min-height:480px}.hs-guide-sprite{width:270px}}
+/* Size the guide to its own card, including the narrow home column on desktop. */
+.hs-guide{container-type:inline-size}
+.hs-guide-scene{min-height:260px;height:260px}
+.hs-guide-sprite{width:190px;max-width:100%}
+.hs-guide-body{padding:22px}
+@container(min-width:680px){.hs-guide-scene{height:340px;min-height:340px}.hs-guide-sprite{width:240px}.hs-guide-body{padding:28px}}
+.hs-guide[data-state=thinking] .hs-guide-sprite{background-position:100% 0}
+.hs-guide[data-state=listening][data-motion=on] .hs-guide-sprite{animation:hs-attentive 4s ease-in-out infinite}
+.hs-guide[data-state=thinking][data-motion=on] .hs-guide-sprite{animation:hs-think 3s ease-in-out infinite}
+.hs-guide[data-state=responding][data-motion=on] .hs-guide-sprite{animation:hs-reply 1.2s ease-in-out 2}
+@keyframes hs-attentive{50%{transform:translateX(4px) rotate(1deg)}}
+@keyframes hs-think{50%{transform:translateY(-3px) rotate(-1deg)}}
+@keyframes hs-reply{50%{transform:translateX(-5px) rotate(-1deg)}}
 @media(prefers-reduced-motion:reduce){.hs-guide-sprite{animation:none!important;transform:none!important}}
 .hs-conversation{border-top:1px solid #ddc7af;margin-top:24px;padding-top:18px}
 .hs-conversation h3{font:24px Georgia,serif;margin:0 0 10px}

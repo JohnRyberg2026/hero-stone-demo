@@ -17,16 +17,19 @@
     let messages = [], version = 0, busy = false, owner = null;
     let sessionAccount;
     let connection = typeof heartStoneId === "undefined" ? null : heartStoneId;
-    function reset() {version++; messages = []; owner = null; busy = false; input.value = ''; draft.value = ''; draftBox.hidden = true; log.replaceChildren(); panel.hidden = true; status.textContent = ''; send.disabled = false; root.dataset.state = 'idle';}
+    function avatarState(value) {if (root.heartStoneState) root.heartStoneState(value); else root.dataset.state = value;}
+    function reset() {version++; messages = []; owner = null; busy = false; input.value = ''; draft.value = ''; draftBox.hidden = true; log.replaceChildren(); panel.hidden = true; status.textContent = ''; send.disabled = false; avatarState('idle');}
     function append(role, text) {const p = document.createElement('p'); const name = document.createElement('strong'); name.textContent = role === 'user' ? 'You: ' : 'Heart Stone: '; p.append(name, document.createTextNode(text)); log.append(p);}
-    section.querySelector('[data-chat-open]').onclick = () => {panel.hidden = false; input.focus();};
+    section.querySelector('[data-chat-open]').onclick = () => {panel.hidden = false; input.focus(); avatarState('listening');};
+    input.addEventListener('focus', () => {if (!busy) avatarState('listening');});
+    input.addEventListener('input', () => {if (!busy) avatarState('listening');});
     section.querySelector('[data-clear]').onclick = reset;
     form.addEventListener('submit', async event => {
       event.preventDefault();
       if (busy || !input.value.trim()) return;
       if (messages.length >= 18) {status.textContent = 'End and clear this conversation to start a fresh one.'; return;}
       const words = input.value.trim(), v = version;
-      busy = true; send.disabled = true; draftBox.hidden = true; status.textContent = 'Heart Stone is thinking…'; root.dataset.state = 'listening';
+      busy = true; send.disabled = true; draftBox.hidden = true; status.textContent = 'Heart Stone is thinking…'; avatarState('thinking');
       try {
         if (typeof sb === 'undefined') throw Error('Open DATE QUEST and sign in to use conversation.');
         const {data:auth,error:authError} = await sb.auth.getUser();
@@ -43,9 +46,9 @@
         if (error) throw Error('Conversation is unavailable or is not connected yet. Your message remains here to retry.');
         if (!data || typeof data.reply !== 'string' || !data.reply.trim() || data.reply.length > 3000 || (data.draft !== null && (typeof data.draft !== 'string' || data.draft.length > 1000))) throw Error('Heart Stone could not respond. Please try again.');
         messages = [...next,{role:'assistant',content:data.reply}]; append('user',words); append('assistant',data.reply);
-        input.value = ''; root.dataset.state = 'responding'; status.textContent = 'You choose the next step.';
+        input.value = ''; avatarState('responding'); status.textContent = 'You choose the next step.';
         draft.value = data.draft || ''; draftBox.hidden = !draft.value;
-      } catch (error) {if (v === version) {status.textContent = error.message; root.dataset.state = 'idle';}}
+      } catch (error) {if (v === version) {status.textContent = error.message; avatarState('idle');}}
       finally {if (v === version) {busy = false; send.disabled = false;}}
     });
     section.querySelector('[data-review]').onclick = () => {
