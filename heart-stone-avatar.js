@@ -9,7 +9,7 @@
   function mount(root) {
     if (root.dataset.mounted) return;
     root.dataset.mounted = 'true';
-    root.innerHTML = `<div class="hs-guide-scene" aria-hidden="true"><div class="hs-guide-sprite"></div><span class="hs-guide-signature">HEART STONE™</span></div>
+    root.innerHTML = `<div class="hs-guide-scene" aria-hidden="true"><div class="hs-guide-sprite"><span class="hs-guide-pose hs-guide-pose-rest"></span><span class="hs-guide-pose hs-guide-pose-listening"></span><span class="hs-guide-pose hs-guide-pose-thinking"></span><span class="hs-guide-pose hs-guide-pose-responding"></span></div><span class="hs-guide-signature">HEART STONE™</span></div>
       <div class="hs-guide-body"><p class="hs-guide-eyebrow">A little help making room for each other</p>
       <h2>What brings you here today?</h2><p class="hs-guide-message" role="status" aria-live="polite">Plan something, reconnect, or pick up where you left off.</p>
       <div class="hs-guide-choices"><button type="button" data-purpose="plan">Plan a moment</button><button type="button" data-purpose="reconnect">Reconnect</button><button type="button" data-purpose="continue">Continue a moment</button></div>

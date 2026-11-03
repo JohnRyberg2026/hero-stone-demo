@@ -1,11 +1,16 @@
 .hs-guide{display:grid;grid-template-columns:minmax(0,1fr);border:1px solid #ddc7af;border-radius:24px;overflow:hidden;background:#fffcf7;color:#30251f;text-align:left;margin:24px 0}
 .hs-guide [hidden]{display:none!important}
 .hs-guide-scene{position:relative;background:#452519;overflow:hidden;display:grid;place-items:center;min-height:300px}
-.hs-guide-sprite{width:240px;aspect-ratio:3/4;background-image:url('images/heart-stone-greeting.webp');background-size:400% 200%;background-position:0 0;transform-origin:50% 85%}
-.hs-guide[data-state=greeting][data-motion=on] .hs-guide-sprite{animation:hs-welcome 1.6s step-end 1}
-.hs-guide[data-state=idle][data-motion=on] .hs-guide-sprite{animation:hs-breathe 5s ease-in-out infinite}
-.hs-guide[data-state=listening] .hs-guide-sprite{background-position:66.6667% 0}
-.hs-guide[data-state=responding] .hs-guide-sprite{background-position:33.3333% 100%}
+/* Keep a single motion clock across reactions; fade poses instead of stepping frames. */
+.hs-guide-sprite{position:relative;width:240px;aspect-ratio:3/4;transform-origin:50% 85%}
+.hs-guide-pose{position:absolute;inset:0;background-image:url('images/heart-stone-greeting.webp');background-size:400% 200%;opacity:0;transition:opacity 900ms ease-in-out}
+.hs-guide-pose-rest{background-position:0 0;opacity:1}
+.hs-guide-pose-listening{background-position:66.6667% 0}
+.hs-guide-pose-thinking{background-position:100% 0}
+.hs-guide-pose-responding{background-position:33.3333% 100%}
+.hs-guide:is([data-state=listening],[data-state=thinking],[data-state=responding]) .hs-guide-pose-rest{opacity:0}
+.hs-guide[data-state=listening] .hs-guide-pose-listening,.hs-guide[data-state=thinking] .hs-guide-pose-thinking,.hs-guide[data-state=responding] .hs-guide-pose-responding{opacity:1}
+.hs-guide[data-motion=on] .hs-guide-sprite{animation:hs-flow 8s ease-in-out infinite}
 .hs-guide-signature{position:absolute;bottom:14px;left:18px;color:#fff2d3;font-size:11px;letter-spacing:.2em}
 .hs-guide-body{padding:24px;min-width:0}
 .hs-guide-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:#8d2534;font-weight:750;margin:0 0 12px}
@@ -26,22 +31,15 @@
 .hs-guide-state{font-size:11px;color:#65544a}
 .hs-guide .hs-guide-motion{padding:5px 0;border:0;background:transparent;font-size:11px;text-decoration:underline}
 .hs-guide-note{font-size:11px;line-height:1.5;color:#756256;margin:12px 0 0}
-@keyframes hs-welcome{0%{background-position:0 0}12.5%{background-position:33.3333% 0}25%{background-position:66.6667% 0}37.5%{background-position:100% 0}50%{background-position:0 100%}62.5%{background-position:33.3333% 100%}75%{background-position:66.6667% 100%}87.5%{background-position:100% 100%}}
-@keyframes hs-breathe{50%{transform:translateY(-2px)}}
+@keyframes hs-flow{0%,100%{transform:translate3d(0,0,0) rotate(-.25deg)}50%{transform:translate3d(1px,-2px,0) rotate(.25deg)}}
 /* Size the guide to its own card, including the narrow home column on desktop. */
 .hs-guide{container-type:inline-size}
 .hs-guide-scene{min-height:260px;height:260px}
 .hs-guide-sprite{width:190px;max-width:100%}
 .hs-guide-body{padding:22px}
 @container(min-width:680px){.hs-guide-scene{height:340px;min-height:340px}.hs-guide-sprite{width:240px}.hs-guide-body{padding:28px}}
-.hs-guide[data-state=thinking] .hs-guide-sprite{background-position:100% 0}
-.hs-guide[data-state=listening][data-motion=on] .hs-guide-sprite{animation:hs-attentive 4s ease-in-out infinite}
-.hs-guide[data-state=thinking][data-motion=on] .hs-guide-sprite{animation:hs-think 3s ease-in-out infinite}
-.hs-guide[data-state=responding][data-motion=on] .hs-guide-sprite{animation:hs-reply 1.2s ease-in-out 2}
-@keyframes hs-attentive{50%{transform:translateX(4px) rotate(1deg)}}
-@keyframes hs-think{50%{transform:translateY(-3px) rotate(-1deg)}}
-@keyframes hs-reply{50%{transform:translateX(-5px) rotate(-1deg)}}
-@media(prefers-reduced-motion:reduce){.hs-guide-sprite{animation:none!important;transform:none!important}}
+@media(prefers-reduced-motion:reduce){.hs-guide-sprite{animation:none!important;transform:none!important}.hs-guide-pose{transition:none!important}}
+.hs-guide[data-motion=paused] .hs-guide-pose{transition:none}
 .hs-conversation{border-bottom:1px solid #ddc7af;margin:0 0 24px;padding:0 0 22px}
 .hs-conversation [data-chat-open]{display:block;width:100%;background:#7c2839;color:#fff;margin:0 0 16px;padding:14px}
 .hs-conversation [data-chat-open]:hover{background:#642030}
