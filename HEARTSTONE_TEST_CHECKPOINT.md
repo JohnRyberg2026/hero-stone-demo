@@ -34,3 +34,9 @@ Use this checkpoint and code evidence before proposing another test. Distinguish
 
 ## Shared availability implementation follow-up
 The previously recommended date-only sharing is now implemented in shared-availability.js and database/shared-availability.sql. See SHARED_AVAILABILITY.md for verification and limits. Existing private events/hearts are not migrated. Automated and rollback database checks passed; the new feature's two-account visual walkthrough remains separate from already completed invitation/calendar tests. Avatar animation remains paused.
+
+
+## Saved and locked — shared availability live test passed
+John supplied screenshots showing his date-only heart shared with Jessica, then confirmed that Jessica could see it after refresh. John also confirmed removing his shared heart and refreshing Jessica's view made it disappear. Record the sender-share, recipient-read and owner-removal round trip as user-confirmed PASS. Do not ask to repeat it without a new regression or change. The feature shipped in PR 68 at baseline 558363c8abdc8a68749395bb83f8518b8120827a. This is a saved development checkpoint, not a repository permission lock.
+
+Next recommended product step: let Heart Stone use a small set of explicitly approved personal date-planning preferences across conversations. The current conversational handler receives only the session transcript and explicitly cannot read preferences/prior sessions. Inspect existing personalization/onboarding storage before designing new storage. Keep saved preferences editable/deletable, do not automatically store chat text or infer partner preferences, and require explicit opt-in before use with AI. This is a proposed next step, not implemented. Keep the conversation pilot restricted until the documented server-side rate limit is implemented. Avatar animation remains paused.
