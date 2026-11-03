@@ -43,3 +43,11 @@ Next recommended product step: let Heart Stone use a small set of explicitly app
 
 ## Planning preferences implementation — November 3, 2026
 Explicit personal planning preferences and optional AI use are implemented; see PLANNING_PREFERENCES.md. Reuses owner-only onboarding storage; no inference or partner/calendar import. Automated and rollback database checks passed. Live user walkthrough pending for this new feature only. Previously completed invitation/calendar/availability tests stay closed. Avatar animation remains paused.
+
+
+## Saved and locked — planning preference live checks, November 3, 2026
+Baseline: f3197b6b68123ad83ff7c46344f9ee41696869bb (preferences PR 70 and direct-page PR 71). John supplied screenshots confirming private save with AI off, confirmed persistence after refresh, then supplied screenshots of saved AI opt-in and an AI reply using quiet walks/dinner at home. The reply referred to budget generally; exact use of the numeric $50 amount was not separately demonstrated. After John turned AI use off and started a fresh conversation, a screenshot showed Heart Stone could not see saved activity preferences. Record save, refresh persistence, opt-in behavior and opt-out behavior as live PASS. The last tested state has AI use off; preferences remain privately saved.
+
+The direct page planning-preferences.html and static home link resolve access for older already-open home tabs. Fresh public-browser inspection verified the button mounts; authenticated live save/model tests were performed by John. Do not repeat these passed checks without a new regression or relevant change. Live deletion was not demonstrated; deletion/stale-editor isolation passed automated and rollback database tests.
+
+Next confirmed engineering gap: the conversational handler still has no distributed per-account request limiter. Implement bounded usage before any expansion of the pilot allowlist, preserving existing account authorization and consent. Prefer short-window burst protection plus a daily cap, applied before paid provider calls, with no chat text in limiter storage and a clear retry message. This is the next proposed implementation, not completed by this checkpoint. Avatar animation remains paused.
