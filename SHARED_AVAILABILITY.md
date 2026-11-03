@@ -9,3 +9,7 @@ Dates expire from visibility at midnight in the sharer's browser timezone, valid
 Verification: SQL rollback integration tests passed under authenticated role for both members, unknown user denial, expected-account mismatch, direct table denial, owner-only removal, duplicate writes, invalid/past dates and timezone validation, and expiry. Three browser-model tests passed for explicit-only payloads, account-change/in-flight clearing, expiry and calendar selection; existing calendar checks and eight conversation/handoff regressions passed. No full browser visual or live two-account UI walkthrough was performed for this new feature.
 
 Security advisor review: the new private table produces an informational RLS-without-policy notice by design; direct access is revoked. The new public functions are invoker wrappers and not callable by anon. Existing unrelated project findings were not changed in this feature.
+
+
+## Live pilot result
+John confirmed the two-account UI walkthrough after deployment: his shared day appeared for Jessica after refresh; after John removed the heart and Jessica refreshed, the day disappeared. Both live checks passed. Earlier text describing this walkthrough as pending is superseded by this result. No additional test data was created by the assistant.
