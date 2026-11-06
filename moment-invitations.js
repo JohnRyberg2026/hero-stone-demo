@@ -2,6 +2,16 @@
   'use strict';
   const el=id=>document.getElementById(id);
   let momentDialog=null,momentVersion=0;
+  let memoriesOnly=window.location?.hash==='#our-memories';
+  function completedMoments(items,userId){return items.filter(item=>item.status==='accepted'&&item.completed_at&&(item.sender_id===userId||item.recipient_id===userId)).sort((a,b)=>String(b.completed_at).localeCompare(String(a.completed_at)));}
+  function collectionLabels(){
+    const inbox=el('sharedInbox');
+    inbox.querySelector('.eyebrow').textContent=memoriesOnly?'Our Memories':'Invitations & replies';
+    inbox.querySelector('h1').textContent=memoriesOnly?'A little time, part of our story.':'Every treasured memory begins with an invitation.';
+    inbox.querySelector('.storyOpening').textContent=memoriesOnly?'Revisit a moment. Keep your own words privately.':'Someone reaches out. Someone answers. A new chapter begins.';
+    el('refreshSharedInvitations').textContent=memoriesOnly?'Refresh Memories':'Refresh Invitations';
+    el('backFromSharedInvitations').textContent=memoriesOnly?'Back — Home':'Back — My Invitation Draft';
+  }
   let client,loading,accountId=null,prepared=null,sendBusy=false,inboxBusy=false;
   const avatars={initials:'Initials',heart:'❤️',sun:'☀️',moon:'🌙',flower:'🌸',compass:'🧭'};
   let pictureOwner=null,pictureDraft='initials',pictureVersion=0;
@@ -255,7 +265,7 @@
       if(momentDialog)momentDialog.close();
       const dialog=node('dialog',undefined,'momentCinema');momentDialog=dialog;
       dialog.setAttribute('aria-label','Our moment together');
-      const intro=node('div'),scene=node('div');intro.hidden=!!latest.started_at;scene.hidden=!latest.started_at;
+      const intro=node('div'),scene=node('div');intro.hidden=!!(latest.started_at||latest.completed_at);scene.hidden=!(latest.started_at||latest.completed_at);
       intro.append(node('div','A new chapter','eyebrow'),node('div','♡','cinemaHeart'));
       const heading=node('h2','We said yes.');heading.setAttribute('tabindex','-1');intro.append(heading);
       intro.append(node('p','A little time chosen for each other. A memory waiting to happen.','cinemaLead'));
@@ -280,7 +290,7 @@
           latest.started_at=begun.data;begin.hidden=true;if(finish)finish.hidden=false;sceneHeading.textContent='Our moment is underway';progress.textContent='Your shared moment is underway. You can return here whenever you need the details.';
           await refreshInbox();
         }catch(e){progress.textContent=e.message;}finally{starting=false;begin.disabled=false;}
-      });begin.className='primary';begin.hidden=!!latest.started_at;
+      });begin.className='primary';begin.hidden=!!(latest.started_at||latest.completed_at);
       if(!latest.completed_at){
         finish=action(scene,'Our Moment Has Come to a Close ❤️',async()=>{
           if(finishing||!confirm('Close this shared moment for both of you? You can each add a private memory afterward.'))return;
@@ -315,16 +325,16 @@
           }catch(e){progress.textContent=e.message;}finally{saving=false;save.disabled=false;}
         });save.className='primary';
       }
-      action(scene,'Back — Our Invitation',()=>{scene.hidden=true;intro.hidden=false;heading.focus();dialog.scrollTop=0;});
+      if(!latest.completed_at)action(scene,'Back — Our Invitation',()=>{scene.hidden=true;intro.hidden=false;heading.focus();dialog.scrollTop=0;});
       dialog.append(intro,scene);
       const exits=node('div',undefined,'actions');
-      action(exits,'Back — Invitations',()=>dialog.close());
+      action(exits,memoriesOnly?'Back — Our Memories':'Back — Invitations',()=>dialog.close());
       if(!latest.completed_at)action(exits,'Stop This Invitation',()=>{if(confirm('Close this invitation for both of you?')){dialog.close();updateInvitation(c,latest,'cancelled','',card);}});
       dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
       dialog.addEventListener('close',()=>{dialog.remove();if(momentDialog===dialog)momentDialog=null;});
-      document.body.append(dialog);dialog.showModal();(latest.started_at?sceneHeading:heading).focus();
+      document.body.append(dialog);dialog.showModal();(latest.started_at||latest.completed_at?sceneHeading:heading).focus();
       if(!latest.started_at&&!latest.completed_at){begin.disabled=true;scheduleEditor(c,latest,scheduleBox,(plan,pending,revision)=>{latest.plan=plan;if(Number.isInteger(revision))latest.revision=revision;introPlan.textContent=scenePlan.textContent=planText(plan);begin.disabled=pending;progress.textContent=pending?'Agree on your proposed time and place before beginning.':'When you are ready together, begin your shared moment. Both of you will see it as underway.';});}
-      el('sharedInvitationStatus').textContent='Your accepted moment is ready to open.';
+      el('sharedInvitationStatus').textContent=latest.completed_at?'Your private memory is ready.':'Your accepted moment is ready to open.';
     }catch(e){if(version===momentVersion)el('sharedInvitationStatus').textContent=e.message;}
   }
   function revisedTimeForm(c,item,card){
@@ -355,22 +365,31 @@
     card.append(panel);
   }
   async function refreshInbox(){
-    if(inboxBusy)return;inboxBusy=true;el('refreshSharedInvitations').disabled=true;
+    if(inboxBusy)return;collectionLabels();const memoryView=memoriesOnly;inboxBusy=true;el('refreshSharedInvitations').disabled=true;
     el('sharedInvitationList').replaceChildren();
-    el('sharedInvitationStatus').textContent='Checking shared invitations…';
+    el('sharedInvitationStatus').textContent=memoryView?'Opening your memories…':'Checking shared invitations…';
     try{
       const c=await context();
       const result=await c.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs});
       if(result.error)throw new Error('We couldn’t load your shared invitations. Please try again.');
       const verify=await c.sb.auth.getUser();
       if(verify.error||verify.data?.user?.id!==c.user.id)throw new Error('Your account changed. Refresh invitations to continue.');
-      const items=Array.isArray(result.data)?result.data:[];
+      const allItems=Array.isArray(result.data)?result.data:[];
+      const items=memoryView?completedMoments(allItems,c.user.id):allItems;
       el('sharedInvitationAccount').textContent='Signed in as '+(c.user.email||'your verified account');
       for(const item of items){
         const incoming=item.recipient_id===c.user.id;
         const other=c.partners.find(x=>x.id===(incoming?item.sender_id:item.recipient_id));
         const card=node('article',undefined,'card invitationLetter'+(item.status==='accepted'?' acceptedLetter':''));card.style.marginTop='16px';
         const identity=node('div',undefined,'person');person(identity,other?.name||'your connected partner',other?.picture,incoming?'From ':'To ');card.append(identity);
+        if(memoryView){
+          card.append(node('h2',item.title));
+          const closed=new Date(item.completed_at);
+          if(Number.isFinite(closed.getTime()))card.append(node('p','Remembered '+closed.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'}),'helper'));
+          action(card,'Revisit Our Moment ❤️',()=>openMoment(c,item,card)).className='primary';
+          el('sharedInvitationList').append(card);
+          continue;
+        }
         if(item.status==='accepted'){
           card.append(node('h3',item.completed_at?'A moment for your story. ❤️':item.started_at?'Our moment is underway. ❤️':(incoming?'It’s a date. ❤️':(other?.name ? other.name+' said yes. ❤️' : 'Your partner said yes. ❤️')),'letterOutcome'));
           card.append(node('p',item.completed_at?'Your time together has come to a close. Your own words can keep a little of it.':item.started_at?'Come back to the moment you have begun together.':'You have a little time together to look forward to.','letterAnticipation'));
@@ -399,14 +418,15 @@
         if(!item.completed_at&&['pending','accepted','reschedule'].includes(item.status))action(card,incoming?'Stop This Invitation':'Cancel This Invitation',()=>{if(confirm('Close this invitation for both of you?'))updateInvitation(c,item,'cancelled','',card);});
         el('sharedInvitationList').append(card);
       }
-      el('sharedInvitationStatus').textContent=items.length?items.length+' invitation'+(items.length===1?'':'s')+' in your collection. Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
+      el('sharedInvitationStatus').textContent=memoryView?(items.length?items.length+' completed moment'+(items.length===1?'':'s')+'. Your written memories stay private.':'Your story has room to grow. Completed moments will appear here.') : items.length?items.length+' invitation'+(items.length===1?'':'s')+' in your collection. Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
     }catch(e){el('sharedInvitationAccount').textContent='';el('sharedInvitationStatus').textContent=e.message;}
-    finally{inboxBusy=false;el('refreshSharedInvitations').disabled=false;}
+    finally{inboxBusy=false;el('refreshSharedInvitations').disabled=false;if(memoryView!==memoriesOnly)refreshInbox();}
   }
-  el('openSharedInvitations').onclick=()=>{screen('sharedInbox');refreshInbox();};
+  el('openSharedInvitations').onclick=()=>{memoriesOnly=false;screen('sharedInbox');refreshInbox();};
   el('refreshSharedInvitations').onclick=refreshInbox;
-  el('backFromSharedInvitations').onclick=()=>screen('feelings');
-  if(window.location?.hash==='#shared-invitations'){
+  el('backFromSharedInvitations').onclick=()=>{if(memoriesOnly)window.location.href='index.html';else screen('feelings');};
+  window.addEventListener('hashchange',()=>{if(['#our-memories','#shared-invitations'].includes(window.location.hash)){memoriesOnly=window.location.hash==='#our-memories';screen('sharedInbox');refreshInbox();}});
+  if(['#shared-invitations','#our-memories'].includes(window.location?.hash)){
     screen('sharedInbox');refreshInbox();
   }
 })();
