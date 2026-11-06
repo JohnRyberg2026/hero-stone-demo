@@ -82,7 +82,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:430px){.home-secondary{grid-template-columns:1fr}.home-title{font-size:27px}}
 
 
-.home-topbar{display:flex;justify-content:flex-end;margin-bottom:8px}
+.home-topbar{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
 .home-topbar button{width:auto;margin:0;padding:8px 12px;font-size:13px}
 .profile-collapsed{display:none!important}
 .signed-out #inviteCard,.signed-out #homeCard,.signed-out #questCard,
@@ -689,6 +689,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   
   <section class="card hidden" id="homeCard">
     <div class="home-topbar">
+      <button type="button" class="secondary" id="switchQuestBtn">Switch Quest</button>
       <button class="secondary" id="homeProfileBtn">Profile & Settings</button>
     </div>
     <section class="dq-home-part dq-welcome" aria-labelledby="dqGreeting"><h1 id="dqGreeting">Welcome back.</h1><p class="dq-lead">What would you like to make room for today?</p><div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div></section>
@@ -2249,6 +2250,7 @@ const existingDateLogo=document.querySelector(".brand .official-logo");
 if(gatewayDateLogo && existingDateLogo) gatewayDateLogo.src=existingDateLogo.src;
 
 $("enterDateQuestBtn").onclick=async()=>{
+  history.replaceState(null,"","#date-quest");
   homeRestingMode=true;
   localStorage.setItem("hs_home_resting_mode","1");
   homeLoadVersion++;
@@ -2265,6 +2267,16 @@ $("enterDateQuestBtn").onclick=async()=>{
     if(connected&&heartStoneId) await loadHeartStoneHome();
     else await loadExistingHeartStone();
   }catch{status("authStatus","Could not check your account. Please try entering DATE QUEST again.");}
+};
+
+$("switchQuestBtn").onclick=()=>{
+  homeLoadVersion++;
+  $("homeCard").classList.remove("dq-talk-view");
+  show("dateQuestApp",false);
+  show("worldQuestStart",false);
+  show("platformGateway",true);
+  history.replaceState(null,"","#choose-quest");
+  window.scrollTo({top:0,behavior:"smooth"});
 };
 
 $("enterWorldQuestBtn").onclick=async()=>{
@@ -3143,6 +3155,14 @@ $("worldRestartQuestBtn").onclick=()=>{
   window.scrollTo({top:0,behavior:"smooth"});
 };
 
+// Explicit Date Quest return route bypasses only the gateway, never sign-in.
+if(window.location.hash==="#date-quest"){
+  homeRestingMode=true;
+  localStorage.setItem("hs_home_resting_mode","1");
+  show("platformGateway",false);
+  show("worldQuestStart",false);
+  show("dateQuestApp",true);
+}
 (async()=>{
   const u=await currentUser();
   if(u){
