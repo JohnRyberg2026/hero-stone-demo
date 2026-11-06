@@ -7,7 +7,8 @@
   function collectionLabels(){
     const inbox=el('sharedInbox');
     inbox.querySelector('.eyebrow').textContent=memoriesOnly?'Our Memories':'Invitations & replies';
-    inbox.querySelector('h1').textContent=memoriesOnly?'A little time, part of our story.':'Every treasured memory begins with an invitation.';
+    inbox.querySelector('h1').textContent=memoriesOnly?'Our Memories':'Our Invitations';
+    for(const [id,active] of [['invitationsCollectionTab',!memoriesOnly],['memoriesCollectionTab',memoriesOnly]]){const tab=el(id);if(tab){if(active)tab.setAttribute('aria-current','page');else tab.removeAttribute('aria-current');}}
     inbox.querySelector('.storyOpening').textContent=memoriesOnly?'Revisit a moment. Keep your own words privately.':'Someone reaches out. Someone answers. A new chapter begins.';
     el('refreshSharedInvitations').textContent=memoriesOnly?'Refresh Memories':'Refresh Invitations';
     el('backFromSharedInvitations').textContent=memoriesOnly?'Back — Home':'Back — My Invitation Draft';
@@ -396,8 +397,9 @@
         }
         card.append(node('h2',item.status==='accepted'&&incoming&&!item.started_at?'A moment waiting for us':item.title));
         card.append(node('p',item.completed_at?'This shared moment has come to a close.':item.status==='accepted'&&item.started_at?'Your shared moment is underway.':item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
-        card.append(node('div',item.message,'quote'));
-        card.append(node('div',planText(item.plan),'quote'));
+        const details=node('details'),summary=node('summary','View invitation details');
+        details.append(summary,node('div',item.message,'quote'),node('div',planText(item.plan),'quote'));
+        card.append(details);
         if(item.status==='accepted'){
           if(!item.started_at&&!item.completed_at)action(card,'Choose Our Time and Place',()=>openMoment(c,item,card));
           action(card,item.completed_at?'Revisit Our Moment ❤️':item.started_at?'Return to Our Moment ❤️':'Reveal Our Moment ❤️',()=>openMoment(c,item,card)).className='primary';
