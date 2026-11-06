@@ -426,7 +426,7 @@
   }
   el('openSharedInvitations').onclick=()=>{memoriesOnly=false;screen('sharedInbox');refreshInbox();};
   el('refreshSharedInvitations').onclick=refreshInbox;
-  el('backFromSharedInvitations').onclick=()=>{if(memoriesOnly)window.location.href='index.html';else screen('feelings');};
+  el('backFromSharedInvitations').onclick=()=>{if(memoriesOnly)window.location.href='index.html#date-quest';else screen('feelings');};
   window.addEventListener('hashchange',()=>{if(['#our-memories','#shared-invitations'].includes(window.location.hash)){memoriesOnly=window.location.hash==='#our-memories';screen('sharedInbox');refreshInbox();}});
   if(['#shared-invitations','#our-memories'].includes(window.location?.hash)){
     screen('sharedInbox');refreshInbox();
