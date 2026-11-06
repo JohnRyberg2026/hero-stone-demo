@@ -281,6 +281,29 @@ button:disabled{opacity:.45;cursor:not-allowed}
 }
 
 </style>
+<style>
+/* Simple phone-first home; retain the existing interactive calendar. */
+#homeCard .dq-home-nav{position:static;display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0;padding:0;border:0;box-shadow:none;background:transparent}
+#homeCard .dq-home-nav a,#homeCard .dq-home-nav button{display:flex;justify-content:center;align-items:center;min-height:52px;margin:0;padding:14px 16px;border:1px solid #c99457;border-radius:14px;background:#862a3d;color:white;font-size:16px;font-weight:750;text-decoration:none}
+#homeCard .dq-home-nav a:last-child{background:#174c3e}
+#homeCard .dq-welcome{padding:8px 4px 0}
+#homeCard .dq-welcome h1{margin:8px 0;font-size:30px}
+#homeCard .dq-lead{font:16px/1.4 system-ui,sans-serif;margin:6px 0}
+#homeCard .home-couple{display:none}
+#homeCard .dq-memory-shortcut{text-align:center;margin:10px 0 18px}
+#homeCard .dq-memory-shortcut a{color:#174c3e;font-weight:700;display:inline-block;padding:10px}
+#homeCard #dqConversation{margin:0;border:0;box-shadow:none}
+#homeCard:not(.dq-talk-view) #dqConversation .hs-guide-body{display:none}
+#homeCard #dqMomentsSection{display:none}
+#homeCard.dq-talk-view .dq-welcome,#homeCard.dq-talk-view .dq-home-nav,#homeCard.dq-talk-view .dq-memory-shortcut,#homeCard.dq-talk-view #dqCalendarSection{display:none}
+#homeCard.dq-talk-view #dqReturnHome{display:block}
+#homeCard:not(.dq-talk-view) #dqReturnHome{display:none}
+#homeCard #dqCalendarSection{margin-top:8px;padding:18px 0}
+#homeCard #dqCalendarTitle{margin:0 0 12px}
+#homeCard .hs-guide-scene{max-height:180px;margin:0 auto}
+#homeCard .dq-calendar-nav{grid-template-columns:38px minmax(0,1fr) 80px 38px}
+#homeCard .dq-calendar-grid button{min-height:44px}
+</style>
 </head>
 <body>
 <section class="gateway" id="platformGateway">
@@ -666,14 +689,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="home-topbar">
       <button class="secondary" id="homeProfileBtn">Profile & Settings</button>
     </div>
-    <section class="dq-home-part dq-welcome" aria-labelledby="dqGreeting"><p class="dq-eyebrow">01 · HEART STONE welcomes you</p><div class="dq-stone" aria-hidden="true">♡</div><h1 id="dqGreeting">Welcome back.</h1><p class="dq-lead">A little time can become something treasured. What would you like to make room for today?</p><div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div></section>
-    <nav class="dq-home-nav" aria-label="Home sections">
-      <a href="#dqConversation">Conversation</a>
-      <a href="#dqMomentsSection">Moments</a>
-      <a href="#dqCalendarSection">Calendar</a>
-      <a href="planning-preferences.html">My planning preferences</a>
+    <section class="dq-home-part dq-welcome" aria-labelledby="dqGreeting"><h1 id="dqGreeting">Welcome back.</h1><p class="dq-lead">What would you like to make room for today?</p><div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div></section>
+    <section id="dqConversation" class="hs-guide" data-heart-stone-guide aria-label="Heartstone"></section>
+    <nav class="dq-home-nav" aria-label="Main actions">
+      <button type="button" id="dqTalkButton">Talk to Heartstone</button>
+      <a href="invitation-opening.html#heart-stone-plan">Plan a Moment</a>
+      <a href="invitation-opening.html#shared-invitations">Our Invitations</a>
     </nav>
-    <section id="dqConversation" class="hs-guide" data-heart-stone-guide aria-label="Heart Stone opening guide"></section>
+    <p class="dq-memory-shortcut"><a href="invitation-opening.html#shared-invitations">Our Memories</a></p>
+    <button type="button" id="dqReturnHome" class="secondary" hidden>← Home</button>
     <section id="dqMomentsSection" class="dq-home-part" aria-labelledby="dqMomentsTitle"><p class="dq-eyebrow">02 · Your DATE QUEST moments</p><h2 id="dqMomentsTitle">Something to look forward to.</h2><p>Time chosen for each other. A WILD ADVENTURE™ with as much surprise as you choose.</p><div id="dqMoments"></div><p id="dqMomentsStatus" role="status"></p><button type="button" class="secondary" id="dqRefreshMoments">Refresh my moments</button><a class="dq-main-link" href="invitation-opening.html">Create a moment ♡</a><a class="dq-main-link dq-green" href="invitation-opening.html#shared-invitations">💌 A Moment Is Calling</a><p class="small">Open your invitations and replies. Nothing is accepted automatically.</p>
     <div class="status hidden" id="invitationResponseNotice" role="status" aria-live="polite" style="border:2px solid var(--accent2);padding:16px">
       <h2>Not tonight ❤️</h2>
@@ -689,7 +713,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button class="secondary" id="homeStoryBtn">Our Story</button>
     </div>
     </details><div class="status" id="homeStatus" role="status" aria-live="polite" aria-atomic="true">Your HEART STONE is ready.</div></section>
-    <section id="dqCalendarSection" class="dq-home-part" aria-labelledby="dqCalendarTitle"><p class="dq-eyebrow">03 · Your calendar</p><h2 id="dqCalendarTitle">Make room for what matters.</h2><p>Birthdays, anniversaries, traditions, milestones and wishes for the years ahead.</p><p class="dq-device-note">Demo calendar: personal entries save only in this browser for the signed-in account. They are not shared or synced. Anyone with access to this browser may be able to read saved data. Use the separate shared availability controls below to share a date with your connected partner. Personal event details remain on this device.</p><div class="dq-calendar-nav"><button id="dqPreviousMonth" type="button" class="secondary" aria-label="Previous month">←</button><label>Month<select id="dqMonth"></select></label><label>Year<input id="dqYear" type="number" min="1900" max="2199"></label><button id="dqNextMonth" type="button" class="secondary" aria-label="Next month">→</button></div><button id="dqToday" type="button" class="secondary">Return to today</button><h3 id="dqMonthTitle"></h3><div class="dq-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="dq-calendar-grid" id="dqDays" aria-label="Choose a calendar day"></div><h3 id="dqDayTitle"></h3><div id="dqDayEvents"></div><button id="dqAddEvent" type="button">Add something that matters</button><button id="dqAvailability" type="button" class="secondary">♡ Mark my availability for this day</button><p class="small">Your heart is a personal availability note for that day, never an invitation or an obligation. No one is notified. It expires after that day.</p><section id="dqSharedAvailability" aria-labelledby="dqSharedTitle"><h3 id="dqSharedTitle">A little room for each other</h3><p class="small">Share only a day you may be available. Your partner can see it after refreshing. No calendar titles or notes are shared. A heart is never an invitation, acceptance, or obligation. It expires at the end of that day in your timezone.</p><label>Available day<input id="dqSharedDay" type="date"></label><label>Share with<select id="dqSharedPartner"></select></label><button id="dqShareDay" type="button" disabled>♡ Share my availability for this day</button><button id="dqUnshareDay" type="button" class="secondary" disabled>Remove my shared heart</button><button id="dqRefreshAvailability" type="button" class="secondary">Refresh availability</button><div id="dqSharedHearts"></div><p id="dqSharedStatus" role="status" aria-live="polite"></p></section><details><summary>Future wishes & bucket list</summary><div id="dqFutureWishes"></div></details><p id="dqCalendarStatus" role="status" aria-live="polite"></p><form id="dqEventForm" hidden><h3 id="dqEventHeading">A little place on your calendar</h3><label>Name<input id="dqEventName" maxlength="120" required></label><label>Day<input id="dqEventDay" type="date" required></label><label>What does it mean?<select id="dqEventKind"><option value="birthday">Birthday</option><option value="anniversary">Anniversary</option><option value="holiday">Holiday</option><option value="tradition">Tradition</option><option value="milestone">Milestone</option><option value="reminder">Reminder</option><option value="wish">Future wish / bucket list</option><option value="personal">Personal plan</option></select></label><p class="small">A reminder is a calendar label in this demo; notifications are not scheduled. Entries do not repeat automatically.</p><button type="submit">Save on this device</button><button id="dqCancelEvent" type="button" class="secondary">Cancel — keep my calendar</button></form></section>
+    <section id="dqCalendarSection" class="dq-home-part" aria-labelledby="dqCalendarTitle"><h2 id="dqCalendarTitle">Our Calendar</h2><details><summary>About this calendar</summary><p class="dq-device-note">Demo calendar: personal entries save only in this browser for the signed-in account. They are not shared or synced. Anyone with access to this browser may be able to read saved data. Use the separate shared availability controls below to share a date with your connected partner. Personal event details remain on this device.</p></details><div class="dq-calendar-nav"><button id="dqPreviousMonth" type="button" class="secondary" aria-label="Previous month">←</button><label>Month<select id="dqMonth"></select></label><label>Year<input id="dqYear" type="number" min="1900" max="2199"></label><button id="dqNextMonth" type="button" class="secondary" aria-label="Next month">→</button></div><button id="dqToday" type="button" class="secondary">Return to today</button><h3 id="dqMonthTitle"></h3><div class="dq-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div class="dq-calendar-grid" id="dqDays" aria-label="Choose a calendar day"></div><h3 id="dqDayTitle"></h3><div id="dqDayEvents"></div><button id="dqAddEvent" type="button">Add something that matters</button><button id="dqAvailability" type="button" class="secondary">♡ Mark my availability for this day</button><p class="small">Your heart is a personal availability note for that day, never an invitation or an obligation. No one is notified. It expires after that day.</p><details class="dq-shared-controls"><summary>Share availability</summary><section id="dqSharedAvailability" aria-labelledby="dqSharedTitle"><h3 id="dqSharedTitle">A little room for each other</h3><p class="small">Share only a day you may be available. Your partner can see it after refreshing. No calendar titles or notes are shared. A heart is never an invitation, acceptance, or obligation. It expires at the end of that day in your timezone.</p><label>Available day<input id="dqSharedDay" type="date"></label><label>Share with<select id="dqSharedPartner"></select></label><button id="dqShareDay" type="button" disabled>♡ Share my availability for this day</button><button id="dqUnshareDay" type="button" class="secondary" disabled>Remove my shared heart</button><button id="dqRefreshAvailability" type="button" class="secondary">Refresh availability</button><div id="dqSharedHearts"></div><p id="dqSharedStatus" role="status" aria-live="polite"></p></section></details><details><summary>Future wishes & bucket list</summary><div id="dqFutureWishes"></div></details><p id="dqCalendarStatus" role="status" aria-live="polite"></p><form id="dqEventForm" hidden><h3 id="dqEventHeading">A little place on your calendar</h3><label>Name<input id="dqEventName" maxlength="120" required></label><label>Day<input id="dqEventDay" type="date" required></label><label>What does it mean?<select id="dqEventKind"><option value="birthday">Birthday</option><option value="anniversary">Anniversary</option><option value="holiday">Holiday</option><option value="tradition">Tradition</option><option value="milestone">Milestone</option><option value="reminder">Reminder</option><option value="wish">Future wish / bucket list</option><option value="personal">Personal plan</option></select></label><p class="small">A reminder is a calendar label in this demo; notifications are not scheduled. Entries do not repeat automatically.</p><button type="submit">Save on this device</button><button id="dqCancelEvent" type="button" class="secondary">Cancel — keep my calendar</button></form></section>
 
   </section>
 
@@ -3154,5 +3178,29 @@ $("worldRestartQuestBtn").onclick=()=>{
 <script src="heart-stone-avatar.js?v=3"></script>
 <script src="heart-stone-conversation.js?v=6"></script>
 <script src="planning-preferences.js?v=1"></script>
+<script>
+(function(){
+ const home=document.getElementById('homeCard');
+ const talk=document.getElementById('dqTalkButton');
+ const back=document.getElementById('dqReturnHome');
+ const guide=document.getElementById('dqConversation');
+ if(!home||!talk||!back||!guide)return;
+ function openHome(){
+   home.classList.remove('dq-talk-view');
+   talk.focus({preventScroll:true});
+   home.scrollIntoView({block:'start'});
+ }
+ talk.addEventListener('click',function(){
+   home.classList.add('dq-talk-view');
+   // Reuse the existing conversation controls and their account safeguards.
+   const start=guide.querySelector('[data-chat-open]');
+   if(start)start.click();
+   home.scrollIntoView({block:'start'});
+ });
+ back.addEventListener('click',openHome);
+ // Account changes always return to the simple opening view.
+ window.addEventListener('heartstone:home-state',function(){home.classList.remove('dq-talk-view');});
+})();
+</script>
 </body>
 </html>
