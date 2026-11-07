@@ -248,7 +248,7 @@ $("stay").onclick=()=>$("exitDialog").close();
 $("saveExit").onclick=()=>{if(save())location.href="index.html#date-quest";};
 $("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}location.href="index.html#date-quest";};
 renderSelections();
-</script><script src="moment-invitations.js?v=calendar-moment-links-4"></script>
+</script><script src="moment-invitations.js?v=unsaved-memory-5"></script>
 <script src="invitation-store-plan.js?v=1"></script><script src="invitation-avatar-entry.js?v=simple-planner-2"></script><script>
 (function(){
  const day=new URLSearchParams(window.location.search).get('planDay');
