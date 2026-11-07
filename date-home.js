@@ -9,30 +9,126 @@ const DateHomeModel=(()=>{
  return {kinds,day,validDay,clean,active,greeting};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=DateHomeModel;
+
 if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()=>{
  const M=DateHomeModel,el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
- let owner=null,version=0,data={version:1,events:[],hearts:[]},moments=[],selected=M.day(new Date()),month=new Date().getMonth(),year=new Date().getFullYear(),editing=null,readable=true,availabilityBusy=false;
+ let owner=null,version=0,revision=0,data={version:1,events:[],hearts:[]},moments=[],selected=M.day(new Date()),month=new Date().getMonth(),year=new Date().getFullYear(),editing=null,readable=false,busy=false;
  const key=()=> 'hs_personal_calendar_demo_v1_'+owner;
  const say=t=>el('dqCalendarStatus').textContent=t;
  const action=(text,fn)=>{const b=node('button',text);b.type='button';b.className='secondary';b.onclick=fn;return b;};
- function reset(){version++;owner=null;data={version:1,events:[],hearts:[]};moments=[];editing=null;el('dqEventForm').hidden=true;el('dqEventName').value='';el('dqEventDay').value='';el('dqGreeting').textContent='Welcome back.';el('dqMoments').replaceChildren();el('dqMomentsStatus').textContent='Sign in to see your moments.';el('dqDayEvents').replaceChildren();el('dqFutureWishes').replaceChildren();el('dqDays').replaceChildren();say('Sign in to open your personal demo calendar.');}
- async function authorized(){const u=await currentUser();if(!u||u.id!==owner){reset();throw Error('Your account changed. Refresh your moments before editing the calendar.');}return u;}
- function persist(){if(!readable)throw Error('Your saved calendar could not be read. It has been left untouched.');data=M.clean(data);localStorage.setItem(key(),JSON.stringify(data));}
+ function reset(){
+   version++;owner=null;revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];editing=null;
+   el('dqEventForm').hidden=true;el('dqEventName').value='';el('dqEventDay').value='';
+   el('dqGreeting').textContent='Welcome back.';el('dqMoments').replaceChildren();el('dqMomentsStatus').textContent='Sign in to see your moments.';
+   for(const id of ['dqDayEvents','dqFutureWishes','dqDays'])el(id).replaceChildren();
+   for(const id of ['dqAddEvent','dqAvailability','dqImportCalendar'])el(id).disabled=true;
+   el('dqImportCalendar').hidden=true;say('Sign in to open your private calendar.');
+ }
+ async function authorized(expected=owner){
+   const u=await currentUser();
+   if(!u||u.id!==expected||owner!==expected){reset();throw Error('Your account changed. Reopen your calendar.');}
+   return u;
+ }
+ async function saveNext(next){
+   if(busy||!readable)throw Error('Refresh your calendar before saving.');
+   const clean=M.clean(next),user=owner,v=++version,expectedRevision=revision;
+   busy=true;render();
+   try{
+     await authorized(user);
+     if(v!==version)throw Error('Your account changed. Reopen your calendar.');
+     const result=await sb.rpc('my_private_calendar',{p_expected_user:user,p_expected_revision:expectedRevision,p_calendar:clean});
+     await authorized(user);
+     if(v!==version)throw Error('Your account changed. Reopen your calendar.');
+     if(result.error){
+       if(result.error.code==='40001'){readable=false;throw Error('Your calendar changed on another device. Your typed words are still here. Refresh Calendar to load the latest version before editing again.');}
+       throw Error('Could not confirm the save. Your words are still here. Refresh Calendar to check before trying again.');
+     }
+     if(!result.data||!Number.isInteger(result.data.revision))throw Error('Could not confirm the calendar save. Refresh Calendar to check.');
+     data=M.clean(result.data.calendar);revision=result.data.revision;updateImport();
+   }finally{busy=false;if(owner===user)render();}
+ }
+ function updateImport(){
+   try{const raw=localStorage.getItem(key());if(!raw){el('dqImportCalendar').hidden=true;return;}
+     const local=M.clean(JSON.parse(raw));el('dqImportCalendar').hidden=!local.events.some(e=>!data.events.some(x=>x.id===e.id))&&!local.hearts.some(d=>!data.hearts.includes(d));
+   }catch{el('dqImportCalendar').hidden=false;}
+ }
  function render(){if(!owner)return;const today=M.day(new Date());el('dqGreeting').textContent=M.greeting(new Date().getHours(),el('profileFirstName').value.trim().slice(0,80));el('dqMonth').value=String(month);el('dqYear').value=String(year);el('dqMonthTitle').textContent=new Date(year,month,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});el('dqDays').replaceChildren();for(let i=0;i<new Date(year,month,1).getDay();i++)el('dqDays').append(node('span'));const days=new Date(year,month+1,0).getDate();for(let i=1;i<=days;i++){const date=M.day(new Date(year,month,i)),has=data.events.some(e=>e.day===date)||moments.some(e=>e.day===date),heart=date>=today&&data.hearts.includes(date),b=action(String(i),()=>{selected=date;el('dqEventForm').hidden=true;render();});b.setAttribute('aria-pressed',String(date===selected));b.setAttribute('aria-label',date+(date===today?' · today':'')+(has?' · has entries':'')+(heart?' · my availability':''));b.append(node('span',(has?'• ':'')+(heart?'♡':''),'dq-day-mark'));el('dqDays').append(b);}
  if(typeof CustomEvent!=='undefined')window.dispatchEvent(new CustomEvent('heartstone:calendar-day',{detail:{day:selected}}));
  el('dqDayTitle').textContent=new Date(selected+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});el('dqDayEvents').replaceChildren();let count=0;
- for(const e of data.events.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p',e.kind==='wish'?'Future wish / bucket list':e.kind));n.append(action('Edit',()=>edit(e)),action('Remove',async()=>{try{await authorized();if(!confirm('Remove this calendar entry from this browser?'))return;const old=data;data={...data,events:data.events.filter(x=>x.id!==e.id)};try{persist();}catch(err){data=old;throw err;}render();say('Entry removed from this device.');}catch(err){say(err.message);}}));el('dqDayEvents').append(n);}
+ for(const e of data.events.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p',e.kind==='wish'?'Future wish / bucket list':e.kind));n.append(action('Edit',()=>edit(e)),action('Remove',async()=>{if(busy||!readable)return;try{await authorized();if(!confirm('Remove this private calendar entry from your account?'))return;await saveNext({...data,events:data.events.filter(x=>x.id!==e.id)});say('Entry removed from your account.');}catch(err){say(err.message);}}));el('dqDayEvents').append(n);}
  for(const e of moments.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p','Accepted invitation · '+(e.time||'Time to confirm')+(e.zone?' · '+e.zone:'')));const a=node('a','Open invitations');a.href='invitation-opening.html#shared-invitations';n.append(a);el('dqDayEvents').append(n);}
- if(!count)el('dqDayEvents').append(node('p','A little room for what matters. No entries for this day.'));el('dqAvailability').disabled=availabilityBusy||selected<today||!readable;el('dqAvailability').textContent=data.hearts.includes(selected)&&selected>=today?'Remove my availability heart':'♡ Mark my availability for this day';el('dqFutureWishes').replaceChildren();const wishes=data.events.filter(e=>e.kind==='wish'&&e.day>=today).sort((a,b)=>a.day.localeCompare(b.day));for(const w of wishes){const b=action(w.day+' · '+w.title,()=>{selected=w.day;year=Number(w.day.slice(0,4));month=Number(w.day.slice(5,7))-1;render();});el('dqFutureWishes').append(b);}if(!wishes.length)el('dqFutureWishes').append(node('p','Something you hope to share, next month or years from now. Add a future wish to begin.'));el('dqAddEvent').disabled=!readable;
+ if(!count)el('dqDayEvents').append(node('p','A little room for what matters. No entries for this day.'));el('dqAvailability').disabled=busy||selected<today||!readable;el('dqAvailability').textContent=data.hearts.includes(selected)&&selected>=today?'Remove my availability heart':'♡ Mark my availability for this day';el('dqFutureWishes').replaceChildren();const wishes=data.events.filter(e=>e.kind==='wish'&&e.day>=today).sort((a,b)=>a.day.localeCompare(b.day));for(const w of wishes){const b=action(w.day+' · '+w.title,()=>{selected=w.day;year=Number(w.day.slice(0,4));month=Number(w.day.slice(5,7))-1;render();});el('dqFutureWishes').append(b);}if(!wishes.length)el('dqFutureWishes').append(node('p','Something you hope to share, next month or years from now. Add a future wish to begin.'));el('dqAddEvent').disabled=busy||!readable;
+ el('dqImportCalendar').disabled=busy||!readable;el('dqRefreshCalendar').disabled=busy;
+ el('dqEventForm').querySelector('[type=submit]').disabled=busy||!readable;
  }
- function edit(e){editing=e?.id||null;el('dqEventName').value=e?.title||'';el('dqEventDay').value=e?.day||selected;el('dqEventKind').value=e?.kind||'personal';el('dqEventForm').hidden=false;el('dqEventName').focus();}
- async function refresh(){const v=++version;moments=[];el('dqMoments').replaceChildren();el('dqMomentsStatus').textContent='Checking your moments…';try{const u=await currentUser();if(v!==version)return;if(!u){reset();return;}if(owner!==u.id){owner=u.id;moments=[];data={version:1,events:[],hearts:[]};el('dqEventForm').hidden=true;readable=true;try{const raw=localStorage.getItem(key());if(raw){if(raw.length>80000)throw Error();data=M.clean(JSON.parse(raw));}}catch{readable=false;say('Your saved calendar could not be read. It has been left untouched; editing is paused.');}}
- render();const result=heartStoneId?await sb.rpc('list_moment_invitations',{p_heart_stone_id:heartStoneId}):{data:[],error:null};const verify=await currentUser();if(v!==version)return;if(!verify||verify.id!==u.id){reset();return;}if(result.error)throw Error('Could not refresh your moments. Open A Moment Is Calling to try again.');moments=M.active(result.data,u.id);el('dqMoments').replaceChildren();for(const item of moments){const n=node('article',undefined,'dq-moment');n.append(node('h3',item.title),node('p',item.started?'Your moment is underway.':item.day?'A little time chosen for '+item.day+(item.time?' at '+item.time:'')+'.':'You said yes. Choose your time together.'));const a=node('a',item.started?'Continue our moment':'View our moment');a.href='invitation-opening.html#shared-invitations';n.append(a);el('dqMoments').append(n);}el('dqMomentsStatus').textContent=moments.length?'Accepted and active moments for this HEART STONE connection.':'Your next treasured memory begins with a gesture.';render();}catch(e){if(v===version)el('dqMomentsStatus').textContent=e.message;}}
- el('dqMonth').replaceChildren(...Array.from({length:12},(_,i)=>{const o=node('option',new Date(2026,i,1).toLocaleDateString(undefined,{month:'long'}));o.value=String(i);return o;}));
- function move(n){const d=new Date(year,month+n,1);if(d.getFullYear()<1900||d.getFullYear()>2199)return;year=d.getFullYear();month=d.getMonth();render();}el('dqPreviousMonth').onclick=()=>move(-1);el('dqNextMonth').onclick=()=>move(1);el('dqMonth').onchange=()=>{month=Number(el('dqMonth').value);render();};el('dqYear').onchange=()=>{const y=Number(el('dqYear').value);if(Number.isInteger(y)&&y>=1900&&y<=2199){year=y;render();}else{el('dqYear').value=String(year);say('Choose a year from 1900 to 2199.');}};el('dqToday').onclick=()=>{const d=new Date();selected=M.day(d);month=d.getMonth();year=d.getFullYear();render();};
- el('dqAddEvent').onclick=()=>edit();el('dqCancelEvent').onclick=()=>{el('dqEventForm').hidden=true;editing=null;};
- el('dqEventForm').onsubmit=async e=>{e.preventDefault();try{await authorized();const entry={id:editing||'e'+Date.now()+'_'+Math.random().toString(36).slice(2,10),title:el('dqEventName').value.trim(),day:el('dqEventDay').value,kind:el('dqEventKind').value};const old=data;const next={...data,events:editing?data.events.map(x=>x.id===editing?entry:x):[...data.events,entry]};M.clean(next);data=next;try{persist();}catch(err){data=old;throw err;}selected=entry.day;year=Number(selected.slice(0,4));month=Number(selected.slice(5,7))-1;el('dqEventForm').hidden=true;editing=null;render();say('Saved on this device. Nothing shared, invited or booked.');}catch(err){say(err.message);}};
- el('dqAvailability').onclick=async()=>{if(availabilityBusy)return;const day=selected,remove=data.hearts.includes(day);availabilityBusy=true;el('dqAvailability').disabled=true;say(remove?'Removing your availability heart…':'Saving your availability heart…');try{await authorized();const today=M.day(new Date());if(day<today)throw Error('Availability hearts are for today or a future day.');const old=data;data={...data,hearts:data.hearts.filter(d=>d>=today&&d!==day)};if(!remove)data.hearts.push(day);try{persist();}catch(err){data=old;throw err;}say(remove?'Availability heart removed. Your calendar entries are unchanged.':'Availability heart added on this device only. No response is needed and no one is notified.');}catch(err){say(err.message);}finally{availabilityBusy=false;render();}};
 
- el('dqRefreshMoments').onclick=refresh;window.addEventListener('heartstone:home-state',e=>{if(!e.detail?.connected)reset();else refresh();});window.addEventListener('focus',()=>{if(owner)refresh();});new MutationObserver(()=>{if(!el('homeCard').classList.contains('hidden'))refresh();}).observe(el('homeCard'),{attributes:true,attributeFilter:['class']});window.setInterval(()=>{if(owner)render();},60000);refresh();
+ function edit(e){if(busy||!readable)return;editing=e?.id||null;el('dqEventName').value=e?.title||'';el('dqEventDay').value=e?.day||selected;el('dqEventKind').value=e?.kind||'personal';el('dqEventForm').hidden=false;el('dqEventName').focus();}
+ async function refresh(){
+   if(busy||!el('dqEventForm').hidden)return;
+   const v=++version;say('Loading your private calendar…');
+   try{
+     const u=await currentUser();if(v!==version)return;if(!u){reset();return;}
+     if(owner!==u.id){owner=u.id;revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];el('dqMoments').replaceChildren();el('dqImportCalendar').hidden=true;render();}
+     const result=await sb.rpc('my_private_calendar',{p_expected_user:u.id});
+     const verify=await currentUser();if(v!==version)return;if(!verify||verify.id!==u.id){reset();return;}
+     if(result.error||!result.data||!Number.isInteger(result.data.revision))throw Error('Your account calendar could not be loaded. Check your connection and tap Refresh Calendar.');
+     data=M.clean(result.data.calendar);revision=result.data.revision;readable=true;updateImport();render();say('Your private calendar is up to date.');
+     const hs=heartStoneId;
+     const invitations=hs?await sb.rpc('list_moment_invitations',{p_heart_stone_id:hs}):{data:[],error:null};
+     const checked=await currentUser();if(v!==version)return;if(!checked||checked.id!==u.id){reset();return;}if(heartStoneId!==hs)return;
+     if(invitations.error){el('dqMomentsStatus').textContent='Could not load shared moments. Open Our Invitations to check.';return;}
+     moments=M.active(invitations.data,u.id);el('dqMoments').replaceChildren();
+     for(const item of moments){const n=node('article',undefined,'dq-moment');n.append(node('h3',item.title),node('p',item.started?'Your moment is underway.':item.day?'A little time chosen for '+item.day+(item.time?' at '+item.time:'')+'.':'You said yes. Choose your time together.'));const a=node('a',item.started?'Continue our moment':'View our moment');a.href='invitation-opening.html#shared-invitations';n.append(a);el('dqMoments').append(n);}
+     el('dqMomentsStatus').textContent=moments.length?'Your accepted moments.':'Your next treasured memory begins with a gesture.';render();
+   }catch(e){if(v===version){readable=false;render();say(e.message);}}
+ }
+ el('dqMonth').replaceChildren(...Array.from({length:12},(_,i)=>{const o=node('option',new Date(2026,i,1).toLocaleDateString(undefined,{month:'long'}));o.value=String(i);return o;}));
+ function move(n){const d=new Date(year,month+n,1);if(d.getFullYear()<1900||d.getFullYear()>2199)return;year=d.getFullYear();month=d.getMonth();render();}
+ el('dqPreviousMonth').onclick=()=>move(-1);el('dqNextMonth').onclick=()=>move(1);
+ el('dqMonth').onchange=()=>{month=Number(el('dqMonth').value);render();};
+ el('dqYear').onchange=()=>{const y=Number(el('dqYear').value);if(Number.isInteger(y)&&y>=1900&&y<=2199){year=y;render();}else{el('dqYear').value=String(year);say('Choose a year from 1900 to 2199.');}};
+ el('dqToday').onclick=()=>{const d=new Date();selected=M.day(d);month=d.getMonth();year=d.getFullYear();render();};
+ el('dqAddEvent').onclick=()=>edit();
+ el('dqCancelEvent').onclick=()=>{if(busy)return;el('dqEventForm').hidden=true;editing=null;if(!readable)refresh();};
+ el('dqEventForm').onsubmit=async event=>{
+   event.preventDefault();if(busy||!readable)return;
+   try{
+     await authorized();
+     const entry={id:editing||'e'+crypto.randomUUID(),title:el('dqEventName').value.trim(),day:el('dqEventDay').value,kind:el('dqEventKind').value};
+     await saveNext({...data,events:editing?data.events.map(x=>x.id===editing?entry:x):[...data.events,entry]});
+     selected=entry.day;year=Number(selected.slice(0,4));month=Number(selected.slice(5,7))-1;el('dqEventForm').hidden=true;editing=null;render();
+     say('Saved privately to your account. Available on your other devices when they refresh.');
+   }catch(err){say(err.message);}
+ };
+ el('dqAvailability').onclick=async()=>{
+   if(busy||!readable)return;const day=selected,remove=data.hearts.includes(day);
+   try{
+     await authorized();const today=M.day(new Date());if(day<today)throw Error('Availability hearts are for today or a future day.');
+     const hearts=data.hearts.filter(d=>d>=today&&d!==day);if(!remove)hearts.push(day);
+     await saveNext({...data,hearts});say(remove?'Private availability heart removed.':'Private availability heart saved to your account. It has not been shared.');
+   }catch(err){say(err.message);}
+ };
+ el('dqImportCalendar').onclick=async()=>{
+   if(busy||!readable)return;
+   try{
+     await authorized();const raw=localStorage.getItem(key());if(!raw||raw.length>80000)throw Error('The browser calendar could not be read. It has been left untouched.');
+     const local=M.clean(JSON.parse(raw));
+     if(!confirm('Copy calendar entries and private availability hearts from this browser into your private account calendar? Existing account entries are kept. Nothing is shared with your partner.'))return;
+     const events=[...data.events,...local.events.filter(e=>!data.events.some(x=>x.id===e.id))];
+     const hearts=[...new Set([...data.hearts,...local.hearts])];await saveNext({version:1,events,hearts});
+     say('Browser entries copied into your private account calendar. The browser copy is still available.');
+   }catch(err){say(err.message);}
+ };
+ el('dqRefreshCalendar').onclick=()=>{
+   if(busy)return;
+   if(!el('dqEventForm').hidden&&!confirm('Reload your calendar and discard the unsaved words in this form?'))return;
+   el('dqEventForm').hidden=true;editing=null;refresh();
+ };
+ el('dqRefreshMoments').onclick=refresh;
+ window.addEventListener('heartstone:home-state',e=>{reset();if(e.detail?.connected)refresh();});
+ window.addEventListener('focus',()=>{if(owner)refresh();});
+ window.addEventListener('pagehide',reset);
+ new MutationObserver(()=>{if(!el('homeCard').classList.contains('hidden'))refresh();}).observe(el('homeCard'),{attributes:true,attributeFilter:['class']});
+ window.setInterval(()=>{if(owner&&!document.hidden)refresh();},60000);
+ reset();refresh();
 })();
