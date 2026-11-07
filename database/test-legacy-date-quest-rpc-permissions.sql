@@ -110,114 +110,114 @@ begin
   begin
     execute 'select public.accept_heart_stone_invitation(null::text)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.begin_demo_quest(null::uuid,null::public.adventure_type,null::text,null::integer,null::text,null::text[],null::integer,null::text,null::integer)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.cancel_demo_adventure(null::uuid)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.cancel_heart_stone_invitation(null::uuid)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.complete_demo_adventure(null::uuid)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.create_heart_stone_invitation(null::text,null::text,null::integer)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.decline_heart_stone_invitation(null::text)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.get_demo_adventure_history(null::uuid,null::integer)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.open_demo_date_invitation(null::uuid)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.preview_heart_stone_invitation(null::text)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.propose_demo_recommendation(null::uuid)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.refresh_demo_recommendations(null::uuid,null::uuid[],null::integer)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.respond_demo_date_invitation(null::uuid,null::boolean)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.reveal_demo_adventure(null::uuid)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.rotate_heart_stone_invitation(null::uuid,null::integer)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.save_demo_adventure_feedback(null::uuid,null::public.feedback_rating,null::text)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.set_demo_invitation_style(null::uuid,null::text)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
   begin
     execute 'select public.start_another_demo_adventure(null::uuid)';
   exception
-    when insufficient_privilege then raise exception 'Signed-in execution grant was lost';
+    when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
     when others then null; -- Existing identity/validation checks may reject null inputs.
   end;
 end $check$;
 reset role;
-select 'PASS: 18 anonymous RPC calls blocked; authenticated and service grants preserved; null-input calls reached existing authorization/validation checks' as result;
+select 'PASS: 18 anonymous RPC calls blocked; authenticated and service grants preserved; unrostered calls reached the legacy boundary' as result;
 rollback;
 
 -- Separate transaction exercises authenticated membership enforcement.
@@ -231,10 +231,10 @@ begin
  begin
    perform public.get_demo_adventure_history(gen_random_uuid(),1);
    raise exception 'Unauthorized history access unexpectedly succeeded';
- exception when raise_exception then
-   if sqlerrm <> 'not authorized for this HEART STONE' then raise;end if;
+ exception when insufficient_privilege then
+   if sqlerrm <> 'This legacy feature is limited to the existing development accounts.' then raise;end if;
  end;
 end $check$;
 reset role;
-select 'PASS: signed-in nonmember history access remains blocked by membership check' as result;
+select 'PASS: signed-in nonmember history access remains blocked by legacy boundary' as result;
 rollback;
