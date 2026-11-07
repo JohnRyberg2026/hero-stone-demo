@@ -211,7 +211,12 @@
   async function scheduleEditor(c,item,container,onPlan){
     const box=node('section'),title=node('h3','Choose Our Time and Place'),status=node('p','Loading your shared details…','notice');
     status.setAttribute('role','status');box.append(title,status);container.append(box);
-    let state,busy=false;
+    let state,busy=false,fields={},baseline='';
+    const snapshot=()=>JSON.stringify(Object.fromEntries(Object.entries(fields).map(([key,input])=>[key,input.value])));
+    const dirty=()=>!!baseline&&snapshot()!==baseline;
+    container.scheduleHasEdits=dirty;
+    container.scheduleIsSaving=()=>busy;
+    const setBusy=value=>{busy=value;box.querySelectorAll('button').forEach(b=>b.disabled=value);box.querySelectorAll('input').forEach(input=>input.disabled=value);};
     async function call(action,details){
       const fresh=await context();
       if(fresh.user.id!==c.user.id||fresh.hs!==c.hs)throw Error('Your account changed. Refresh invitations.');
@@ -223,7 +228,8 @@
     }
     async function load(){
       if(busy)return;
-      busy=true;box.querySelectorAll('button').forEach(b=>b.disabled=true);
+      if(dirty()&&!confirm('Refresh shared details and discard your unsent suggestion? Choose Cancel to keep editing.'))return;
+      setBusy(true);
       status.textContent='Loading your shared details…';
       try{
         const next=await readWithTimeout(()=>call('load'));
@@ -237,13 +243,15 @@
           action(box,'Try Again — Load Shared Details',load);
           onPlan(item.plan,true);
         }
-      }finally{busy=false;box.querySelectorAll('button').forEach(b=>b.disabled=false);}
+      }finally{setBusy(false);}
     }
     async function save(action,details){
-      if(busy)return;busy=true;box.querySelectorAll('button').forEach(b=>b.disabled=true);
+      if(busy)return;
+      if(action!=='propose'&&dirty()&&!confirm('Continue and discard your unsent suggestion? Choose Cancel to keep editing.'))return;
+      setBusy(true);
       try{state=await call(action,details);render();onPlan(state.plan,state.proposal?.status==='pending',state.revision);}
       catch(e){status.textContent=e.message;}
-      finally{busy=false;box.querySelectorAll('button').forEach(b=>b.disabled=false);}
+      finally{setBusy(false);}
     }
     function render(){
       box.replaceChildren(title,status);
@@ -252,12 +260,13 @@
       if(p.status)box.append(node('div',[p.date,p.time,p.zone,p.place,p.duration].filter(Boolean).join(' · '),'quote'));
       if(pending&&p.proposed_by!==c.user.id)action(box,'Confirm Our Time and Place ❤️',()=>{if(confirm('Confirm these details with your partner?'))save('confirm');}).className='primary';
       if(pending)action(box,p.proposed_by===c.user.id?'Withdraw My Suggestion':'Keep Deciding — Clear This Suggestion',()=>{if(confirm('Clear this proposed schedule? Your invitation stays accepted.'))save('withdraw');});
-      const form=node('form'),fields={};
+      const form=node('form');fields={};
       for(const [key,label,type,max] of [['date','Day','date'],['time','Time','time'],['zone','Time zone (for example, America/New_York)','text',100],['place','Where we’ll meet','text',240],['duration','Time together (optional)','text',120]]){
         const wrap=node('label',label),input=node('input');input.type=type;input.required=key!=='duration';if(max)input.maxLength=max;
         input.value=p[key]||({date:state.plan?.momentDate,time:state.plan?.momentTime,zone:state.plan?.momentZone||Intl.DateTimeFormat().resolvedOptions().timeZone,place:state.plan?.meetPlace,duration:state.plan?.length}[key]||'');
         wrap.append(input);form.append(wrap);fields[key]=input;
       }
+      baseline=snapshot();
       const submit=node('button',pending?'Suggest Different Details':'Propose Our Time and Place');submit.type='submit';form.append(submit);
       form.append(node('p','These details are shared inside Heart Stone. Your partner must confirm each new proposal. No email or text message is sent.','helper'));
       form.onsubmit=e=>{e.preventDefault();if(confirm('Share these proposed details with your partner?'))save('propose',Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,v.value.trim()])));};
@@ -292,12 +301,13 @@
       let memoryNote=null,savedMemory=memory,memorySaving=false;
       const hasUnsavedMemory=()=>memoryNote!==null&&memoryNote.value!==savedMemory;
       function requestMomentClose(){
-        if(memorySaving){progress.textContent='Your memory is still saving. Please wait a moment.';return;}
+        if(memorySaving||scheduleBox.scheduleIsSaving?.()){progress.textContent='Your changes are still loading or saving. Please wait a moment.';return;}
         if(hasUnsavedMemory()&&!confirm('Leave without saving your memory changes? Choose Cancel to keep editing.'))return;
+        if(scheduleBox.scheduleHasEdits?.()&&!confirm('Leave without sharing your time-and-place suggestion? Choose Cancel to keep editing.'))return;
         dialog.close();
       }
       function warnBeforeLeaving(event){
-        if(!hasUnsavedMemory()&&!memorySaving)return;
+        if(!hasUnsavedMemory()&&!memorySaving&&!scheduleBox.scheduleHasEdits?.()&&!scheduleBox.scheduleIsSaving?.())return;
         event.preventDefault();event.returnValue='';
       }
       window.addEventListener('beforeunload',warnBeforeLeaving);
