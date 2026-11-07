@@ -5,6 +5,8 @@ on:
     paths:
       - 'index.html'
       - 'date-home.js'
+      - 'account-wishes.js'
+      - 'tests/account-wish-revocation.test.cjs'
       - 'moment-invitations.js'
       - 'invitation-opening.html'
       - 'test-account-calendar.cjs'
@@ -18,6 +20,8 @@ on:
     paths:
       - 'index.html'
       - 'date-home.js'
+      - 'account-wishes.js'
+      - 'tests/account-wish-revocation.test.cjs'
       - 'moment-invitations.js'
       - 'invitation-opening.html'
       - 'test-account-calendar.cjs'
@@ -56,3 +60,5 @@ jobs:
         run: node --test tests/session-recovery.test.cjs
       - name: Check conversation privacy and usage limits
         run: node --test tests/heartstone-conversation.test.mjs
+      - name: Check ended wish shares and fresh planning access
+        run: node --test tests/account-wish-revocation.test.cjs
