@@ -51,3 +51,12 @@ After rollback: zero real founding enrollments, zero members, zero occupied plac
 Security advisor: six anonymous and 98 authenticated public privileged-function findings unchanged; RLS-without-policy INFO becomes 25, including the three deliberately private enrollment tables. Leaked-password protection finding remains. See [RLS advisor explanation](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
 
 Next coding step: an account-scoped read of saved membership terms, with privacy checks, before any enrollment operator UI. Do not open guest replies until their separate invitation-scoped server authorization exists.
+
+## Owner-only membership display shipped — November 7, 2026
+Applied `private_account_membership_terms`. Public `my_date_quest_membership(expected_user)` is an authenticated SECURITY INVOKER wrapper. Its private implementation requires auth.uid(), the exact expected account and a nonanonymous/nondeleted Auth account. It returns only the caller's saved terms or `{enrolled:false}`; no partner IDs, roster, seats, request IDs or enrollment IDs are returned. Authenticated now has schema usage and execution of this own-terms function only; enrollment function and all tables remain denied.
+
+Profile & Settings has a collapsed **My Date Quest Membership** section. It loads on demand, shows no enrollment when absent, and explicitly says billing is inactive. Generation and account rechecks suppress stale results after account changes; timeout/error restores retry. No payment action is offered and the store was unchanged.
+
+Database owner/partner/outsider/null/signed-out/anonymous, direct-table and self-enrollment tests passed with rollback fixtures. Enrollment regression still passes after the schema-usage change. Seven UI logic tests passed, covering saved terms, unenrolled display, malformed responses, changed accounts, signout, errors and stale timeout results. No real accounts were enrolled. The display is not an authorization gate, subscription or billing integration.
+
+Security advisor counts remain six anonymous and 98 authenticated privileged public functions, 25 RLS-without-policy INFO (private deny-default tables), and the existing leaked-password protection warning. New tester HOLD remains.
