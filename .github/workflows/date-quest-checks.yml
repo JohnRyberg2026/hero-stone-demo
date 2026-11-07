@@ -5,6 +5,8 @@ on:
     paths:
       - 'index.html'
       - 'date-home.js'
+      - 'date-quest-membership.mjs'
+      - 'tests/date-quest-membership.test.mjs'
       - 'account-wishes.js'
       - 'tests/account-wish-revocation.test.cjs'
       - 'moment-invitations.js'
@@ -20,6 +22,8 @@ on:
     paths:
       - 'index.html'
       - 'date-home.js'
+      - 'date-quest-membership.mjs'
+      - 'tests/date-quest-membership.test.mjs'
       - 'account-wishes.js'
       - 'tests/account-wish-revocation.test.cjs'
       - 'moment-invitations.js'
@@ -62,3 +66,5 @@ jobs:
         run: node --test tests/heartstone-conversation.test.mjs
       - name: Check ended wish shares and fresh planning access
         run: node --test tests/account-wish-revocation.test.cjs
+      - name: Check founding membership limits and lifetime pricing
+        run: node --test tests/date-quest-membership.test.mjs
