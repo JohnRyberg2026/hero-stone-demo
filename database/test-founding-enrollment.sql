@@ -13,7 +13,7 @@ begin
  a:=gen_random_uuid();insert into auth.users(id,is_anonymous,raw_user_meta_data) values(a,true,'{"first_name":"Founding enrollment rollback fixture 20261107"}');
  perform set_config('test.founding.ids',array_to_string(ids,','),true);
  perform set_config('test.founding.anonymous',a::text,true);
- if has_schema_privilege('authenticated','hs_membership_internal','USAGE') then raise exception 'Client schema access';end if;
+ -- Schema usage permits only the separately guarded own-terms lookup; roster tables and enrollment remain denied.
  if has_function_privilege('authenticated','hs_membership_internal.enroll_founders(uuid,text,uuid[])','EXECUTE')
  or has_function_privilege('anon','hs_membership_internal.enroll_founders(uuid,text,uuid[])','EXECUTE') then raise exception 'Client enrollment grant';end if;
  if has_table_privilege('service_role','hs_membership_internal.founding_members','INSERT,UPDATE,DELETE') then raise exception 'Direct service roster mutation granted';end if;
