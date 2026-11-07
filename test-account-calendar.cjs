@@ -71,6 +71,8 @@ const submit=async(d,title)=>{d.get('dqAddEvent').onclick();d.get('dqEventName')
    assert.equal(independent.get('dqAddEvent').disabled,false);
    assert.equal(independent.get('dqMoments').children.length,0);
    assert.match(independent.get('dqMomentsStatus').textContent,/private calendar is still available/);
+   assert.match(independent.get('dqCalendarStatus').textContent,/Tap Refresh Calendar/);
+   assert(!independent.get('dqCalendarStatus').textContent.includes('Refresh Moments'));
    await submit(independent,'Calendar works during '+failure);
    assert(database.get('calendar-independent').calendar.events.some(e=>e.title==='Calendar works during '+failure));
    independent.state[failure]=false;
