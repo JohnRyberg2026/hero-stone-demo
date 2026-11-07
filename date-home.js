@@ -9,8 +9,9 @@ const DateHomeModel=(()=>{
  function planLink(day){if(!validDay(day))throw Error('Choose a valid calendar day.');return 'invitation-opening.html?planDay='+encodeURIComponent(day)+'#heart-stone-plan';}
  function momentLink(id){return 'invitation-opening.html?moment='+encodeURIComponent(String(id))+'#shared-invitations';}
  function timeLabel(time){if(!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(time))return 'Time to confirm';const [h,m]=time.split(':').map(Number);return (h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM');}
+ function readWithTimeout(task,ms=15000){let timer;return Promise.race([task,new Promise((resolve,reject)=>{timer=setTimeout(()=>reject(Error('The connection is taking too long. Tap Refresh Calendar to try again.')),ms);})]).finally(()=>clearTimeout(timer));}
  const greeting=(hour,name)=>'Good '+(hour<12?'morning':hour<18?'afternoon':'evening')+(name?', '+name:'')+'.';
- return {kinds,day,validDay,clean,active,greeting,momentLink,timeLabel,planLink,attention};
+ return {kinds,day,validDay,clean,active,greeting,momentLink,timeLabel,planLink,attention,readWithTimeout};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=DateHomeModel;
 
@@ -86,12 +87,12 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
    try{
      const u=await currentUser();if(v!==version)return;if(!u){reset();return;}
      if(owner!==u.id){owner=u.id;revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];el('dqMoments').replaceChildren();el('dqImportCalendar').hidden=true;render();}
-     const result=await sb.rpc('my_private_calendar',{p_expected_user:u.id});
+     const result=await M.readWithTimeout(sb.rpc('my_private_calendar',{p_expected_user:u.id}));
      const verify=await currentUser();if(v!==version)return;if(!verify||verify.id!==u.id){reset();return;}
      if(result.error||!result.data||!Number.isInteger(result.data.revision))throw Error('Your account calendar could not be loaded. Check your connection and tap Refresh Calendar.');
      data=M.clean(result.data.calendar);revision=result.data.revision;readable=true;updateImport();render();say('Your private calendar is up to date.');
      const hs=heartStoneId;
-     const invitations=hs?await sb.rpc('list_moment_invitations',{p_heart_stone_id:hs}):{data:[],error:null};
+     const invitations=hs?await M.readWithTimeout(sb.rpc('list_moment_invitations',{p_heart_stone_id:hs})):{data:[],error:null};
      const checked=await currentUser();if(v!==version)return;if(!checked||checked.id!==u.id){reset();return;}if(heartStoneId!==hs)return;
      if(invitations.error){el('dqInvitationsLink').textContent='Our Invitations';el('dqMomentsStatus').textContent='Could not load shared moments. Open Our Invitations to check.';return;}
      const needsAttention=M.attention(invitations.data,u.id);el('dqInvitationsLink').textContent=needsAttention?'Our Invitations · '+needsAttention+' need'+(needsAttention===1?'s':'')+' attention':'Our Invitations';
