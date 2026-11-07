@@ -16,10 +16,10 @@
   const message = document.getElementById('message');
   const feelings = document.getElementById('feelings');
   if (!message || !feelings) return;
-  const offer = document.createElement('section');
+  const offer = document.createElement('details');
   offer.className = 'notice'; offer.setAttribute('aria-label', 'Your Heart Stone starting point');
   offer.hidden = true;
-  offer.innerHTML = '<h2 style="margin-top:0"></h2><p></p><blockquote class="quote"></blockquote><button type="button" class="secondary">Use this opening in my message</button><button type="button" class="textbutton">I’ll write my own</button><p class="helper" role="status" aria-live="polite"></p>';
+  offer.innerHTML = '<summary style="cursor:pointer;font-weight:750;min-height:44px">Help me find the words</summary><h2 style="margin-top:0"></h2><p></p><blockquote class="quote"></blockquote><button type="button" class="secondary">Use this opening in my message</button><button type="button" class="textbutton">I’ll write my own</button><p class="helper" role="status" aria-live="polite"></p>';
   feelings.insertBefore(offer, feelings.querySelector('h2'));
   let opening, reviewed, revision = 0;
   const transferKey = "hs_reviewed_invitation_v1";
@@ -45,6 +45,7 @@
       } catch {return;}
     } else opening = openings[location.hash];
     offer.hidden = !opening;
+    offer.open = location.hash === '#heart-stone-reviewed';
     if (!opening) return;
     offer.querySelector('h2').textContent = opening.title;
     offer.querySelector('p').textContent = opening.copy;
