@@ -3,17 +3,18 @@ class Element{
  constructor(tag='div'){this.isConnected=true;this.tagName=tag;this.children=[];this.value='';this.textContent='';this.style={};this.disabled=false;this.hidden=false;this.open=false;this.listeners={};this.dataset={};}
  append(...nodes){this.children.push(...nodes);} appendChild(n){this.children.push(n);return n;} add(n){this.children.push(n);}
  replaceChildren(...nodes){this.children=[...nodes];} setAttribute(k,v){this[k]=v;} addEventListener(k,f){this.listeners[k]=f;}
- showModal(){this.open=true;} close(){this.open=false;} remove(){} focus(){this.focused=true;}
+ showModal(){this.open=true;} close(){this.open=false;} remove(){} querySelector(tag){return this.querySelectorAll(tag)[0]||null;} removeAttribute(k){delete this[k];} focus(){this.focused=true;}
  querySelectorAll(tag){return this.children.flatMap(n=>[...(n.tagName===tag?[n]:[]),...n.querySelectorAll(tag)]);}
 }
 function setup(){
- const ids=['pictureEditor','myPicturePreview','recipientPicture','avatarChoices','loadMyPicture','pictureStatus','cancelMyPicture','profilePhoto','saveMyPicture','sharedInvitationList','sharedInvitationStatus','accountConnectionStatus','sendInvitationDialog','checkAccount','message','experienceTitle','experienceStory','revealMode','experienceHint','prepareLiveSend','liveSendStatus','liveSender','liveRecipient','liveSendSummary','confirmLiveSend','sendDialogStatus','keepInvitationDraft','previewBanner','refreshSharedInvitations','sharedInvitationAccount','openSharedInvitations','backFromSharedInvitations'];
+ const ids=['pictureEditor','myPicturePreview','recipientPicture','avatarChoices','loadMyPicture','pictureStatus','cancelMyPicture','profilePhoto','saveMyPicture','sharedInvitationList','sharedInvitationStatus','accountConnectionStatus','sendInvitationDialog','checkAccount','message','experienceTitle','experienceStory','revealMode','experienceHint','prepareLiveSend','liveSendStatus','liveSender','liveRecipient','liveSendSummary','confirmLiveSend','sendDialogStatus','keepInvitationDraft','previewBanner','refreshSharedInvitations','sharedInvitationAccount','openSharedInvitations','backFromSharedInvitations','sharedInbox','invitationsCollectionTab','memoriesCollectionTab'];
  const els=Object.fromEntries(ids.map(x=>[x,new Element()]));
  Object.assign(els.message,{value:'I miss you.'});els.experienceTitle.value='Our hideaway';els.experienceStory.value='A quiet moment';els.revealMode.value='surprise';
+ els.sharedInbox.append(Object.assign(new Element('.eyebrow'),{textContent:''}),new Element('h1'),new Element('.storyOpening'));
  const state={user:{id:'sender',email:'sender@example.test'},hs:'hs',partners:[{id:'partner-123456',name:'Partner'}],items:[],calls:[],failSend:false};
  const sb={auth:{getUser:async()=>({data:{user:state.user}}),onAuthStateChange:f=>{state.authListener=f;}},from:()=>({select(){return this},eq(){return this},limit:async()=>({data:[{heart_stone_id:state.hs}]})}),rpc:async(name,args)=>{state.calls.push({name,args});if(name==='shared_moment_schedule'){if(state.failSchedule)return {error:{message:'Schedule changed. Refresh.'}};if(args.p_action==='propose')state.schedule={version:1,proposal:{...args.p_details,status:'pending',proposed_by:state.user.id},plan:{}};return {data:state.schedule||{version:0,proposal:{},plan:{}}};}if(name==='finish_shared_moment'){if(state.failFinish)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).completed_at='2026-10-21T13:00:00Z';return {data:'2026-10-21T13:00:00Z'};}if(name==='my_shared_moment_memory'){if(state.failMemory)return {error:{message:'network'}};if(args.p_note!==undefined)state.memory=args.p_note;return {data:state.memory||''};}if(name==='begin_shared_moment'){if(state.failStart)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).started_at='2026-10-21T12:00:00Z';return {data:'2026-10-21T12:00:00Z'};}if(name==='my_moment_profile_picture')return {data:args.p_picture||'sun'};if(name==='get_moment_invitation_partners')return {data:state.partners};if(name==='list_moment_invitations')return {data:state.items};if(name==='send_checked_moment_invitation'&&state.failSend)return {error:{message:'network'}};return {data:'invitation-id'};}};
  const storage=new Map();const document={body:new Element('body'),getElementById:id=>{assert(els[id],id);return els[id]},createTextNode:text=>Object.assign(new Element('text'),{textContent:text}),createElement:tag=>new Element(tag),head:{appendChild:s=>s.onload()}};
- const ctx=vm.createContext({document,Event,Intl,window:{dispatchEvent(){},supabase:{createClient:()=>sb}},Option:function(t,v){const e=new Element('option');e.textContent=t;e.value=v;return e;},TextEncoder,crypto:webcrypto,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},confirm:()=>true,planDraft:()=>({whenMode:'together',length:'About 2 hours',meetMode:'home'}),kind:'date',screen:id=>{state.screen=id;}});
+ const ctx=vm.createContext({document,Event,Intl,setTimeout,clearTimeout,URL,URLSearchParams,window:{location:{search:'',hash:''},addEventListener(){},removeEventListener(){},dispatchEvent(){},supabase:{createClient:()=>sb}},Option:function(t,v){const e=new Element('option');e.textContent=t;e.value=v;return e;},TextEncoder,crypto:webcrypto,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},confirm:()=>state.confirm!==false,planDraft:()=>({whenMode:'together',length:'About 2 hours',meetMode:'home'}),kind:'date',screen:id=>{state.screen=id;}});
  vm.runInContext(fs.readFileSync('moment-invitations.js','utf8'),ctx);
  return {els,state,body:document.body};
 }
@@ -68,15 +69,27 @@ const tick=()=>new Promise(r=>setImmediate(r));
  ({els,state}=setup());state.items=[{id:'named',sender_id:'sender',recipient_id:'partner-123456',status:'accepted',title:'Our moment',plan:{}}];await els.refreshSharedInvitations.onclick();assert(texts(els.sharedInvitationList).includes('Partner said yes. ❤️'));
  const cinema=setup();({els,state}=cinema);state.items=[{id:'cinema',sender_id:'partner-123456',recipient_id:'sender',status:'accepted',revision:1,title:'Our walk',story:'A quiet wander together',message:'I miss you.',plan:{}}];
  await els.refreshSharedInvitations.onclick();card=els.sharedInvitationList.children[0];await card.querySelectorAll('button').find(b=>b.textContent==='Reveal Our Moment ❤️').onclick();
+ await tick();await tick();
  let dialog=cinema.body.children.at(-1);assert(dialog.open);assert(texts(dialog).includes('We said yes.'));assert(texts(dialog).includes('Our walk'));
- dialog.querySelectorAll('button').find(b=>b.textContent==='Step Into Our Moment ❤️').onclick();assert(dialog.children[0].hidden);assert(!dialog.children[1].hidden);
- dialog.querySelectorAll('button').find(b=>b.textContent==='Back — Our Invitation').onclick();assert(!dialog.children[0].hidden);
+ dialog.querySelectorAll('button').find(b=>b.textContent==='Step Into Our Moment ❤️').onclick();assert(dialog.children[1].hidden);assert(!dialog.children[2].hidden);
+ dialog.querySelectorAll('button').find(b=>b.textContent==='Back — Our Invitation').onclick();assert(!dialog.children[1].hidden);
  dialog.querySelectorAll('button').find(b=>b.textContent==='Back — Invitations').onclick();assert(!dialog.open);assert(!state.calls.some(x=>x.name==='cancel_moment_invitation'||x.name.startsWith('respond_')));
  state.items[0].status='cancelled';await card.querySelectorAll('button').find(b=>b.textContent==='Reveal Our Moment ❤️').onclick();assert(els.sharedInvitationStatus.textContent.includes('changed'));assert.equal(cinema.body.children.length,1);
  const sched=setup();sched.state.items=[{id:'sched',sender_id:'sender',recipient_id:'partner-123456',status:'accepted',revision:0,title:'Our time',plan:{}}];
  await sched.els.refreshSharedInvitations.onclick();await sched.els.sharedInvitationList.querySelectorAll('button').find(b=>b.textContent==='Choose Our Time and Place').onclick();await tick();await tick();
  const sd=sched.body.children.at(-1);assert(texts(sd).includes('Suggest a time and place'));assert(!sched.state.calls.some(x=>x.args.p_action==='propose'));
  sd.querySelectorAll('button').find(b=>b.textContent==='Add My Suggestion').onclick();const sf=sd.querySelectorAll('form')[0],si=sf.querySelectorAll('input');['2026-12-01','18:00','America/New_York','At home','Two hours'].forEach((v,i)=>si[i].value=v);
+ assert(texts(sd).includes('← Invitations'));
+ const callsBeforeRefresh=sched.state.calls.length;
+ sched.state.confirm=false;
+ await sd.querySelectorAll('button').find(b=>b.textContent==='Refresh Shared Details').onclick();
+ assert.equal(sched.state.calls.length,callsBeforeRefresh);
+ sd.querySelectorAll('button').find(b=>b.textContent==='← Invitations').onclick();
+ assert(sd.open);assert.equal(si[3].value,'At home');
+ sched.state.confirm=true;sched.state.failSchedule=true;
+ await sf.onsubmit({preventDefault(){}});await tick();await tick();
+ assert.equal(si[3].value,'At home');assert(!si[3].disabled);assert(texts(sd).includes('Schedule changed'));
+ sched.state.failSchedule=false;
  await sf.onsubmit({preventDefault(){}});await tick();await tick();assert(texts(sd).includes('waiting for your partner'));assert(!sd.querySelectorAll('button').some(b=>b.textContent==='Confirm Our Time and Place ❤️'));assert(sd.querySelectorAll('button').find(b=>b.textContent==='Begin Our Moment Together ❤️').disabled);
  assert(sched.state.calls.some(x=>x.name==='shared_moment_schedule'&&x.args.p_action==='propose'&&x.args.p_version===0&&x.args.p_details.place==='At home'));
  console.log('PASS: scheduling loads without sharing, explicit proposal uses displayed version, self-confirmation hidden, pending start disabled.');
@@ -87,7 +100,7 @@ const tick=()=>new Promise(r=>setImmediate(r));
  const beginButton=dialog.querySelectorAll('button').find(b=>b.textContent==='Begin Our Moment Together ❤️');
  state.failStart=true;await beginButton.onclick();assert(!beginButton.hidden);assert(texts(dialog).includes('couldn’t confirm'));
  state.failStart=false;await beginButton.onclick();assert(beginButton.hidden);assert(state.calls.some(x=>x.name==='begin_shared_moment'&&x.args.p_expected_revision===2&&x.args.p_expected_user==='sender'));
- card=els.sharedInvitationList.children[0];const resume=card.querySelectorAll('button').find(b=>b.textContent==='Return to Our Moment ❤️');assert(resume);await resume.onclick();dialog=active.body.children.at(-1);assert(dialog.children[0].hidden);assert(!dialog.children[1].hidden);assert(texts(dialog).includes('Our moment is underway'));
+ card=els.sharedInvitationList.children[0];const resume=card.querySelectorAll('button').find(b=>b.textContent==='Return to Our Moment ❤️');assert(resume);await resume.onclick();dialog=active.body.children.at(-1);assert(dialog.children[1].hidden);assert(!dialog.children[2].hidden);assert(texts(dialog).includes('Our moment is underway'));
  assert(dialog.querySelectorAll('button').find(b=>b.textContent==='Begin Our Moment Together ❤️').hidden);
  console.log('PASS: shared begin requires explicit action, failures remain retryable, and active moments reopen directly without starting again.');
  const closing=setup();({els,state}=closing);state.items=[{id:'closed',sender_id:'sender',recipient_id:'partner-123456',status:'accepted',revision:2,started_at:'2026-10-21T12:00:00Z',title:'Our walk',story:'A quiet wander',plan:{}}];
@@ -105,6 +118,6 @@ const tick=()=>new Promise(r=>setImmediate(r));
  console.log('PASS: close failures retry; completed moments reopen; private memory saves and reloads; failed saves preserve words; account changes block writes.');
  const html=fs.readFileSync('invitation-opening.html','utf8');for(const [,s] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(s);new vm.Script(fs.readFileSync('moment-invitations.js','utf8'));
  for(const id of ['sharedInbox','prepareLiveSend','sendInvitationDialog','openSharedInvitations'])assert(html.includes('id="'+id+'"'));
- assert(html.includes('function screen(id){$("liveSendStatus").textContent="";'));
+ assert(/function screen\(id\)\{[\s\S]*?\$\("liveSendStatus"\)\.textContent="";/.test(html));
  console.log('PASS: navigation clears old send feedback; HTML integration and JavaScript syntax.');
 })().catch(e=>{console.error(e);process.exit(1);});
