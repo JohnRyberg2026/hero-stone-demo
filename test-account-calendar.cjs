@@ -10,7 +10,7 @@ function device(user='john',local={}){
  const nodes=new Map(),events={};const get=id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);};
  get('dqEventForm').hidden=true;get('profileFirstName').value='John';
  const state={user,fail:false,hold:null};
- const context={setTimeout,clearTimeout,document:{hidden:false,getElementById:get,createElement:t=>new Node(t)},window:{addEventListener:(n,fn)=>(events[n]??=[]).push(fn),dispatchEvent(){},setInterval(){}},MutationObserver:class{observe(){}},CustomEvent:class{},crypto:{randomUUID:()=>Math.random().toString(36).slice(2)},confirm:()=>true,console,Date,Math,JSON,Map,Set,module:{exports:{}},localStorage:{getItem:k=>local[k]??null},heartStoneId:'connected',currentUser:async()=>state.user?{id:state.user}:null,
+ const context={setTimeout,clearTimeout,document:{hidden:false,getElementById:get,createElement:t=>new Node(t)},window:{addEventListener:(n,fn)=>(events[n]??=[]).push(fn),dispatchEvent(){},setInterval(){}},MutationObserver:class{observe(){}},CustomEvent:class{},crypto:{randomUUID:()=>Math.random().toString(36).slice(2)},confirm:()=>state.confirm!==false,console,Date,Math,JSON,Map,Set,module:{exports:{}},localStorage:{getItem:k=>local[k]??null},heartStoneId:'connected',currentUser:async()=>state.user?{id:state.user}:null,
  sb:{rpc:async(name,args)=>{
  if(name==='list_moment_invitations')return {data:[],error:null};
  if(state.hold){const p=state.hold;state.hold=null;await p;}
@@ -41,5 +41,27 @@ const submit=async(d,title)=>{d.get('dqAddEvent').onclick();d.get('dqEventName')
  let release;const pending=new Promise(r=>release=r);c.state.hold=pending;
  c.get('dqRefreshCalendar').onclick();await flush();c.state.user='jessica';release();await flush();
  assert.equal(c.get('dqDays').children.length,0);assert.match(c.get('dqCalendarStatus').textContent,/Sign in/);
+ const undoDevice=device('undo-owner');await flush();await submit(undoDevice,'Birthday dinner');
+ const buttons=()=>{const walk=n=>[n,...n.children.flatMap(walk)];return walk(undoDevice.get('dqDayEvents')).filter(n=>n.tag==='button');};
+ undoDevice.state.confirm=false;
+ await buttons().find(n=>n.textContent==='Remove').onclick();
+ assert.equal(database.get('undo-owner').calendar.events.length,1);
+ undoDevice.state.confirm=true;undoDevice.state.fail=true;
+ await buttons().find(n=>n.textContent==='Remove').onclick();
+ assert.equal(database.get('undo-owner').calendar.events.length,1);
+ assert(!buttons().some(n=>n.textContent.startsWith('Undo removal')));
+ await buttons().find(n=>n.textContent==='Remove').onclick();
+ assert.equal(database.get('undo-owner').calendar.events.length,0);
+ const undo=buttons().find(n=>n.textContent==='Undo removal — Birthday dinner');assert(undo);
+ undoDevice.state.fail=true;await undo.onclick();
+ assert.equal(database.get('undo-owner').calendar.events.length,0);
+ assert(buttons().some(n=>n.textContent.startsWith('Undo removal')));
+ await buttons().find(n=>n.textContent.startsWith('Undo removal')).onclick();
+ assert.equal(database.get('undo-owner').calendar.events[0].title,'Birthday dinner');
+ assert(!buttons().some(n=>n.textContent.startsWith('Undo removal')));
+ await buttons().find(n=>n.textContent==='Remove').onclick();
+ undoDevice.state.user='other-owner';await buttons().find(n=>n.textContent.startsWith('Undo removal')).onclick();
+ assert.equal(database.has('other-owner'),false);assert.equal(database.get('undo-owner').calendar.events.length,0);
+ console.log('PASS: cancelled removal, failed removal, undo restoration, failed undo retry, account-change undo guard.');
  console.log('PASS: account saves, reload on a second device, stale conflict protection, failed-save draft retention, separate owners, explicit import, account-switch read guard.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
