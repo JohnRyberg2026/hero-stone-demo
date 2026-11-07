@@ -19,16 +19,18 @@ The reviewed core has passing checks. The unresolved shared-backend surface prev
 
 ## Three gates before new testers
 
-### A1 — Bound the authenticated backend surface
-The database has 98 public SECURITY DEFINER functions callable by authenticated. This is not evidence of 98 vulnerabilities. It is an exact, named review inventory:
-- 6 helpers/triggers: scoped exception documented below.
-- 24 legacy/connection/onboarding functions: bodies inspected, but per-function signed-in authorization coverage incomplete.
-- 11 World Quest actions: anonymous denial and selected membership checks verified; a complete signed-in World Quest review was not performed.
-- 57 other functions: authorization review or server isolation still required.
+### A1 — Legacy privileged RPC boundary implemented
+## Legacy API boundary applied — November 7, 2026
 
-The current invitation/calendar invoker APIs and private implementations are separately reviewed and tested. Older APIs still share the authenticated role. Hiding a page, excluding World Quest from the campaign, or adding a browser-only feature flag does not prevent a signed-in account from calling reachable RPCs.
+Migration `gate_legacy_privileged_apis_with_checked_entry_guards` restricts 91 legacy public SECURITY DEFINER endpoints to the three preexisting development accounts. The private administrator-managed roster has RLS enabled and no client table grants. Signup does not enroll accounts. The trusted service role can use the guard; browser accounts cannot grant themselves access. Existing function signatures, grants and business checks were preserved through fingerprint-checked body insertion.
 
-**Exit:** every endpoint a new pilot account can reach has a documented acceptable disposition, or is blocked for pilot accounts by an enforced server boundary. Run the current-path regression after the boundary changes. See [the fixed review queue](PILOT_RPC_REVIEW_QUEUE.md). Prefer isolating unneeded paths when this is safer and smaller than redesigning them; verify dependency callers before revoking grants.
+Seven exceptions remain: the six scoped helpers/triggers and `get_heart_stone_partner_personalization(uuid)`. The latter supports the simple home, requires active membership, omits gender and exposes pronouns only with consent. These exceptions are not blanket authorization for other legacy features. Current invitation/calendar/preferences APIs retain their separate ownership and participant checks.
+
+Verification: all 91 typed-null calls by an unrostered authenticated identity failed with the specific boundary denial. A rollback-only rostered fixture passed the guard and preview, while its nonmember history request still failed membership authorization. The service guard check passed. Current invitation/lifecycle/private calendar/memory, preferences, shared availability, wish revocation, anonymous legacy and World Quest role regressions passed. Three existing roster entries remain; no boundary fixture profiles remain. No real invitation or memory was changed, no tester was added, and no paid AI call was made.
+
+Advisor counts remain six anonymous and 98 authenticated privileged-function findings. RLS-without-policy INFO is now 22: the additional private roster deliberately denies client row access. Password-protection finding remains. This is a scoped server boundary, not full certification or enrollment clearance.
+
+Source: [boundary migration](database/pilot-legacy-api-boundary.sql). Repeatable rollback checks: [boundary test](database/test-pilot-legacy-boundary.sql). A2 enrollment/API configuration and A3 password/recovery remain HOLD gates.
 
 ### A2 — Verify enrollment and API configuration
 The actual Auth signup/enrollment configuration and the PostgREST exposed-schema configuration were not retrieved in this review. No claim is made that public account creation is disabled or that only intended pilot identities can access the whole app.
@@ -67,7 +69,7 @@ No operator approval is being inferred from this document. Unknown settings rema
 ## Fixed finish line and next step
 This decision-writing stage is complete when the queue, gates and evidence are saved and agree with the current inventory. That is now done.
 
-The next coding task is **A1: choose and enforce the pilot server boundary for the named legacy endpoints**, starting with the functions required by home/sign-in versus unrelated legacy features. Do not start another unrelated subsystem during this task.
+A1's legacy privileged RPC boundary is applied and verified. The next task is **A2: verify actual enrollment and exposed API schema settings**, followed by A3's password/recovery decision. New testers remain on hold.
 
 Once A1–A3 have recorded acceptable outcomes, take a release snapshot and perform a short check of only the newly changed phone/computer behavior. Do not restart John's passed invitation, availability or consent walkthroughs. No new manual testing is requested by this document.
 
