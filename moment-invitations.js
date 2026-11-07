@@ -2,6 +2,7 @@
   'use strict';
   const el=id=>document.getElementById(id);
   let momentDialog=null,momentVersion=0;
+  let calendarMoment=new URLSearchParams(window.location.search).get('moment');
   let memoriesOnly=window.location?.hash==='#our-memories';
   function completedMoments(items,userId){return items.filter(item=>item.status==='accepted'&&item.completed_at&&(item.sender_id===userId||item.recipient_id===userId)).sort((a,b)=>String(b.completed_at).localeCompare(String(a.completed_at)));}
   function collectionLabels(){
@@ -378,10 +379,12 @@
       const allItems=Array.isArray(result.data)?result.data:[];
       const items=memoryView?completedMoments(allItems,c.user.id):allItems;
       el('sharedInvitationAccount').textContent='Signed in as '+(c.user.email||'your verified account');
+      let calendarTarget=null;
       for(const item of items){
         const incoming=item.recipient_id===c.user.id;
         const other=c.partners.find(x=>x.id===(incoming?item.sender_id:item.recipient_id));
         const card=node('article',undefined,'card invitationLetter'+(item.status==='accepted'?' acceptedLetter':''));card.style.marginTop='16px';
+        if(calendarMoment===String(item.id))calendarTarget={item,card};
         const identity=node('div',undefined,'person');person(identity,other?.name||'your connected partner',other?.picture,incoming?'From ':'To ');card.append(identity);
         if(memoryView){
           card.append(node('h2',item.title));
@@ -421,6 +424,13 @@
         el('sharedInvitationList').append(card);
       }
       el('sharedInvitationStatus').textContent=memoryView?(items.length?items.length+' completed moment'+(items.length===1?'':'s')+'. Your written memories stay private.':'Your story has room to grow. Completed moments will appear here.') : items.length?items.length+' invitation'+(items.length===1?'':'s')+' in your collection. Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
+      if(calendarMoment){
+        const target=calendarTarget;
+        calendarMoment=null;
+        const url=new URL(window.location.href);url.searchParams.delete('moment');history.replaceState(null,'',url.pathname+url.search+url.hash);
+        if(target&&target.item.status==='accepted')await openMoment(c,target.item,target.card);
+        else el('sharedInvitationStatus').textContent='This calendar moment is no longer available to open. Review your invitations below for its current status.';
+      }
     }catch(e){el('sharedInvitationAccount').textContent='';el('sharedInvitationStatus').textContent=e.message;}
     finally{inboxBusy=false;el('refreshSharedInvitations').disabled=false;if(memoryView!==memoriesOnly)refreshInbox();}
   }
