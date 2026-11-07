@@ -608,11 +608,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   <section class="card" id="authCard">
     <h2>1. Sign in</h2>
-    <input id="email" type="email" placeholder="Email"/>
-    <input id="password" type="password" placeholder="Password"/>
+    <input id="email" type="email" placeholder="Email" aria-label="Email" autocomplete="username"/>
+    <input id="password" type="password" placeholder="Password" aria-label="Password" autocomplete="current-password"/>
     <button id="signInBtn">Sign In</button>
     <button class="secondary hidden" id="signOutBtn">Sign Out</button>
-    <div class="status" id="authStatus">Not signed in.</div>
+    <div class="status" id="authStatus" role="status" aria-live="polite">Not signed in.</div>
     <div class="hidden" id="connectedState">
       <div class="hero">❤️ HEART STONE Connected</div>
       <p>You’re signed in and connected to your partner.</p>
@@ -1185,16 +1185,74 @@ async function loadExistingHeartStone(){
   return id;
 }
 
+// Sign-in and session recovery.
+let signInBusy=false,sessionUserId=null,sessionEpoch=0;
+function clearSessionUI(){
+  sessionEpoch++;
+  if(autoSyncTimer){clearInterval(autoSyncTimer);autoSyncTimer=null;}
+  heartStoneId="";requestId=null;adventureId=null;stepId=null;privateRequestId=null;seenCandidateIds=[];
+  lastSharedFingerprint="";autoSyncBusy=false;
+  try{localStorage.removeItem("hs_heart_stone_id");}catch{}
+  setConnectedUI(false);
+}
+sb.auth.onAuthStateChange((event,session)=>{
+  const next=session?.user?.id||null;
+  if(event==="INITIAL_SESSION"){sessionUserId=next;return;}
+  if(event==="SIGNED_OUT"){
+    sessionUserId=null;clearSessionUI();
+    status("authStatus","Your session ended. Sign in again to continue.");
+    return;
+  }
+  if(!next||next===sessionUserId)return;
+  const changed=sessionUserId!==null;
+  sessionUserId=next;
+  if(changed)clearSessionUI();
+  const epoch=++sessionEpoch;
+  if(signInBusy)return;
+  // Auth work runs after the synchronous auth event callback has returned.
+  setTimeout(async()=>{
+    try{
+      const user=await currentUser();
+      if(epoch!==sessionEpoch||user?.id!==next)return;
+      status("authStatus","Restoring your connection…");
+      const connected=await loadExistingHeartStone();
+      if(epoch!==sessionEpoch)return;
+      if(!connected){$("dateQuestApp").classList.remove("signed-out");show("signOutBtn",true);show("inviteCard",true);}
+    }catch{
+      if(epoch===sessionEpoch)status("authStatus","Could not restore your connection. Check your connection and sign in again.");
+    }
+  },0);
+});
 $("signInBtn").onclick = async()=>{
-  status("authStatus","Signing in...");
-  const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
-  if(error) return status("authStatus","Sign-in error: "+error.message);
-  $("dateQuestApp").classList.remove("signed-out");
-  $("password").value="";
-  status("authStatus","Signed in as "+data.user.email);
-  step(2);
-  const connected = await loadExistingHeartStone();
-  if(!connected){ show("signOutBtn",true); show("inviteCard",true); }
+  if(signInBusy)return;
+  const email=$("email").value.trim(),password=$("password").value;
+  if(!email||!password){status("authStatus","Enter your email and password to sign in.");return;}
+  signInBusy=true;$("signInBtn").disabled=true;
+  status("authStatus","Signing in…");
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){
+      status("authStatus",error.status===429?"Too many sign-in attempts. Please wait a little before trying again.":"Could not sign in. Check your email and password, then try again.");
+      return;
+    }
+    const id=data?.user?.id;
+    if(!id)throw Error("Sign-in could not be confirmed.");
+    const epoch=sessionEpoch;
+    const verified=await currentUser();
+    if(epoch!==sessionEpoch||verified?.id!==id){status("authStatus","Your session changed. Sign in again to continue.");return;}
+    sessionUserId=id;
+    $("dateQuestApp").classList.remove("signed-out");
+    $("password").value="";
+    status("authStatus","Signed in as "+(verified.email||email));
+    step(2);
+    const connected=await loadExistingHeartStone();
+    if(epoch!==sessionEpoch)return;
+    if(!connected){show("signOutBtn",true);show("inviteCard",true);}
+  }catch{
+    status("authStatus","Could not complete sign-in. Check your connection and try again.");
+  }finally{
+    signInBusy=false;$("signInBtn").disabled=false;
+  }
 };
 
 async function signOutUser(){
