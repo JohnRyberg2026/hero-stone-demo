@@ -618,6 +618,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="hero">❤️ HEART STONE Connected</div>
       <p>You’re signed in and connected to your partner.</p>
 <p id="signedInEmail" style="font-size:12px;opacity:.72;margin-top:-2px;"></p>
+      <details id="myMembershipDetails" style="margin-top:16px;text-align:left">
+        <summary>My Date Quest Membership</summary>
+        <p id="myMembershipStatus" class="small" role="status" aria-live="polite">Open your saved membership details when you’re ready.</p>
+        <button id="refreshMyMembership" type="button" class="secondary">View My Membership</button>
+      </details>
 
       <div id="profilePanel" style="margin-top:18px;padding-top:16px;border-top:1px solid #eadfd5;text-align:left;">
         <div style="font-weight:900;font-size:18px;margin-bottom:4px;">Your Profile</div>
@@ -3283,6 +3288,21 @@ if(window.location.hash==="#date-quest"){
  // Account changes always return to the simple opening view.
  window.addEventListener('heartstone:home-state',function(){home.classList.remove('dq-talk-view');});
 })();
+</script>
+<script type="module">
+import { createMembershipReader } from './membership-reader.mjs?v=1';
+const output=document.getElementById('myMembershipStatus');
+const refresh=document.getElementById('refreshMyMembership');
+const details=document.getElementById('myMembershipDetails');
+const reader=createMembershipReader({
+ getUser:async()=>{const result=await sb.auth.getUser();if(result.error)throw Error('Sign in required');return result.data?.user;},
+ rpc:(name,args)=>sb.rpc(name,args),
+ show:message=>{output.textContent=message;},
+ setBusy:busy=>{refresh.disabled=busy;refresh.textContent=busy?'Loading…':'Refresh My Membership';}
+});
+refresh.onclick=()=>reader.load();
+details.addEventListener('toggle',()=>{if(details.open)reader.load();});
+sb.auth.onAuthStateChange(()=>{reader.reset();});
 </script>
 </body>
 </html>
