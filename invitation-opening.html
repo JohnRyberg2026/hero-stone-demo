@@ -231,4 +231,20 @@ $("saveExit").onclick=()=>{if(save())location.href="index.html#date-quest";};
 $("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}location.href="index.html#date-quest";};
 renderSelections();
 </script><script src="moment-invitations.js?v=calendar-moment-links-4"></script>
-<script src="invitation-store-plan.js?v=1"></script><script src="invitation-avatar-entry.js?v=1"></script></body></html>
+<script src="invitation-store-plan.js?v=1"></script><script src="invitation-avatar-entry.js?v=1"></script><script>
+(function(){
+ const day=new URLSearchParams(window.location.search).get('planDay');
+ if(!day)return;
+ const date=new Date(day+'T12:00:00');
+ const valid=/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(day)&&day>='1900-01-01'&&day<='2199-12-31'&&
+   Number.isFinite(date.getTime())&&date.getFullYear()===Number(day.slice(0,4))&&date.getMonth()+1===Number(day.slice(5,7))&&date.getDate()===Number(day.slice(8,10));
+ const now=new Date(),today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+ const banner=document.getElementById('previewBanner');
+ if(!valid||day<today){banner.textContent='Choose today or a future day in your calendar. You can still plan a moment here.';return;}
+ document.getElementById('momentDate').value=day;
+ document.getElementById('whenMode').value='specific';
+ document.getElementById('whenMode').onchange();
+ document.getElementById('momentZone').value=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
+ banner.textContent='Planning for '+date.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})+'. Choose a time as you create your invitation.';
+})();
+</script></body></html>
