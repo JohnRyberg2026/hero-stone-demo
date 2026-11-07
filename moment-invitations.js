@@ -126,10 +126,24 @@
     if(el('revealMode').value==='hint'&&!el('experienceHint').value.trim())throw new Error('Add a hint or choose another reveal option.');
     return {p_message:el('message').value.trim()||'I’d love a little time together.',p_kind:kind,p_plan:plan,p_title:el('experienceTitle').value.trim(),p_story:el('experienceStory').value.trim(),p_reveal_mode:el('revealMode').value,p_hint:el('experienceHint').value.trim()};
   }
+  function readableDay(value){
+    if(typeof value!=='string'||! /^\d{4}-\d{2}-\d{2}$/.test(value))return value||'';
+    const date=new Date(value+'T12:00:00Z');
+    if(!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==value)return value;
+    return date.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'});
+  }
+  function readableTime(value){
+    if(typeof value!=='string'||! /^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(value))return value||'';
+    const date=new Date('2000-01-01T'+value.slice(0,5)+':00Z');
+    return date.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',timeZone:'UTC'});
+  }
+  function readableSchedule(day,time,zone){
+    return [readableDay(day),readableTime(time),zone?'Time zone: '+String(zone).replace(/_/g,' '):''].filter(Boolean).join(' · ');
+  }
   function planText(p){
     p=p&&typeof p==='object'?p:{};
     const meeting={together:'We’ll decide together',home:'Meet at home',leave:'Leave together',place:p.meetPlace||'We’ll decide together'};
-    return [p.whenMode==='specific'?[p.momentDate,p.momentTime,p.momentZone].filter(Boolean).join(' · '):'Day and time: We’ll decide together','Time together: '+(p.length||'We’ll decide together'),'Meeting: '+(meeting[p.meetMode]||meeting.together),p.preparation?'Before we go: '+p.preparation:''].filter(Boolean).join('\n');
+    return [p.whenMode==='specific'?readableSchedule(p.momentDate,p.momentTime,p.momentZone):'Day and time: We’ll decide together','Time together: '+(p.length||'We’ll decide together'),'Meeting: '+(meeting[p.meetMode]||meeting.together),p.preparation?'Before we go: '+p.preparation:''].filter(Boolean).join('\n');
   }
   el('prepareLiveSend').onclick=async()=>{
     const button=el('prepareLiveSend');button.disabled=true;
@@ -257,7 +271,7 @@
       box.replaceChildren(title,status);
       const p=state.proposal||{},pending=p.status==='pending';
       status.textContent=pending?(p.proposed_by===c.user.id?'Your suggestion is waiting for your partner’s confirmation.':'Your partner suggested these details. Confirm them or suggest a change.'):p.status==='confirmed'?'You both agreed on these details.':'Suggest a time and place for your partner to review.';
-      if(p.status)box.append(node('div',[p.date,p.time,p.zone,p.place,p.duration].filter(Boolean).join(' · '),'quote'));
+      if(p.status)box.append(node('div',[readableSchedule(p.date,p.time,p.zone),p.place,p.duration].filter(Boolean).join(' · '),'quote'));
       if(pending&&p.proposed_by!==c.user.id)action(box,'Confirm Our Time and Place ❤️',()=>{if(confirm('Confirm these details with your partner?'))save('confirm');}).className='primary';
       if(pending)action(box,p.proposed_by===c.user.id?'Withdraw My Suggestion':'Keep Deciding — Clear This Suggestion',()=>{if(confirm('Clear this proposed schedule? Your invitation stays accepted.'))save('withdraw');});
       const form=node('form');fields={};
@@ -405,7 +419,7 @@
       if(!day.value||!time.value||!zone.value.trim()){feedback.textContent='Choose a day, time, and time zone first.';return;}
       try{new Intl.DateTimeFormat('en',{timeZone:zone.value.trim()});}catch{feedback.textContent='Enter a valid time zone, such as America/New_York.';return;}
       const proposal={p_invitation_id:item.id,p_expected_sender:c.user.id,p_expected_revision:item.revision||0,p_request_id:requestId,p_date:day.value,p_time:time.value,p_zone:zone.value.trim()};
-      if(!confirm('Send this revised time: '+day.value+' at '+time.value+' ('+proposal.p_zone+')? Your partner must accept before it is confirmed.'))return;
+      if(!confirm('Send this revised time: '+readableSchedule(day.value,time.value,proposal.p_zone)+'? Your partner must accept before it is confirmed.'))return;
       busy=true;const controls=[...card.querySelectorAll('button'),day,time,zone];controls.forEach(b=>b.disabled=true);feedback.textContent='Sending the revised time…';
       try{
         const current=await context();
