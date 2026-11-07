@@ -134,3 +134,19 @@ All assertions passed on the deployed database. The final fixture-profile count 
 [Guard patch](database/expected-account-guards.sql) · [Repeatable authorization tests](database/test-current-date-quest-authorization.sql)
 
 Advisor counts remain 6 anonymous privileged-function warnings, 98 authenticated privileged-function warnings, 21 RLS informational findings, and disabled leaked-password protection. The current 12 public entry points are not SECURITY DEFINER; the remaining older authenticated APIs and alternate entry points still need their own targeted review. Do not infer wider launch clearance from this scoped pass.
+
+## Older invitation compatibility paths — November 7, 2026
+
+Inspected `public.send_moment_invitation`, `public.respond_moment_invitation` and `hs_invitation_internal.respond_invitation`.
+
+The older send wrapper delegates to the same sender-derived, active-pair-checked, idempotent implementation as the checked-send wrapper. It cannot supply another sender identity. The older reply delegates to `respond_revision(...,0,...)`: it supports the original revision, but rejects revised invitations. No bypass was found in these inspected compatibility paths, so no function/grant change was made.
+
+Extended [current authorization tests](database/test-current-date-quest-authorization.sql) and ran them against the deployed database with synthetic accounts:
+- Checked-send followed by the legacy send path with the same request returns the same invitation ID.
+- Both public compatibility wrappers remain unavailable to anon.
+- Legacy outsider send/reply fail authorization.
+- The recipient can accept an original revision through the legacy path.
+- Legacy acceptance of revision one fails with the expected stale-revision error.
+- Revision-aware acceptance of that revision still succeeds.
+
+The full synthetic sender/recipient/outsider regression passed and rolled back. No live user data changed. This closes this specific compatibility-path question; it does not certify unrelated older authenticated RPCs.
