@@ -150,3 +150,26 @@ Extended [current authorization tests](database/test-current-date-quest-authoriz
 - Revision-aware acceptance of that revision still succeeds.
 
 The full synthetic sender/recipient/outsider regression passed and rolled back. No live user data changed. This closes this specific compatibility-path question; it does not certify unrelated older authenticated RPCs.
+
+## Client table-maintenance permissions — November 7, 2026
+
+Reviewed all 72 public application base tables/partitioned tables. Before repair, anon had TRUNCATE on 38 and authenticated had TRUNCATE/TRIGGER/REFERENCES on 48. These are privilege grants, not evidence that a browser client had an exposed SQL endpoint capable of executing them.
+
+Applied `restrict_public_table_client_maintenance_privileges`:
+- Removed TRUNCATE, REFERENCES, TRIGGER and MAINTAIN from PUBLIC, anon and authenticated for the 72 reviewed tables.
+- Preserved existing SELECT, INSERT, UPDATE and DELETE grants, table contents, RLS policies, existing triggers and sequences.
+- Removed these maintenance privileges from future public-table defaults for the application migration owner, postgres.
+- Did not change managed storage/auth/extension schemas or supabase_admin's defaults. Future objects created by a different owner still need their own review.
+
+Verification:
+- Compared all four row-operation grants for anon, authenticated and service_role on every table: **864 before/after comparisons, zero changes**.
+- All service_role effective grants, including maintenance privileges, are unchanged.
+- Client maintenance grants are absent from every reviewed table, and postgres public-table defaults are restricted.
+- Current/legacy invitation authorization, private calendar separation, preference consent/revisions, availability revocation, and wish snapshot revocation database regressions all passed again using generated synthetic accounts and rollback-only writes.
+- No TRUNCATE or table-maintenance operation was executed. No live account records were edited.
+
+[Applied grant patch](database/public-client-maintenance-grants.sql) · [Read-only repeatable assertions](database/test-public-client-maintenance-grants.sql)
+
+Why this matters: [PostgreSQL row security](https://www.postgresql.org/docs/17/ddl-rowsecurity.html) does not cover whole-table TRUNCATE/REFERENCES operations. Maintenance privileges should be controlled independently of per-row policies.
+
+Existing broader findings remain: 6 anonymous internal helper/trigger warnings, 98 authenticated privileged-function warnings, 21 RLS informational findings and disabled leaked-password protection. This pass closes the identified public-table maintenance-grant issue; it does not certify every legacy RPC or clear the entire platform for wider launch.
