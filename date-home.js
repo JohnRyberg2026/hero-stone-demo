@@ -15,12 +15,13 @@ if(typeof module!=='undefined'&&module.exports)module.exports=DateHomeModel;
 
 if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()=>{
  const M=DateHomeModel,el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
+ let sharedDays={user:null,own:[],partner:[],name:'your partner'};
  let owner=null,version=0,revision=0,data={version:1,events:[],hearts:[]},moments=[],selected=M.day(new Date()),month=new Date().getMonth(),year=new Date().getFullYear(),editing=null,readable=false,busy=false;
  const key=()=> 'hs_personal_calendar_demo_v1_'+owner;
  const say=t=>el('dqCalendarStatus').textContent=t;
  const action=(text,fn)=>{const b=node('button',text);b.type='button';b.className='secondary';b.onclick=fn;return b;};
  function reset(){
-   version++;owner=null;revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];editing=null;
+   version++;owner=null;sharedDays={user:null,own:[],partner:[],name:'your partner'};revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];editing=null;
    el('dqEventForm').hidden=true;el('dqEventName').value='';el('dqEventDay').value='';
    el('dqGreeting').textContent='Welcome back.';el('dqMoments').replaceChildren();el('dqMomentsStatus').textContent='Sign in to see your moments.';
    for(const id of ['dqDayEvents','dqFutureWishes','dqDays'])el(id).replaceChildren();
@@ -55,9 +56,11 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
      const local=M.clean(JSON.parse(raw));el('dqImportCalendar').hidden=!local.events.some(e=>!data.events.some(x=>x.id===e.id))&&!local.hearts.some(d=>!data.hearts.includes(d));
    }catch{el('dqImportCalendar').hidden=false;}
  }
- function render(){if(!owner)return;const today=M.day(new Date());el('dqGreeting').textContent=M.greeting(new Date().getHours(),el('profileFirstName').value.trim().slice(0,80));el('dqMonth').value=String(month);el('dqYear').value=String(year);el('dqMonthTitle').textContent=new Date(year,month,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});el('dqDays').replaceChildren();for(let i=0;i<new Date(year,month,1).getDay();i++)el('dqDays').append(node('span'));const days=new Date(year,month+1,0).getDate();for(let i=1;i<=days;i++){const date=M.day(new Date(year,month,i)),has=data.events.some(e=>e.day===date)||moments.some(e=>e.day===date),heart=date>=today&&data.hearts.includes(date),b=action(String(i),()=>{selected=date;el('dqEventForm').hidden=true;render();});b.setAttribute('aria-pressed',String(date===selected));b.setAttribute('aria-label',date+(date===today?' · today':'')+(has?' · has entries':'')+(heart?' · my availability':''));b.append(node('span',(has?'• ':'')+(heart?'♡':''),'dq-day-mark'));el('dqDays').append(b);}
+ function render(){if(!owner)return;const today=M.day(new Date());el('dqGreeting').textContent=M.greeting(new Date().getHours(),el('profileFirstName').value.trim().slice(0,80));el('dqMonth').value=String(month);el('dqYear').value=String(year);el('dqMonthTitle').textContent=new Date(year,month,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});el('dqDays').replaceChildren();for(let i=0;i<new Date(year,month,1).getDay();i++)el('dqDays').append(node('span'));const days=new Date(year,month+1,0).getDate();for(let i=1;i<=days;i++){const date=M.day(new Date(year,month,i)),has=data.events.some(e=>e.day===date)||moments.some(e=>e.day===date),heart=date>=today&&data.hearts.includes(date),ownShared=date>=today&&sharedDays.user===owner&&sharedDays.own.includes(date),partnerShared=date>=today&&sharedDays.user===owner&&sharedDays.partner.includes(date),b=action(String(i),()=>{selected=date;el('dqEventForm').hidden=true;render();});b.setAttribute('aria-pressed',String(date===selected));b.setAttribute('aria-label',date+(date===today?' · today':'')+(has?' · has entries':'')+(heart?' · private availability':'')+(ownShared&&partnerShared?' · both shared availability':partnerShared?' · partner shared availability':ownShared?' · you shared availability':''));b.append(node('span',(has?'• ':'')+(ownShared&&partnerShared?'♥♥':partnerShared?'♥':ownShared?'♡':heart?'◦':''),'dq-day-mark'));if(ownShared||partnerShared)b.className+=' dq-shared-day';el('dqDays').append(b);}
  if(typeof CustomEvent!=='undefined')window.dispatchEvent(new CustomEvent('heartstone:calendar-day',{detail:{day:selected}}));
  el('dqDayTitle').textContent=new Date(selected+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});el('dqDayEvents').replaceChildren();let count=0;
+ if(sharedDays.user===owner&&selected>=today){const mine=sharedDays.own.includes(selected),theirs=sharedDays.partner.includes(selected);if(mine||theirs){el('dqDayEvents').append(node('p',mine&&theirs?'♥♥ You and '+sharedDays.name+' shared availability.':theirs?'♥ '+sharedDays.name+' shared availability.':'♡ You shared availability with '+sharedDays.name+'.','dq-shared-summary'));}}
+
  for(const e of data.events.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p',e.kind==='wish'?'Future wish / bucket list':e.kind));n.append(action('Edit',()=>edit(e)),action('Remove',async()=>{if(busy||!readable)return;try{await authorized();if(!confirm('Remove this private calendar entry from your account?'))return;await saveNext({...data,events:data.events.filter(x=>x.id!==e.id)});say('Entry removed from your account.');}catch(err){say(err.message);}}));el('dqDayEvents').append(n);}
  for(const e of moments.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p','Accepted invitation · '+M.timeLabel(e.time)+(e.zone?' · '+e.zone:'')));const a=node('a',e.started?'Continue Our Moment':'Open Our Moment');a.href=M.momentLink(e.id);n.append(a);el('dqDayEvents').append(n);}
  if(!count)el('dqDayEvents').append(node('p','A little room for what matters. No entries for this day.'));el('dqAvailability').disabled=busy||selected<today||!readable;el('dqAvailability').textContent=data.hearts.includes(selected)&&selected>=today?'Remove my availability heart':'♡ Mark my availability for this day';el('dqFutureWishes').replaceChildren();const wishes=data.events.filter(e=>e.kind==='wish'&&e.day>=today).sort((a,b)=>a.day.localeCompare(b.day));for(const w of wishes){const b=action(w.day+' · '+w.title,()=>{selected=w.day;year=Number(w.day.slice(0,4));month=Number(w.day.slice(5,7))-1;render();});el('dqFutureWishes').append(b);}if(!wishes.length)el('dqFutureWishes').append(node('p','Something you hope to share, next month or years from now. Add a future wish to begin.'));el('dqAddEvent').disabled=busy||!readable;el('dqPlanDay').disabled=busy||!readable||selected<today;
@@ -135,6 +138,12 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
    el('dqEventForm').hidden=true;editing=null;refresh();
  };
  el('dqRefreshMoments').onclick=refresh;
+ window.addEventListener('heartstone:shared-calendar-days',event=>{
+   const d=event.detail;
+   if(!d||!Array.isArray(d.own)||!Array.isArray(d.partner))return;
+   sharedDays={user:typeof d.user==='string'?d.user:null,own:d.own.filter(M.validDay),partner:d.partner.filter(M.validDay),name:typeof d.name==='string'?d.name.slice(0,80):'your partner'};
+   if(owner)render();
+ });
  window.addEventListener('heartstone:home-state',e=>{reset();if(e.detail?.connected)refresh();});
  window.addEventListener('focus',()=>{if(owner)refresh();});
  window.addEventListener('pagehide',reset);
