@@ -32,3 +32,6 @@ The Date Store account backend was deployed according to STORE_WISHES_IMPLEMENTA
 
 ## Review correction
 The simplified home hides the older Moments section. Calendar recovery messages must refer to visible Refresh Calendar or Our Invitations, not the hidden Refresh my moments control. The November 7 review fixes that guidance and adds an assertion for the visible status.
+
+## Sign-in and access follow-up
+Session recovery is now implemented and has six automated checks; see [PILOT_ACCESS_REVIEW.md](PILOT_ACCESS_REVIEW.md). Conversation access checks were inspected in the deployed handler. The database advisor review still requires a targeted authorization/grant audit before broader launch; no access expansion or blanket grant changes were performed.
