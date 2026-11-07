@@ -128,6 +128,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
  window.addEventListener('heartstone:home-state',e=>{reset();if(e.detail?.connected)refresh();});
  window.addEventListener('focus',()=>{if(owner)refresh();});
  window.addEventListener('pagehide',reset);
+ window.addEventListener('pageshow',refresh);
  new MutationObserver(()=>{if(!el('homeCard').classList.contains('hidden'))refresh();}).observe(el('homeCard'),{attributes:true,attributeFilter:['class']});
  window.setInterval(()=>{if(owner&&!document.hidden)refresh();},60000);
  reset();refresh();
