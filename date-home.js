@@ -18,6 +18,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=DateHomeModel;
 if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()=>{
  const M=DateHomeModel,el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  let sharedDays={user:null,own:[],partner:[],name:'your partner'};
+ let connectionVersion=0,lastConnection=null;
  let formBaseline=null,removedEntry=null;
  let owner=null,version=0,revision=0,data={version:1,events:[],hearts:[]},moments=[],selected=M.day(new Date()),month=new Date().getMonth(),year=new Date().getFullYear(),editing=null,readable=false,busy=false;
  const key=()=> 'hs_personal_calendar_demo_v1_'+owner;
@@ -31,7 +32,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
 
  const action=(text,fn)=>{const b=node('button',text);b.type='button';b.className='secondary';b.onclick=fn;return b;};
  function reset(){
-   formBaseline=null;removedEntry=null;
+   formBaseline=null;removedEntry=null;lastConnection=null;
    el('dqInvitationsLink').textContent='Our Invitations';
    version++;owner=null;sharedDays={user:null,own:[],partner:[],name:'your partner'};revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];editing=null;
    el('dqEventForm').hidden=true;el('dqEventName').value='';el('dqEventDay').value='';
@@ -176,7 +177,26 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
    sharedDays={user:typeof d.user==='string'?d.user:null,own:d.own.filter(M.validDay),partner:d.partner.filter(M.validDay),name:typeof d.name==='string'?d.name.slice(0,80):'your partner'};
    if(owner)render();
  });
- window.addEventListener('heartstone:home-state',e=>{reset();if(e.detail?.connected)refresh();});
+ window.addEventListener('heartstone:home-state',async e=>{
+   const ticket=++connectionVersion;
+   if(!e.detail?.connected){reset();return;}
+   try{
+     const user=await currentUser();
+     if(ticket!==connectionVersion)return;
+     if(!user){reset();return;}
+     if(owner&&owner!==user.id)reset();
+     const connection=e.detail.heartStoneId||null;
+     if(lastConnection!==connection){
+       lastConnection=connection;moments=[];sharedDays={user:null,own:[],partner:[],name:'your partner'};
+       el('dqMoments').replaceChildren();el('dqInvitationsLink').textContent='Our Invitations';
+       el('dqMomentsStatus').textContent='Refresh moments to see your current connection.';
+       if(owner)render();
+     }
+     await refresh();
+   }catch(error){
+     if(ticket===connectionVersion)say('Could not check your connection. Your unsaved calendar words are still here. Try again when connected.');
+   }
+ });
  window.addEventListener('focus',()=>{if(owner)refresh();});
  window.addEventListener('beforeunload',event=>{if(hasCalendarEdits()||busy){event.preventDefault();event.returnValue='';}});
  window.addEventListener('pagehide',reset);
