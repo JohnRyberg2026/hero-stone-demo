@@ -39,3 +39,20 @@ Deployment remains outstanding: review and apply the migration, publish the bran
 
 ## Release update — October 22, 2026
 The account migration has now been applied to The Heart Stone Brain, and PR #53 was merged into main at d3d734df57aed5d52719605c08c3a16fdc7ba436. The rollback-only access-rule tests passed again against the deployed tables. The security advisor returned no findings for the new wish objects. The earlier not-deployed statements above describe the pre-release review checkpoint. GitHub Pages publishing is being checked separately; the real John/Jessica two-account browser walkthrough remains outstanding.
+
+## Connection-change privacy repair — November 7, 2026
+
+Reproduced with synthetic accounts: recipient access to a snapshot could return when the same membership was marked left and active again. The snapshot now carries an internal revoked_at marker. Membership status changes for either participant, and relationship status changes, mark the relevant snapshots revoked. Recipient RLS excludes revoked snapshots even if the connection is restored. Owners retain an ended snapshot view for review/removal; the private source wish and private notes are preserved.
+
+The owner UI labels ended shares and provides Remove Ended Share. After removing that historical snapshot, Share a Snapshot creates a new explicit share. Recipient views hide revoked results defensively and recheck current access before Plan From This. Previously seen or copied material cannot be retracted.
+
+Narrowed wish-table client privileges to the operations used by the UI: private wishes SELECT/INSERT/UPDATE/DELETE; snapshots SELECT/INSERT/DELETE. Removed unused UPDATE and table-wide maintenance privileges from authenticated clients. Existing RLS, snapshot identity/revision validation and the owner's explicit deletion policy remain in place. No existing wish rows were rewritten during migration installation.
+
+Applied database changes: revoke_wish_snapshots_on_connection_changes, remove_unused_wish_snapshot_update_grants, limit_wish_tables_to_client_crud_privileges. Source: [share revocation and permissions](database/wish-share-revocation.sql).
+
+Verification:
+- [Synthetic database checks](database/test-wish-share-revocation.sql) passed: owner/recipient/outsider isolation, private-note exclusion, server-copied snapshot fields, metadata stability, both membership transitions, relationship transitions, no silent restored sharing, new explicit snapshots, and no client UPDATE/TRUNCATE/TRIGGER grant.
+- Four Node VM UI tests passed: ended owner display/removal with mocked transport, revoked recipient data hidden, fresh revocation checked before planning, and active snapshot planning. These are now in GitHub Actions.
+- Test writes rolled back and the fixture-profile count afterward was zero. No real wish, membership or note was used.
+- Delete-containing database test submissions required confirmations that expired and did not execute. The completed database run performs no deletes. Same-snapshot removal is covered by mocked UI testing and its unchanged owner-delete policy, not a fresh live delete walkthrough.
+- Security advisor counts remain unchanged: 6 anonymous privileged-function warnings, 98 authenticated privileged-function warnings, 21 RLS informational findings and disabled leaked-password protection. Broader access review is still tracked separately; see [authenticated privilege guidance](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
