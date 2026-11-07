@@ -11,6 +11,8 @@ on:
       - 'tests/moment-invitations.cjs'
       - 'tests/planner-drafts.test.cjs'
       - 'tests/session-recovery.test.cjs'
+      - 'tests/heartstone-conversation.test.mjs'
+      - 'supabase/functions/heartstone-conversation/handler.mjs'
       - '.github/workflows/date-quest-checks.yml'
   pull_request:
     paths:
@@ -22,6 +24,8 @@ on:
       - 'tests/moment-invitations.cjs'
       - 'tests/planner-drafts.test.cjs'
       - 'tests/session-recovery.test.cjs'
+      - 'tests/heartstone-conversation.test.mjs'
+      - 'supabase/functions/heartstone-conversation/handler.mjs'
       - '.github/workflows/date-quest-checks.yml'
   workflow_dispatch:
 
@@ -50,3 +54,5 @@ jobs:
         run: node --test tests/planner-drafts.test.cjs
       - name: Check sign-in and session recovery
         run: node --test tests/session-recovery.test.cjs
+      - name: Check conversation privacy and usage limits
+        run: node --test tests/heartstone-conversation.test.mjs
