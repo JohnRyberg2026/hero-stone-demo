@@ -1,5 +1,9 @@
 (function(){
   'use strict';
+  function readWithTimeout(task,ms=15000){
+    let timer;
+    return Promise.race([Promise.resolve().then(task),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('The connection is taking too long. Tap Refresh to try again.')),ms);})]).finally(()=>clearTimeout(timer));
+  }
   const el=id=>document.getElementById(id);
   let momentDialog=null,momentVersion=0;
   let calendarMoment=new URLSearchParams(window.location.search).get('moment');
@@ -248,18 +252,18 @@
     const version=++momentVersion;
     el('sharedInvitationStatus').textContent='Opening your moment…';
     try{
-      const current=await context();
+      const current=await readWithTimeout(()=>context());
       if(current.user.id!==c.user.id||current.hs!==c.hs)throw Error('Your account changed. Refresh invitations to continue.');
-      const result=await current.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs});
-      const verify=await current.sb.auth.getUser();
+      const result=await readWithTimeout(()=>current.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs}));
+      const verify=await readWithTimeout(()=>current.sb.auth.getUser());
       if(version!==momentVersion)return;
       if(result.error||verify.error||verify.data?.user?.id!==c.user.id)throw Error('We couldn’t open this moment. Refresh invitations and try again.');
       const latest=(result.data||[]).find(x=>x.id===item.id);
       if(!latest||latest.status!=='accepted'||(latest.revision||0)!==(item.revision||0))throw Error('This invitation changed. Refresh invitations before opening it.');
       let memory='';
       if(latest.completed_at){
-        const saved=await current.sb.rpc('my_shared_moment_memory',{p_invitation_id:latest.id,p_expected_user:c.user.id});
-        const checked=await current.sb.auth.getUser();
+        const saved=await readWithTimeout(()=>current.sb.rpc('my_shared_moment_memory',{p_invitation_id:latest.id,p_expected_user:c.user.id}));
+        const checked=await readWithTimeout(()=>current.sb.auth.getUser());
         if(version!==momentVersion)return;
         if(saved.error||checked.error||checked.data?.user?.id!==c.user.id)throw Error('We couldn’t load your private memory. Refresh and try again.');
         memory=saved.data||'';
@@ -388,10 +392,10 @@
     el('sharedInvitationList').replaceChildren();
     el('sharedInvitationStatus').textContent=memoryView?'Opening your memories…':'Checking shared invitations…';
     try{
-      const c=await context();
-      const result=await c.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs});
+      const c=await readWithTimeout(()=>context());
+      const result=await readWithTimeout(()=>c.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs}));
       if(result.error)throw new Error('We couldn’t load your shared invitations. Please try again.');
-      const verify=await c.sb.auth.getUser();
+      const verify=await readWithTimeout(()=>c.sb.auth.getUser());
       if(verify.error||verify.data?.user?.id!==c.user.id)throw new Error('Your account changed. Refresh invitations to continue.');
       const allItems=Array.isArray(result.data)?result.data:[];
       const items=memoryView?completedMoments(allItems,c.user.id):allItems;
