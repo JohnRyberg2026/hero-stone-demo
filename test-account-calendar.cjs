@@ -12,7 +12,7 @@ function device(user='john',local={}){
  const state={user,fail:false,hold:null};
  const context={setTimeout,clearTimeout,document:{hidden:false,getElementById:get,createElement:t=>new Node(t)},window:{addEventListener:(n,fn)=>(events[n]??=[]).push(fn),dispatchEvent(){},setInterval(){}},MutationObserver:class{observe(){}},CustomEvent:class{},crypto:{randomUUID:()=>Math.random().toString(36).slice(2)},confirm:()=>state.confirm!==false,console,Date,Math,JSON,Map,Set,module:{exports:{}},localStorage:{getItem:k=>local[k]??null},heartStoneId:'connected',currentUser:async()=>state.user?{id:state.user}:null,
  sb:{rpc:async(name,args)=>{
- if(name==='list_moment_invitations')return {data:[],error:null};
+ if(name==='list_moment_invitations'){if(state.throwMoments)throw Error('Connection interrupted');if(state.failMoments)return {error:{code:'NETWORK'}};return {data:state.moments||[],error:null};}
  if(state.hold){const p=state.hold;state.hold=null;await p;}
  if(state.fail&&args.p_calendar){state.fail=false;return {error:{code:'NETWORK'}};}
  const row=database.get(args.p_expected_user)||{calendar:{version:1,events:[],hearts:[]},revision:0};
@@ -62,6 +62,23 @@ const submit=async(d,title)=>{d.get('dqAddEvent').onclick();d.get('dqEventName')
  await buttons().find(n=>n.textContent==='Remove').onclick();
  undoDevice.state.user='other-owner';await buttons().find(n=>n.textContent.startsWith('Undo removal')).onclick();
  assert.equal(database.has('other-owner'),false);assert.equal(database.get('undo-owner').calendar.events.length,0);
+ const independent=device('calendar-independent');await flush();
+ const entryDay=new Date().toISOString().slice(0,10);
+ independent.state.moments=[{id:'shared',status:'accepted',sender_id:'calendar-independent',recipient_id:'partner',reveal_mode:'all',title:'Shared dinner',plan:{whenMode:'specific',momentDate:entryDay}}];
+ independent.get('dqRefreshCalendar').onclick();await flush();assert.equal(independent.get('dqMoments').children.length,1);
+ for(const failure of ['failMoments','throwMoments']){
+   independent.state[failure]=true;independent.get('dqRefreshCalendar').onclick();await flush();
+   assert.equal(independent.get('dqAddEvent').disabled,false);
+   assert.equal(independent.get('dqMoments').children.length,0);
+   assert.match(independent.get('dqMomentsStatus').textContent,/private calendar is still available/);
+   await submit(independent,'Calendar works during '+failure);
+   assert(database.get('calendar-independent').calendar.events.some(e=>e.title==='Calendar works during '+failure));
+   independent.state[failure]=false;
+ }
+ independent.get('dqRefreshMoments').onclick();await flush();
+ assert.equal(independent.get('dqMoments').children.length,1);
+ assert.equal(independent.get('dqAddEvent').disabled,false);
+ console.log('PASS: shared-moment API errors and thrown network failures keep private calendar saves available; retry restores moments.');
  console.log('PASS: cancelled removal, failed removal, undo restoration, failed undo retry, account-change undo guard.');
  console.log('PASS: account saves, reload on a second device, stale conflict protection, failed-save draft retention, separate owners, explicit import, account-switch read guard.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
