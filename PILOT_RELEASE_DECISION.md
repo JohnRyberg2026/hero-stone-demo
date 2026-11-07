@@ -32,10 +32,10 @@ Advisor counts remain six anonymous and 98 authenticated privileged-function fin
 
 Source: [boundary migration](database/pilot-legacy-api-boundary.sql). Repeatable rollback checks: [boundary test](database/test-pilot-legacy-boundary.sql). A2 enrollment/API configuration and A3 password/recovery remain HOLD gates.
 
-### A2 — Verify enrollment and API configuration
-The actual Auth signup/enrollment configuration and the PostgREST exposed-schema configuration were not retrieved in this review. No claim is made that public account creation is disabled or that only intended pilot identities can access the whole app.
+### A2 — Configuration verified; signup restriction still required
+Live Auth settings show public email signup enabled, email confirmation required, anonymous signup disabled and listed social providers disabled. Effective REST exposed schemas are exactly `public, graphql_public`; application implementation schemas are excluded. Signed-out live calendar and invitation calls return 401/42501.
 
-**Exit:** record the actual enrollment policy and exposed API schemas; allow only the intended onboarding route for new pilot accounts, keep privileged implementation schemas unexposed, and verify signed-out and signed-in nonparticipant denial. The existing conversation allowlist is one independently checked safeguard, not a substitute for this gate. Do not fetch or publish secret values to verify these settings.
+**HOLD:** disable public signup for the controlled pilot, reverify the live setting, and confirm the administrator-issued invitation route. Available connected tools do not support Auth configuration updates; no setting was changed and no account or email was created. See [live verification and exact next step](PILOT_ENROLLMENT_VERIFICATION.md). This is not a full GraphQL audit.
 
 ### A3 — Resolve the new-account password/recovery decision
 The advisor reports leaked-password protection disabled. Session expiry recovery is implemented; a password-reset UI is not. These are different features.
