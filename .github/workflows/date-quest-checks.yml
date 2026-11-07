@@ -8,6 +8,7 @@ on:
       - 'invitation-opening.html'
       - 'test-account-calendar.cjs'
       - 'tests/moment-invitations.cjs'
+      - 'tests/planner-drafts.test.cjs'
       - '.github/workflows/date-quest-checks.yml'
   pull_request:
     paths:
@@ -16,6 +17,7 @@ on:
       - 'invitation-opening.html'
       - 'test-account-calendar.cjs'
       - 'tests/moment-invitations.cjs'
+      - 'tests/planner-drafts.test.cjs'
       - '.github/workflows/date-quest-checks.yml'
   workflow_dispatch:
 
@@ -40,3 +42,5 @@ jobs:
         run: node test-account-calendar.cjs
       - name: Check invitation lifecycle
         run: node tests/moment-invitations.cjs
+      - name: Check planner draft protection
+        run: node --test tests/planner-drafts.test.cjs
