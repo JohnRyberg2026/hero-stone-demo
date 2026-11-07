@@ -1,3 +1,5 @@
+> Current release decision: [PILOT_RELEASE_DECISION.md](PILOT_RELEASE_DECISION.md). Existing-account development may continue; new tester invitations remain on hold pending the three named gates.
+
 # Date Quest pilot checkpoint — November 7, 2026
 
 ## Direction
@@ -13,7 +15,7 @@ Continue toward a focused, dependable Date Quest pilot. Keep the opening page to
 - Read timeout/retry handling for calendar, invitation, memory, and shared schedule reads. Shared-moment outages leave the private calendar usable.
 - Same-account reconnections preserve private calendar drafts; account changes clear them. Old pending saves cannot reset or unlock a newer account's form.
 - Readable invitation dates/times without silently converting the agreed wall time.
-- GitHub Actions runs private-calendar, invitation-lifecycle, and planner-draft tests on relevant pushes and pull requests. This workflow reports failures; it does not block GitHub Pages publication or enforce branch protection.
+- GitHub Actions runs private-calendar, invitation-lifecycle, planner-draft, session-recovery, conversation/privacy/quota, and wish-revocation UI tests on relevant pushes and pull requests. This workflow reports failures; it does not block GitHub Pages publication or enforce branch protection.
 
 ## Evidence and limits
 Earlier live demonstrations remain recorded in HEARTSTONE_TEST_CHECKPOINT.md: conversation-to-invitation, John/Jessica send/accept, availability share/remove, and explicit preference consent. Do not repeat those walkthroughs without a relevant regression.
@@ -34,4 +36,4 @@ The Date Store account backend was deployed according to STORE_WISHES_IMPLEMENTA
 The simplified home hides the older Moments section. Calendar recovery messages must refer to visible Refresh Calendar or Our Invitations, not the hidden Refresh my moments control. The November 7 review fixes that guidance and adds an assertion for the visible status.
 
 ## Sign-in and access follow-up
-Session recovery is now implemented and has six automated checks; see [PILOT_ACCESS_REVIEW.md](PILOT_ACCESS_REVIEW.md). Conversation access checks were inspected in the deployed handler. The database advisor review still requires a targeted authorization/grant audit before broader launch; no access expansion or blanket grant changes were performed.
+Session recovery is now implemented and has six automated checks; see [PILOT_ACCESS_REVIEW.md](PILOT_ACCESS_REVIEW.md). Conversation access checks were inspected in the deployed handler. The database advisor review still requires a targeted authorization/grant audit before broader launch. No access expansion was performed; targeted function restrictions and maintenance-grant changes are recorded in the audit.
