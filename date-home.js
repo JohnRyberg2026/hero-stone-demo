@@ -32,7 +32,8 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
 
  const action=(text,fn)=>{const b=node('button',text);b.type='button';b.className='secondary';b.onclick=fn;return b;};
  function reset(){
-   formBaseline=null;removedEntry=null;lastConnection=null;
+   formBaseline=null;removedEntry=null;lastConnection=null;busy=false;
+   for(const id of ['dqEventName','dqEventDay','dqEventKind','dqCancelEvent','dqRefreshCalendar'])el(id).disabled=false;
    el('dqInvitationsLink').textContent='Our Invitations';
    version++;owner=null;sharedDays={user:null,own:[],partner:[],name:'your partner'};revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];editing=null;
    el('dqEventForm').hidden=true;el('dqEventName').value='';el('dqEventDay').value='';
@@ -43,7 +44,8 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
  }
  async function authorized(expected=owner){
    const u=await currentUser();
-   if(!u||u.id!==expected||owner!==expected){reset();throw Error('Your account changed. Reopen your calendar.');}
+   if(owner!==expected)throw Error('Your account changed. Reopen your calendar.');
+   if(!u||u.id!==expected){reset();throw Error('Your account changed. Reopen your calendar.');}
    return u;
  }
  async function saveNext(next){
@@ -54,6 +56,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
      await authorized(user);
      if(v!==version)throw Error('Your account changed. Reopen your calendar.');
      const result=await sb.rpc('my_private_calendar',{p_expected_user:user,p_expected_revision:expectedRevision,p_calendar:clean});
+     if(v!==version)throw Error('Your account changed. Reopen your calendar.');
      await authorized(user);
      if(v!==version)throw Error('Your account changed. Reopen your calendar.');
      if(result.error){
@@ -62,7 +65,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
      }
      if(!result.data||!Number.isInteger(result.data.revision))throw Error('Could not confirm the calendar save. Refresh Calendar to check.');
      data=M.clean(result.data.calendar);revision=result.data.revision;removedEntry=null;updateImport();
-   }finally{busy=false;if(owner===user)render();}
+   }finally{if(v===version){busy=false;if(owner===user)render();}}
  }
  function updateImport(){
    try{const raw=localStorage.getItem(key());if(!raw){el('dqImportCalendar').hidden=true;return;}
