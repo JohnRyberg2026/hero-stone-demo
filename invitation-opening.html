@@ -217,7 +217,7 @@ $("alternativeTime").value="";$("revealedMoment").textContent="";$("revealedMome
 $("previewAlternative").onclick=()=>{$("alternativePreviewStatus").textContent="Preview updated above. Nothing has been sent.";$("senderOutcome").textContent="Your partner would like another time. The original time is not confirmed."+($("alternativeTime").value.trim()?" Their suggestion: "+$("alternativeTime").value.trim():"");};
 $("revealAccepted").onclick=()=>{$("revealedMoment").textContent=$("experienceTitle").value.trim()+"\n"+$("experienceStory").value.trim();$("revealedMoment").classList.remove("hidden");};
 
-function save(){try{saved={feelings:[...selected],message:$("message").value,kind,plan:planDraft(),experience:Object.fromEntries(experienceIds.map(id=>[id,$(id).value]))};localStorage.setItem(draftKey,JSON.stringify(saved));$("restoreBox").classList.remove("hidden");status("Your draft is saved on this device. Saving does not send an invitation.");return true;}catch{status("Your beginning couldn’t be saved on this device. Your words are still here.");return false;}}
+function save(){try{saved={feelings:[...selected],message:$("message").value,kind,plan:planDraft(),experience:Object.fromEntries(experienceIds.map(id=>[id,$(id).value]))};localStorage.setItem(draftKey,JSON.stringify(saved));$("restoreBox").classList.remove("hidden");status("Your draft is saved on this device. Saving does not send an invitation.");window.heartStonePlannerMarkSaved?.();return true;}catch{status("Your beginning couldn’t be saved on this device. Your words are still here.");return false;}}
 document.querySelectorAll("[data-save]").forEach(b=>{
   const confirmation=document.createElement("div");
   confirmation.setAttribute("role","status");
@@ -239,14 +239,14 @@ document.querySelectorAll("[data-save]").forEach(b=>{
   };
 });
 $("restoreBox").classList.toggle("hidden",!saved);
-$("restore").onclick=()=>{if(!saved)return;selected=new Set(saved.feelings.filter(k=>Object.hasOwn(starts,k)));$("message").value=saved.message.slice(0,1500);kind=["everyday","date","adventure","quest","own"].includes(saved.kind)?saved.kind:"";if(saved.experience&&typeof saved.experience==="object"){experienceIds.forEach(id=>{if(typeof saved.experience[id]==="string")$(id).value=saved.experience[id].slice(0,$(id).maxLength>0?$(id).maxLength:2000);});if(!["all","hint","surprise"].includes($("revealMode").value))$("revealMode").value="all";$("revealMode").onchange();idea="";renderIdeas();}if(saved.plan&&typeof saved.plan==="object"){detailIds.forEach(id=>{if(typeof saved.plan[id]==="string")$(id).value=saved.plan[id];});$("whenMode").onchange();$("meetMode").onchange();}edited=true;renderSelections();screen("feelings");status("Your saved beginning is ready to continue.");};
-$("deleteSaved").onclick=()=>{if(!confirm("Delete the beginning saved on this device? Your open draft will stay here."))return;try{localStorage.removeItem(draftKey);saved=null;$("restoreBox").classList.add("hidden");status("Saved beginning deleted. Your open draft is unchanged.");}catch{status("The saved beginning couldn’t be deleted. Please try again.");}};
+$("restore").onclick=()=>{if(!saved)return;selected=new Set(saved.feelings.filter(k=>Object.hasOwn(starts,k)));$("message").value=saved.message.slice(0,1500);kind=["everyday","date","adventure","quest","own"].includes(saved.kind)?saved.kind:"";if(saved.experience&&typeof saved.experience==="object"){experienceIds.forEach(id=>{if(typeof saved.experience[id]==="string")$(id).value=saved.experience[id].slice(0,$(id).maxLength>0?$(id).maxLength:2000);});if(!["all","hint","surprise"].includes($("revealMode").value))$("revealMode").value="all";$("revealMode").onchange();idea="";renderIdeas();}if(saved.plan&&typeof saved.plan==="object"){detailIds.forEach(id=>{if(typeof saved.plan[id]==="string")$(id).value=saved.plan[id];});$("whenMode").onchange();$("meetMode").onchange();}edited=true;renderSelections();screen("feelings");status("Your saved beginning is ready to continue.");window.heartStonePlannerMarkSaved?.();};
+$("deleteSaved").onclick=()=>{if(!confirm("Delete the beginning saved on this device? Your open draft will stay here."))return;try{localStorage.removeItem(draftKey);saved=null;$("restoreBox").classList.add("hidden");status("Saved beginning deleted. Your open draft is unchanged.");window.heartStonePlannerSavedDeleted?.();}catch{status("The saved beginning couldn’t be deleted. Please try again.");}};
 function exit(mode){exitMode=mode;$("exitTitle").textContent=mode==="cancel"?"Cancel this invitation?":"Leave this beginning?";$("exitCopy").textContent=mode==="cancel"?"Discarding removes this local draft. It does not cancel any invitation you have already sent. Use Shared Invitations to cancel a sent invitation.":"Keep your words on this device for later, or discard this open draft.";$("exitDialog").showModal();}
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>exit("home"));
 document.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=()=>exit("cancel"));
 $("stay").onclick=()=>$("exitDialog").close();
 $("saveExit").onclick=()=>{if(save())location.href="index.html#date-quest";};
-$("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}location.href="index.html#date-quest";};
+$("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}window.heartStonePlannerDiscardForExit?.();location.href="index.html#date-quest";};
 renderSelections();
 </script><script src="moment-invitations.js?v=unsaved-memory-5"></script>
 <script src="invitation-store-plan.js?v=1"></script><script src="invitation-avatar-entry.js?v=simple-planner-2"></script><script>
@@ -272,5 +272,15 @@ renderSelections();
  const store=document.getElementById('openDateStore'),experience=document.getElementById('experience');
  if(store&&experience){const options=document.createElement('details'),summary=document.createElement('summary');options.id='plannerStoreOptions';summary.textContent='Explore the Date Store';options.append(summary,store);experience.append(options);}
  document.querySelector('.planner-navigation a').onclick=event=>{event.preventDefault();if(!document.getElementById('sharedInbox').classList.contains('hidden'))return;document.getElementById('openSharedInvitations').click();window.location.hash='shared-invitations';};
+})();
+</script><script>
+(function(){
+ function snapshot(){return JSON.stringify({feelings:[...selected].sort(),message:document.getElementById('message').value,kind,plan:planDraft(),experience:Object.fromEntries(experienceIds.map(id=>[id,document.getElementById(id).value]))});}
+ const initial=snapshot();let baseline=initial,leaving=false;
+ window.heartStonePlannerIsDirty=()=>!leaving&&snapshot()!==baseline;
+ window.heartStonePlannerMarkSaved=()=>{baseline=snapshot();};
+ window.heartStonePlannerDiscardForExit=()=>{leaving=true;};
+ window.heartStonePlannerSavedDeleted=()=>{baseline=initial;};
+ window.addEventListener('beforeunload',event=>{if(window.heartStonePlannerIsDirty()){event.preventDefault();event.returnValue='';}});
 })();
 </script></body></html>
