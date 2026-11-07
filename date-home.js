@@ -104,13 +104,20 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
      if(result.error||!result.data||!Number.isInteger(result.data.revision))throw Error('Your account calendar could not be loaded. Check your connection and tap Refresh Calendar.');
      data=M.clean(result.data.calendar);revision=result.data.revision;readable=true;updateImport();render();say('Your private calendar is up to date.');
      const hs=heartStoneId;
+     try{
      const invitations=hs?await M.readWithTimeout(sb.rpc('list_moment_invitations',{p_heart_stone_id:hs})):{data:[],error:null};
      const checked=await currentUser();if(v!==version)return;if(!checked||checked.id!==u.id){reset();return;}if(heartStoneId!==hs)return;
-     if(invitations.error){el('dqInvitationsLink').textContent='Our Invitations';el('dqMomentsStatus').textContent='Could not load shared moments. Open Our Invitations to check.';return;}
+     if(invitations.error)throw Error('Shared moments could not load.');
      const needsAttention=M.attention(invitations.data,u.id);el('dqInvitationsLink').textContent=needsAttention?'Our Invitations · '+needsAttention+' need'+(needsAttention===1?'s':'')+' attention':'Our Invitations';
      moments=M.active(invitations.data,u.id);el('dqMoments').replaceChildren();
      for(const item of moments){const n=node('article',undefined,'dq-moment');n.append(node('h3',item.title),node('p',item.started?'Your moment is underway.':item.day?'A little time chosen for '+item.day+(item.time?' at '+item.time:'')+'.':'You said yes. Choose your time together.'));const a=node('a',item.started?'Continue our moment':'View our moment');a.href=M.momentLink(item.id);n.append(a);el('dqMoments').append(n);}
      el('dqMomentsStatus').textContent=moments.length?'Your accepted moments.':'Your next treasured memory begins with a gesture.';render();
+     }catch(error){
+       if(v!==version||owner!==u.id)return;
+       moments=[];el('dqMoments').replaceChildren();el('dqInvitationsLink').textContent='Our Invitations';
+       el('dqMomentsStatus').textContent='Shared moments could not load. Tap Refresh Moments to retry. Your private calendar is still available.';
+       render();
+     }
    }catch(e){if(v===version){readable=false;render();say(e.message);}}
  }
  el('dqMonth').replaceChildren(...Array.from({length:12},(_,i)=>{const o=node('option',new Date(2026,i,1).toLocaleDateString(undefined,{month:'long'}));o.value=String(i);return o;}));
