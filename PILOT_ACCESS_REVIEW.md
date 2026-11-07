@@ -106,3 +106,31 @@ The signed-out helper and direct-trigger checks passed. These observations class
 Source: [World Quest permission patch](database/restrict-world-quest-rpc.sql).
 Repeatable checks: [World Quest and helper role tests](database/test-world-quest-rpc-permissions.sql).
 Remediation guidance: [anonymous privileged functions](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
+
+## Current Date Quest signed-in authorization — November 7, 2026
+
+Reviewed the 12 public RPCs used by the current invitation/calendar UI and their 11 internal invitation implementations. Public entry points are SECURITY INVOKER with empty search paths and no anonymous EXECUTE. The privileged internal implementations also have empty search paths and no anonymous EXECUTE.
+
+Found and fixed two expected-account guard inconsistencies:
+- `my_picture` previously accepted a NULL expected account; the return/write was still scoped to auth.uid(), so this did not provide access to another account's picture.
+- `propose_time` likewise allowed a NULL expected sender past its initial guard; its sender-ownership and active-pair checks still applied.
+Both now use `IS DISTINCT FROM auth.uid()` to reject missing or mismatched identities. Public wrappers, table permissions, and ownership checks are preserved. Applied migration: `enforce_expected_account_for_picture_and_revised_time`.
+
+A new database-role regression uses three generated synthetic accounts and an isolated connection in a rollback-only transaction. It verifies:
+- Correct-owner picture read/write; missing/mismatched expected accounts denied.
+- Expected-sender enforcement and idempotent sends.
+- Sender cannot accept their own invitation; recipient may accept the displayed revision.
+- Surprise title/story redaction before acceptance.
+- Outsider denial for lists, partner lookup, reply, cancellation, scheduling, begin, finish, revised time, calendar, and private memory.
+- Direct invitation/memory table access denied.
+- Partner cannot read or overwrite another person's private calendar; calendar table RLS hides the other owner.
+- Proposal confirmation must come from the other participant; pending proposals and stale revisions block beginning.
+- Authorized begin/finish and separate private memory saves; no private memory in shared invitation JSON.
+- Valid revised time works after rejecting a missing expected sender.
+- Inactive pairs lose shared invitation listing/schedule access. Existing personal-memory retention remains: an original participant can read only their own words after disconnection.
+
+All assertions passed on the deployed database. The final fixture-profile count was zero after rollback. No real user identities, invitations, calendar rows, or memories were used in the test. This is database-role verification, not a phone/browser walkthrough.
+
+[Guard patch](database/expected-account-guards.sql) · [Repeatable authorization tests](database/test-current-date-quest-authorization.sql)
+
+Advisor counts remain 6 anonymous privileged-function warnings, 98 authenticated privileged-function warnings, 21 RLS informational findings, and disabled leaked-password protection. The current 12 public entry points are not SECURITY DEFINER; the remaining older authenticated APIs and alternate entry points still need their own targeted review. Do not infer wider launch clearance from this scoped pass.
