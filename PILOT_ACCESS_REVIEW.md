@@ -77,3 +77,32 @@ Verification on the deployed database:
 Source: [permission patch](database/restrict-legacy-date-quest-rpc.sql).
 Repeatable checks: [database role tests](database/test-legacy-date-quest-rpc-permissions.sql).
 Remaining advisories and remediation links above still apply. This is a targeted hardening milestone, not a complete security clearance.
+
+## Remaining anonymous access triage — November 7, 2026
+
+Applied `restrict_world_quest_rpc_anonymous_access` to 11 reviewed World Quest actions. EXECUTE from PUBLIC/anon is removed; authenticated/service_role execution remains. Function bodies, teams, scores, memberships, storage and evidence were not changed.
+
+- `advance_world_quest(uuid)`
+- `begin_world_quest_challenge(uuid,integer)`
+- `cast_world_skip_vote(uuid,integer)`
+- `create_world_quest_team(text,text)`
+- `get_world_quest_state(uuid)`
+- `join_world_quest_team(text,text)`
+- `record_world_quest_result(uuid,integer,boolean,integer)`
+- `resume_world_quest_team()`
+- `reveal_world_quest_challenge(uuid,integer)`
+- `start_world_quest(uuid)`
+- `submit_world_quest_evidence(uuid,integer,text,text,text,bigint,integer)`
+
+Rollback-only database checks verify that every anonymous call is permission-denied and every authenticated/service execution grant remains. Null-input signed-in calls reach existing authorization/validation checks; this is not a complete positive World Quest walkthrough. A synthetic signed-in nonmember cannot read team state (MEMBER_REQUIRED).
+
+Anonymous privileged-function warnings now total **6**, down from 17 in this pass and 35 before both repairs. The six are classified:
+- `current_user_email()`: scoped to auth.uid(); returns empty text with no identity.
+- `is_active_heart_stone_member(uuid)` and `is_any_heart_stone_member(uuid)`: scoped to auth.uid(); return false with no identity. Existing row policies use membership helpers, including PUBLIC-targeted policies on onboarding and recommendation tables. Do not revoke helper access just to reduce the counter without migrating dependent policies.
+- `capture_adventure_candidate_learning()`, `guard_demo_memory_storybook()`, and `handle_new_auth_user()`: bound trigger functions. Direct invocation as anon is rejected by PostgreSQL with feature_not_supported. The actual trigger definitions were inspected; no trigger or signup configuration was changed.
+
+The signed-out helper and direct-trigger checks passed. These observations classify the remaining six; they are not a blanket security clearance. Existing 98 authenticated privileged-function warnings, 21 RLS informational findings and disabled leaked-password protection remain. The next access-review scope is authenticated authorization, prioritizing the current Date Quest RPC path rather than blanket revocation.
+
+Source: [World Quest permission patch](database/restrict-world-quest-rpc.sql).
+Repeatable checks: [World Quest and helper role tests](database/test-world-quest-rpc-permissions.sql).
+Remediation guidance: [anonymous privileged functions](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
