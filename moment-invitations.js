@@ -221,6 +221,24 @@
       if(result.error)throw Error(result.error.message||'Could not save details. Refresh before trying again.');
       return result.data;
     }
+    async function load(){
+      if(busy)return;
+      busy=true;box.querySelectorAll('button').forEach(b=>b.disabled=true);
+      status.textContent='Loading your shared details…';
+      try{
+        const next=await readWithTimeout(()=>call('load'));
+        if(!box.isConnected)return;
+        state=next;render();onPlan(state.plan,state.proposal?.status==='pending',state.revision);
+      }catch(e){
+        if(!box.isConnected)return;
+        status.textContent=e.message;
+        if(!state){
+          box.replaceChildren(title,status);
+          action(box,'Try Again — Load Shared Details',load);
+          onPlan(item.plan,true);
+        }
+      }finally{busy=false;box.querySelectorAll('button').forEach(b=>b.disabled=false);}
+    }
     async function save(action,details){
       if(busy)return;busy=true;box.querySelectorAll('button').forEach(b=>b.disabled=true);
       try{state=await call(action,details);render();onPlan(state.plan,state.proposal?.status==='pending',state.revision);}
@@ -244,9 +262,9 @@
       form.append(node('p','These details are shared inside Heart Stone. Your partner must confirm each new proposal. No email or text message is sent.','helper'));
       form.onsubmit=e=>{e.preventDefault();if(confirm('Share these proposed details with your partner?'))save('propose',Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,v.value.trim()])));};
       const toggle=action(box,p.status==='confirmed'?'Suggest a Change':'Add My Suggestion',()=>{form.hidden=!form.hidden;toggle.setAttribute('aria-expanded',String(!form.hidden));if(!form.hidden)fields.date.focus();});toggle.setAttribute('aria-expanded','false');form.hidden=true;box.append(form);
-      action(box,'Refresh Shared Details',async()=>{if(busy)return;busy=true;try{state=await call('load');render();onPlan(state.plan,state.proposal?.status==='pending',state.revision);}catch(e){status.textContent=e.message;}finally{busy=false;}});
+      action(box,'Refresh Shared Details',load);
     }
-    try{state=await call('load');render();onPlan(state.plan,state.proposal?.status==='pending',state.revision);}catch(e){status.textContent=e.message;onPlan(item.plan,true);}
+    await load();
   }
   async function openMoment(c,item,card){
     const version=++momentVersion;
