@@ -33,8 +33,12 @@ begin
  if not denied then raise exception 'Spoofed sender accepted';end if;
  i:=public.send_checked_moment_invitation(a,h,b,req,'Rollback only','date','{"whenMode":"together"}','AUDIT SECRET TITLE','AUDIT SECRET STORY','surprise','');
  if public.send_checked_moment_invitation(a,h,b,req,'Rollback only','date','{"whenMode":"together"}','AUDIT SECRET TITLE','AUDIT SECRET STORY','surprise','')<>i then raise exception 'Retry created duplicate';end if;
+ if public.send_moment_invitation(h,b,req,'Rollback only','date','{"whenMode":"together"}','AUDIT SECRET TITLE','AUDIT SECRET STORY','surprise','')<>i then raise exception 'Legacy retry created duplicate';end if;
+ if has_function_privilege('anon','public.send_moment_invitation(uuid,uuid,uuid,text,text,jsonb,text,text,text,text)','execute') then raise exception 'Legacy send anonymous grant';end if;
+ if has_function_privilege('anon','public.respond_moment_invitation(uuid,text,text)','execute') then raise exception 'Legacy reply anonymous grant';end if;
  perform set_config('test.audit.i',i::text,true);
- denied:=false;begin perform public.respond_moment_invitation_revision(i,0,'accepted','');exception when insufficient_privilege then denied:=true;end;
+ denied:=false;begin perform public.respond_moment_invitation(i,'accepted',''); -- Compatibility is limited to the original revision.
+ perform public.respond_moment_invitation_revision(i,0,'accepted','');exception when insufficient_privilege then denied:=true;end;
  if not denied then raise exception 'Sender responded to own invitation';end if;
  -- Direct secret table access must remain denied.
  denied:=false;begin perform 1 from hs_invitation_internal.invitations;exception when insufficient_privilege then denied:=true;end;
@@ -52,6 +56,10 @@ begin
  if not denied then raise exception 'Outsider cancellation allowed';end if;
  denied:=false;begin perform public.respond_moment_invitation_revision(i,0,'accepted','');exception when insufficient_privilege then denied:=true;end;
  if not denied then raise exception 'Outsider reply allowed';end if;
+ denied:=false;begin perform public.respond_moment_invitation(i,'accepted','');exception when insufficient_privilege then denied:=true;end;
+ if not denied then raise exception 'Legacy outsider reply allowed';end if;
+ denied:=false;begin perform public.send_moment_invitation(h,b,gen_random_uuid(),'Outsider','date','{}','Title','Story','all','');exception when insufficient_privilege then denied:=true;end;
+ if not denied then raise exception 'Legacy outsider send allowed';end if;
  denied:=false;begin perform public.shared_moment_schedule(i,c,'load');exception when insufficient_privilege then denied:=true;end;
  if not denied then raise exception 'Outsider schedule load allowed';end if;
  denied:=false;begin perform public.begin_shared_moment(i,c,0);exception when insufficient_privilege then denied:=true;end;
@@ -109,7 +117,15 @@ begin
  denied:=false;begin perform public.propose_moment_invitation_time(j,null,0,gen_random_uuid(),future_day,'18:00','America/New_York');exception when insufficient_privilege then denied:=true;end;
  if not denied then raise exception 'Missing expected revised-time sender accepted';end if;
  if public.propose_moment_invitation_time(j,a,0,gen_random_uuid(),future_day,'18:00','America/New_York')<>1 then raise exception 'Authorized revised time failed';end if;
- perform set_config('request.jwt.claim.sub',b::text,true);perform public.respond_moment_invitation_revision(j,1,'accepted','');
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ denied:=false;
+ begin perform public.respond_moment_invitation(j,'accepted','');
+ exception when raise_exception then
+   if sqlerrm<>'The proposed time changed. Refresh invitations before replying' then raise;end if;
+   denied:=true;
+ end;
+ if not denied then raise exception 'Legacy reply bypassed revised invitation';end if;
+ perform public.respond_moment_invitation_revision(j,1,'accepted','');
 end $check$;
 reset role;
 -- Only the synthetic fixture's membership is changed, within this transaction.
@@ -127,4 +143,4 @@ begin
 end $check$;
 reset role;
 rollback;
-select 'PASS: synthetic sender/recipient/outsider checks, private account separation, guarded lifecycle, revised time, inactive pair, and owner memory retention. All fixture data rolled back.' as result;
+select 'PASS: current and legacy sender/recipient/outsider checks, private account separation, guarded lifecycle, stale legacy reply rejection, revised time, inactive pair, and owner memory retention. All fixture data rolled back.' as result;
