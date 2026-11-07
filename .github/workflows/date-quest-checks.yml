@@ -1,0 +1,42 @@
+name: Date Quest regression checks
+
+on:
+  push:
+    paths:
+      - 'date-home.js'
+      - 'moment-invitations.js'
+      - 'invitation-opening.html'
+      - 'test-account-calendar.cjs'
+      - 'tests/moment-invitations.cjs'
+      - '.github/workflows/date-quest-checks.yml'
+  pull_request:
+    paths:
+      - 'date-home.js'
+      - 'moment-invitations.js'
+      - 'invitation-opening.html'
+      - 'test-account-calendar.cjs'
+      - 'tests/moment-invitations.cjs'
+      - '.github/workflows/date-quest-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: date-quest-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    name: Calendar and invitations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check private calendar behavior
+        run: node test-account-calendar.cjs
+      - name: Check invitation lifecycle
+        run: node tests/moment-invitations.cjs
