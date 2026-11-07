@@ -1,0 +1,12 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createMembershipReader, describeMembership } from '../membership-reader.mjs';
+const terms = {enrolled:true,tier:'founding',currency:'USD',annualPriceCents:1200,billingInterval:'year',lifetimeAnnualRate:true,foundingRecognition:true,billingActivated:false,inFreePeriod:true,freeUntil:'2027-11-07'};
+function harness(extra={}) { const messages=[],busy=[];return {messages,busy,reader:createMembershipReader({getUser:async()=>({id:'owner'}),rpc:async()=>({data:terms}),show:s=>messages.push(s),setBusy:s=>busy.push(s),...extra})}; }
+test('saved terms show annual lifetime price and no payment claim', async()=>{const h=harness();await h.reader.load();assert.match(h.messages.at(-1),/\$12 per year/);assert.match(h.messages.at(-1),/Billing is not activated/);assert.equal(h.busy.at(-1),false);});
+test('unenrolled accounts never receive founding recognition',()=>{assert.match(describeMembership({enrolled:false}),/not enrolled/);assert.doesNotMatch(describeMembership({enrolled:false}),/Founding Member/);});
+test('unexpected prices, active billing and invalid dates do not become promises',()=>{for(const patch of [{annualPriceCents:2400},{billingActivated:true},{freeUntil:'2027-02-30'},{lifetimeAnnualRate:false}])assert.throws(()=>describeMembership({...terms,...patch}));});
+test('changed account suppresses previous-account response',async()=>{let count=0;const h=harness({getUser:async()=>({id:++count===1?'owner':'other'})});await h.reader.load();assert.doesNotMatch(h.messages.at(-1),/Founding Member/);assert.equal(h.busy.at(-1),false);});
+test('signout invalidates an outstanding request',async()=>{let finish;const h=harness({rpc:()=>new Promise(r=>finish=r)});const work=h.reader.load();await Promise.resolve();h.reader.reset();finish({data:terms});await work;assert.doesNotMatch(h.messages.at(-1),/Founding Member/);});
+test('network errors and signed-out accounts restore retry',async()=>{for(const extra of [{rpc:async()=>{throw Error('Network');}},{getUser:async()=>null}]){const h=harness(extra);await h.reader.load();assert.match(h.messages.at(-1),/try again/);assert.equal(h.busy.at(-1),false);}});
+test('timed-out results cannot overwrite a later retry',async()=>{let finish,calls=0;const h=harness({timeoutMs:5,rpc:()=>++calls===1?new Promise(r=>finish=r):Promise.resolve({data:{enrolled:false}})});await h.reader.load();await h.reader.load();finish({data:terms});await new Promise(r=>setTimeout(r,1));assert.match(h.messages.at(-1),/not enrolled/);});
