@@ -23,7 +23,13 @@ do $$declare a uuid:=current_setting('test.a')::uuid;b uuid:=current_setting('te
  rev:=(x->>'revision')::int;
  x:=public.my_planning_preferences(a,'save',rev,'{"activities":"TEST quiet walks"}',false);
  if (x->>'useWithAI')::boolean then raise exception 'Opt out failed';end if;
- perform public.save_shared_onboarding_answer(current_setting('test.h')::uuid,'audit_explicit_shared','{"plan":"A walk"}');
+ denied:=false;
+ begin perform public.save_shared_onboarding_answer(current_setting('test.h')::uuid,'audit_explicit_shared','{"plan":"A walk"}');
+ exception when insufficient_privilege then
+  if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;
+  denied:=true;
+ end;
+ if not denied then raise exception 'Unrostered legacy onboarding accepted';end if;
  if exists(select 1 from public.couple_onboarding_answers where heart_stone_id=current_setting('test.h')::uuid and answer_json::text like '%TEST quiet walks%') then raise exception 'Private preferences copied to shared answers';end if;
  denied:=false;begin perform public.my_planning_preferences(a,'save',(x->>'revision')::int,'{"secret":"not allowed"}',true);exception when others then denied:=true;end;if not denied then raise exception 'Unknown field accepted';end if;
  rev:=(x->>'revision')::int;x:=public.my_planning_preferences(a,'delete',rev);
