@@ -5,11 +5,12 @@ const DateHomeModel=(()=>{
  function validDay(s){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s)||Number(s.slice(0,4))<1900||Number(s.slice(0,4))>2199)return false;const d=new Date(s+'T12:00:00');return Number.isFinite(d.getTime())&&day(d)===s;}
  function clean(raw){if(!raw||raw.version!==1||!Array.isArray(raw.events)||raw.events.length>200||!Array.isArray(raw.hearts)||raw.hearts.length>366)throw Error('This saved calendar could not be read.');const events=raw.events.map(e=>{if(!e||typeof e.id!=='string'||e.id.length>80||!e.id||typeof e.title!=='string'||!e.title.trim()||e.title.length>120||!kinds.includes(e.kind)||!validDay(e.day))throw Error('A calendar entry is invalid.');return {id:e.id,title:e.title.trim(),kind:e.kind,day:e.day};});if(new Set(events.map(e=>e.id)).size!==events.length)throw Error('Duplicate calendar entries.');return {version:1,events,hearts:[...new Set(raw.hearts.filter(validDay))]};}
  function active(items,userId){return (Array.isArray(items)?items:[]).filter(x=>x&&x.status==='accepted'&&!x.completed_at&&(x.sender_id===userId||x.recipient_id===userId)).map(x=>({id:String(x.id),title:x.reveal_mode==='all'?String(x.title||'A moment for us').slice(0,120):'A moment waiting for us',started:!!x.started_at,day:x.plan?.whenMode==='specific'&&validDay(x.plan?.momentDate)?x.plan.momentDate:'',time:/^([01]\d|2[0-3]):[0-5]\d$/.test(x.plan?.momentTime||'')?x.plan.momentTime:'',zone:typeof x.plan?.momentZone==='string'?x.plan.momentZone.slice(0,80):''}));}
+ function attention(items,userId){if(!userId)return 0;return (Array.isArray(items)?items:[]).filter(x=>x&&((x.status==='pending'&&x.recipient_id===userId)||(x.status==='reschedule'&&x.sender_id===userId))).length;}
  function planLink(day){if(!validDay(day))throw Error('Choose a valid calendar day.');return 'invitation-opening.html?planDay='+encodeURIComponent(day)+'#heart-stone-plan';}
  function momentLink(id){return 'invitation-opening.html?moment='+encodeURIComponent(String(id))+'#shared-invitations';}
  function timeLabel(time){if(!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(time))return 'Time to confirm';const [h,m]=time.split(':').map(Number);return (h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM');}
  const greeting=(hour,name)=>'Good '+(hour<12?'morning':hour<18?'afternoon':'evening')+(name?', '+name:'')+'.';
- return {kinds,day,validDay,clean,active,greeting,momentLink,timeLabel,planLink};
+ return {kinds,day,validDay,clean,active,greeting,momentLink,timeLabel,planLink,attention};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=DateHomeModel;
 
@@ -21,6 +22,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
  const say=t=>el('dqCalendarStatus').textContent=t;
  const action=(text,fn)=>{const b=node('button',text);b.type='button';b.className='secondary';b.onclick=fn;return b;};
  function reset(){
+   el('dqInvitationsLink').textContent='Our Invitations';
    version++;owner=null;sharedDays={user:null,own:[],partner:[],name:'your partner'};revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];editing=null;
    el('dqEventForm').hidden=true;el('dqEventName').value='';el('dqEventDay').value='';
    el('dqGreeting').textContent='Welcome back.';el('dqMoments').replaceChildren();el('dqMomentsStatus').textContent='Sign in to see your moments.';
@@ -82,7 +84,8 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
      const hs=heartStoneId;
      const invitations=hs?await sb.rpc('list_moment_invitations',{p_heart_stone_id:hs}):{data:[],error:null};
      const checked=await currentUser();if(v!==version)return;if(!checked||checked.id!==u.id){reset();return;}if(heartStoneId!==hs)return;
-     if(invitations.error){el('dqMomentsStatus').textContent='Could not load shared moments. Open Our Invitations to check.';return;}
+     if(invitations.error){el('dqInvitationsLink').textContent='Our Invitations';el('dqMomentsStatus').textContent='Could not load shared moments. Open Our Invitations to check.';return;}
+     const needsAttention=M.attention(invitations.data,u.id);el('dqInvitationsLink').textContent=needsAttention?'Our Invitations · '+needsAttention+' need'+(needsAttention===1?'s':'')+' attention':'Our Invitations';
      moments=M.active(invitations.data,u.id);el('dqMoments').replaceChildren();
      for(const item of moments){const n=node('article',undefined,'dq-moment');n.append(node('h3',item.title),node('p',item.started?'Your moment is underway.':item.day?'A little time chosen for '+item.day+(item.time?' at '+item.time:'')+'.':'You said yes. Choose your time together.'));const a=node('a',item.started?'Continue our moment':'View our moment');a.href=M.momentLink(item.id);n.append(a);el('dqMoments').append(n);}
      el('dqMomentsStatus').textContent=moments.length?'Your accepted moments.':'Your next treasured memory begins with a gesture.';render();
