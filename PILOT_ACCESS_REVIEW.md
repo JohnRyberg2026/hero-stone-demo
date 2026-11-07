@@ -38,3 +38,42 @@ References:
 Six simulated session tests cover same-account notifications, signout clearing, changed-account deferred restoration, stale restore cancellation, duplicate sign-in protection, and missing/rejected/network/rate-limited sign-in responses. Inline HTML scripts parse. These tests join the calendar, invitation and planner checks in GitHub Actions; index.html changes now trigger that workflow.
 
 No real user signed out, no password was reset, and no John/Jessica live walkthrough was repeated. Next: inspect the older Date Quest RPC grants and their authorization checks before expanding pilot access.
+
+## Targeted permission repair applied — November 7, 2026
+
+Applied database migration `restrict_legacy_date_quest_rpc_anonymous_access`. Reviewed 18 legacy Date Quest entry points: partner-connection invitations and demo adventure actions. Removed EXECUTE from PUBLIC and anon, while explicitly retaining authenticated and service_role access. No function bodies, tables, row policies, current invitations, memberships, or user records were changed.
+
+The bodies already gate actions using identity, invitation ownership/recipient email, or active Heart Stone membership. Preview/decline/cancel functions return no authorized result when identity does not match. This change removes unnecessary pre-sign-in reachability; it does not replace those checks. Shared membership/email helpers, trigger functions, and World Quest functions were excluded from this pass.
+
+| Function signature | Anonymous execution | Signed-in execution |
+| --- | --- | --- |
+| `accept_heart_stone_invitation(text)` | Denied | Preserved |
+| `begin_demo_quest(uuid,adventure_type,text,integer,text,text[],integer,text,integer)` | Denied | Preserved |
+| `cancel_demo_adventure(uuid)` | Denied | Preserved |
+| `cancel_heart_stone_invitation(uuid)` | Denied | Preserved |
+| `complete_demo_adventure(uuid)` | Denied | Preserved |
+| `create_heart_stone_invitation(text,text,integer)` | Denied | Preserved |
+| `decline_heart_stone_invitation(text)` | Denied | Preserved |
+| `get_demo_adventure_history(uuid,integer)` | Denied | Preserved |
+| `open_demo_date_invitation(uuid)` | Denied | Preserved |
+| `preview_heart_stone_invitation(text)` | Denied | Preserved |
+| `propose_demo_recommendation(uuid)` | Denied | Preserved |
+| `refresh_demo_recommendations(uuid,uuid[],integer)` | Denied | Preserved |
+| `respond_demo_date_invitation(uuid,boolean)` | Denied | Preserved |
+| `reveal_demo_adventure(uuid)` | Denied | Preserved |
+| `rotate_heart_stone_invitation(uuid,integer)` | Denied | Preserved |
+| `save_demo_adventure_feedback(uuid,feedback_rating,text)` | Denied | Preserved |
+| `set_demo_invitation_style(uuid,text)` | Denied | Preserved |
+| `start_another_demo_adventure(uuid)` | Denied | Preserved |
+
+Verification on the deployed database:
+- All 18 direct calls under the anon role fail with insufficient_privilege.
+- All 18 authenticated and service_role execution grants are present.
+- All 18 null-input calls under the authenticated role reach existing identity/validation checks without an execution-grant denial.
+- A synthetic signed-in nonmember cannot read demo history: the active membership check rejects it.
+- Tests run in rollback-only transactions. No real account identity is used and no real invitation or adventure is invoked.
+- Security advisor anonymous privileged-function warning count fell from 35 to 17. The 98 authenticated privileged-function warnings, 21 RLS informational findings, and disabled leaked-password protection remain for separate review.
+
+Source: [permission patch](database/restrict-legacy-date-quest-rpc.sql).
+Repeatable checks: [database role tests](database/test-legacy-date-quest-rpc-permissions.sql).
+Remaining advisories and remediation links above still apply. This is a targeted hardening milestone, not a complete security clearance.
