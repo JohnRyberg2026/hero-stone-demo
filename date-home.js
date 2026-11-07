@@ -120,7 +120,8 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
      }catch(error){
        if(v!==version||owner!==u.id)return;
        moments=[];el('dqMoments').replaceChildren();el('dqInvitationsLink').textContent='Our Invitations';
-       el('dqMomentsStatus').textContent='Shared moments could not load. Tap Refresh Moments to retry. Your private calendar is still available.';
+       const message='Shared moments could not load. Your private calendar is still available. Tap Refresh Calendar to retry, or open Our Invitations.';
+       el('dqMomentsStatus').textContent=message;say(message);
        render();
      }
    }catch(e){if(v===version){readable=false;render();say(e.message);}}
