@@ -3,21 +3,25 @@ name: Date Quest regression checks
 on:
   push:
     paths:
+      - 'index.html'
       - 'date-home.js'
       - 'moment-invitations.js'
       - 'invitation-opening.html'
       - 'test-account-calendar.cjs'
       - 'tests/moment-invitations.cjs'
       - 'tests/planner-drafts.test.cjs'
+      - 'tests/session-recovery.test.cjs'
       - '.github/workflows/date-quest-checks.yml'
   pull_request:
     paths:
+      - 'index.html'
       - 'date-home.js'
       - 'moment-invitations.js'
       - 'invitation-opening.html'
       - 'test-account-calendar.cjs'
       - 'tests/moment-invitations.cjs'
       - 'tests/planner-drafts.test.cjs'
+      - 'tests/session-recovery.test.cjs'
       - '.github/workflows/date-quest-checks.yml'
   workflow_dispatch:
 
@@ -44,3 +48,5 @@ jobs:
         run: node tests/moment-invitations.cjs
       - name: Check planner draft protection
         run: node --test tests/planner-drafts.test.cjs
+      - name: Check sign-in and session recovery
+        run: node --test tests/session-recovery.test.cjs
