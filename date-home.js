@@ -18,7 +18,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=DateHomeModel;
 if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()=>{
  const M=DateHomeModel,el=id=>document.getElementById(id),node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  let sharedDays={user:null,own:[],partner:[],name:'your partner'};
- let formBaseline=null;
+ let formBaseline=null,removedEntry=null;
  let owner=null,version=0,revision=0,data={version:1,events:[],hearts:[]},moments=[],selected=M.day(new Date()),month=new Date().getMonth(),year=new Date().getFullYear(),editing=null,readable=false,busy=false;
  const key=()=> 'hs_personal_calendar_demo_v1_'+owner;
  const say=t=>el('dqCalendarStatus').textContent=t;
@@ -31,7 +31,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
 
  const action=(text,fn)=>{const b=node('button',text);b.type='button';b.className='secondary';b.onclick=fn;return b;};
  function reset(){
-   formBaseline=null;
+   formBaseline=null;removedEntry=null;
    el('dqInvitationsLink').textContent='Our Invitations';
    version++;owner=null;sharedDays={user:null,own:[],partner:[],name:'your partner'};revision=0;readable=false;data={version:1,events:[],hearts:[]};moments=[];editing=null;
    el('dqEventForm').hidden=true;el('dqEventName').value='';el('dqEventDay').value='';
@@ -60,7 +60,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
        throw Error('Could not confirm the save. Your words are still here. Refresh Calendar to check before trying again.');
      }
      if(!result.data||!Number.isInteger(result.data.revision))throw Error('Could not confirm the calendar save. Refresh Calendar to check.');
-     data=M.clean(result.data.calendar);revision=result.data.revision;updateImport();
+     data=M.clean(result.data.calendar);revision=result.data.revision;removedEntry=null;updateImport();
    }finally{busy=false;if(owner===user)render();}
  }
  function updateImport(){
@@ -73,7 +73,19 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
  el('dqDayTitle').textContent=new Date(selected+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});el('dqDayEvents').replaceChildren();let count=0;
  if(sharedDays.user===owner&&selected>=today){const mine=sharedDays.own.includes(selected),theirs=sharedDays.partner.includes(selected);if(mine||theirs){el('dqDayEvents').append(node('p',mine&&theirs?'♥♥ You and '+sharedDays.name+' shared availability.':theirs?'♥ '+sharedDays.name+' shared availability.':'♡ You shared availability with '+sharedDays.name+'.','dq-shared-summary'));}}
 
- for(const e of data.events.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p',e.kind==='wish'?'Future wish / bucket list':e.kind));n.append(action('Edit',()=>edit(e)),action('Remove',async()=>{if(busy||!readable)return;try{await authorized();if(!confirm('Remove this private calendar entry from your account?'))return;await saveNext({...data,events:data.events.filter(x=>x.id!==e.id)});say('Entry removed from your account.');}catch(err){say(err.message);}}));el('dqDayEvents').append(n);}
+ for(const e of data.events.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p',e.kind==='wish'?'Future wish / bucket list':e.kind));n.append(action('Edit',()=>edit(e)),action('Remove',async()=>{if(busy||!readable||!canLeaveCalendarForm())return;try{await authorized();if(!confirm('Remove “'+e.title+'” from your private calendar?'))return;await saveNext({...data,events:data.events.filter(x=>x.id!==e.id)});removedEntry={...e};el('dqEventForm').hidden=true;formBaseline=null;editing=null;render();say('Entry removed. You can undo it below.');}catch(err){say(err.message);}}));el('dqDayEvents').append(n);}
+ if(removedEntry&&removedEntry.day===selected){
+   const entry=removedEntry,undo=action('Undo removal — '+entry.title,async()=>{
+     if(busy||!readable)return;
+     try{
+       await authorized();
+       if(removedEntry!==entry)throw Error('That removal is no longer available to undo.');
+       if(data.events.some(e=>e.id===entry.id))throw Error('This entry is already in your calendar. Refresh Calendar to check.');
+       await saveNext({...data,events:[...data.events,entry]});
+       say('Entry restored privately to your account.');
+     }catch(err){say(err.message);}
+   });undo.disabled=busy||!readable;el('dqDayEvents').append(undo);
+ }
  for(const e of moments.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p','Accepted invitation · '+M.timeLabel(e.time)+(e.zone?' · '+e.zone:'')));const a=node('a',e.started?'Continue Our Moment':'Open Our Moment');a.href=M.momentLink(e.id);n.append(a);el('dqDayEvents').append(n);}
  if(!count)el('dqDayEvents').append(node('p','A little room for what matters. No entries for this day.'));el('dqAvailability').disabled=busy||selected<today||!readable;el('dqAvailability').textContent=data.hearts.includes(selected)&&selected>=today?'Remove my availability heart':'♡ Mark my availability for this day';el('dqFutureWishes').replaceChildren();const wishes=data.events.filter(e=>e.kind==='wish'&&e.day>=today).sort((a,b)=>a.day.localeCompare(b.day));for(const w of wishes){const b=action(w.day+' · '+w.title,()=>{selected=w.day;year=Number(w.day.slice(0,4));month=Number(w.day.slice(5,7))-1;render();});el('dqFutureWishes').append(b);}if(!wishes.length)el('dqFutureWishes').append(node('p','Something you hope to share, next month or years from now. Add a future wish to begin.'));el('dqAddEvent').disabled=busy||!readable;el('dqPlanDay').disabled=busy||!readable||selected<today;
  el('dqImportCalendar').disabled=busy||!readable;el('dqRefreshCalendar').disabled=busy;
