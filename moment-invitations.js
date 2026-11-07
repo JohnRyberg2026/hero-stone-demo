@@ -267,6 +267,20 @@
       if(momentDialog)momentDialog.close();
       const dialog=node('dialog',undefined,'momentCinema');momentDialog=dialog;
       dialog.setAttribute('aria-label','Our moment together');
+      let memoryNote=null,savedMemory=memory,memorySaving=false;
+      const hasUnsavedMemory=()=>memoryNote!==null&&memoryNote.value!==savedMemory;
+      function requestMomentClose(){
+        if(memorySaving){progress.textContent='Your memory is still saving. Please wait a moment.';return;}
+        if(hasUnsavedMemory()&&!confirm('Leave without saving your memory changes? Choose Cancel to keep editing.'))return;
+        dialog.close();
+      }
+      function warnBeforeLeaving(event){
+        if(!hasUnsavedMemory()&&!memorySaving)return;
+        event.preventDefault();event.returnValue='';
+      }
+      window.addEventListener('beforeunload',warnBeforeLeaving);
+      dialog.addEventListener('cancel',event=>{event.preventDefault();requestMomentClose();});
+
       const intro=node('div'),scene=node('div');intro.hidden=!!(latest.started_at||latest.completed_at);scene.hidden=!(latest.started_at||latest.completed_at);
       intro.append(node('div','A new chapter','eyebrow'),node('div','♡','cinemaHeart'));
       const heading=node('h2','We said yes.');heading.setAttribute('tabindex','-1');intro.append(heading);
@@ -311,29 +325,32 @@
       if(latest.completed_at){
         progress.textContent='Your shared moment has come to a close. Keep a little of it in your own words, whenever you are ready.';
         const label=node('label','What would you like to remember? (optional)'),note=node('textarea');
+        memoryNote=note;
+        note.addEventListener('input',()=>{progress.textContent=hasUnsavedMemory()?'Unsaved changes. Save your private memory when you are ready.':'Your saved memory is unchanged.';});
         note.maxLength=4000;note.value=memory;note.placeholder='A laugh, a discovery, a small detail…';label.append(note);scene.append(label);
         scene.append(node('p','Only you can read these words. Your partner can save their own perspective.','helper'));
         let saving=false;
         const save=action(scene,'Save My Private Memory ❤️',async()=>{
-          if(saving)return;saving=true;save.disabled=true;progress.textContent='Saving your private memory…';
+          if(saving)return;const submittedNote=note.value;saving=true;memorySaving=true;note.disabled=true;save.disabled=true;progress.textContent='Saving your private memory…';
           try{
             const fresh=await context();
             if(fresh.user.id!==c.user.id||fresh.hs!==c.hs)throw Error('Your account changed. Refresh invitations to continue.');
-            const result=await fresh.sb.rpc('my_shared_moment_memory',{p_invitation_id:latest.id,p_expected_user:c.user.id,p_note:note.value});
+            const result=await fresh.sb.rpc('my_shared_moment_memory',{p_invitation_id:latest.id,p_expected_user:c.user.id,p_note:submittedNote});
             const checked=await fresh.sb.auth.getUser();
             if(version!==momentVersion)return;
             if(result.error||checked.error||checked.data?.user?.id!==c.user.id)throw Error('We couldn’t confirm the save. Your words are still here; try again or reopen to check.');
+            savedMemory=submittedNote;
             progress.textContent='Your memory is saved privately. You can return here to read or edit it.';
-          }catch(e){progress.textContent=e.message;}finally{saving=false;save.disabled=false;}
+          }catch(e){progress.textContent=e.message;}finally{saving=false;memorySaving=false;note.disabled=false;save.disabled=false;}
         });save.className='primary';
       }
       if(!latest.completed_at)action(scene,'Back — Our Invitation',()=>{scene.hidden=true;intro.hidden=false;heading.focus();dialog.scrollTop=0;});
       dialog.append(intro,scene);
       const exits=node('div',undefined,'actions');
-      action(exits,memoriesOnly?'Back — Our Memories':'Back — Invitations',()=>dialog.close());
+      action(exits,memoriesOnly?'Back — Our Memories':'Back — Invitations',requestMomentClose);
       if(!latest.completed_at)action(exits,'Stop This Invitation',()=>{if(confirm('Close this invitation for both of you?')){dialog.close();updateInvitation(c,latest,'cancelled','',card);}});
       dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
-      dialog.addEventListener('close',()=>{dialog.remove();if(momentDialog===dialog)momentDialog=null;});
+      dialog.addEventListener('close',()=>{window.removeEventListener('beforeunload',warnBeforeLeaving);dialog.remove();if(momentDialog===dialog)momentDialog=null;});
       document.body.append(dialog);dialog.showModal();(latest.started_at||latest.completed_at?sceneHeading:heading).focus();
       if(!latest.started_at&&!latest.completed_at){begin.disabled=true;scheduleEditor(c,latest,scheduleBox,(plan,pending,revision)=>{latest.plan=plan;if(Number.isInteger(revision))latest.revision=revision;introPlan.textContent=scenePlan.textContent=planText(plan);begin.disabled=pending;progress.textContent=pending?'Agree on your proposed time and place before beginning.':'When you are ready together, begin your shared moment. Both of you will see it as underway.';});}
       el('sharedInvitationStatus').textContent=latest.completed_at?'Your private memory is ready.':'Your accepted moment is ready to open.';
