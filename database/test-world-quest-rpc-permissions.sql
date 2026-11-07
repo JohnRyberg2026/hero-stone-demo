@@ -31,17 +31,17 @@ reset role;
 set local role authenticated;
 do $check$
 begin
- begin execute 'select public.advance_world_quest(null::uuid)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.begin_world_quest_challenge(null::uuid,null::integer)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.cast_world_skip_vote(null::uuid,null::integer)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.create_world_quest_team(null::text,null::text)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.get_world_quest_state(null::uuid)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.join_world_quest_team(null::text,null::text)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.record_world_quest_result(null::uuid,null::integer,null::boolean,null::integer)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.resume_world_quest_team()';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.reveal_world_quest_challenge(null::uuid,null::integer)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.start_world_quest(null::uuid)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
- begin execute 'select public.submit_world_quest_evidence(null::uuid,null::integer,null::text,null::text,null::text,null::bigint,null::integer)';exception when insufficient_privilege then raise exception 'Signed-in grant lost';when others then null;end;
+ begin execute 'select public.advance_world_quest(null::uuid)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.begin_world_quest_challenge(null::uuid,null::integer)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.cast_world_skip_vote(null::uuid,null::integer)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.create_world_quest_team(null::text,null::text)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.get_world_quest_state(null::uuid)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.join_world_quest_team(null::text,null::text)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.record_world_quest_result(null::uuid,null::integer,null::boolean,null::integer)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.resume_world_quest_team()';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.reveal_world_quest_challenge(null::uuid,null::integer)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.start_world_quest(null::uuid)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
+ begin execute 'select public.submit_world_quest_evidence(null::uuid,null::integer,null::text,null::text,null::text,null::bigint,null::integer)';exception when insufficient_privilege then if sqlerrm<>'This legacy feature is limited to the existing development accounts.' then raise;end if;when others then null;end;
 end $check$;
 reset role;
 select 'PASS: 11 World Quest actions blocked before sign-in; signed-in/service grants preserved; signed-out helpers reveal no email or membership' as result;
@@ -55,12 +55,12 @@ begin
  begin
    perform public.get_world_quest_state(gen_random_uuid());
    raise exception 'Nonmember team access unexpectedly succeeded';
- exception when raise_exception then
-   if sqlerrm <> 'MEMBER_REQUIRED' then raise;end if;
+ exception when insufficient_privilege then
+   if sqlerrm <> 'This legacy feature is limited to the existing development accounts.' then raise;end if;
  end;
 end $check$;
 reset role;
-select 'PASS: signed-in nonmember team reads remain blocked' as result;
+select 'PASS: signed-in unrostered team reads remain blocked' as result;
 rollback;
 
 begin;
