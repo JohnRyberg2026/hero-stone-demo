@@ -173,3 +173,6 @@ Verification:
 Why this matters: [PostgreSQL row security](https://www.postgresql.org/docs/17/ddl-rowsecurity.html) does not cover whole-table TRUNCATE/REFERENCES operations. Maintenance privileges should be controlled independently of per-row policies.
 
 Existing broader findings remain: 6 anonymous internal helper/trigger warnings, 98 authenticated privileged-function warnings, 21 RLS informational findings and disabled leaked-password protection. This pass closes the identified public-table maintenance-grant issue; it does not certify every legacy RPC or clear the entire platform for wider launch.
+
+## Bounded release decision — November 7, 2026
+See [PILOT_RELEASE_DECISION.md](PILOT_RELEASE_DECISION.md) for the current continue/hold/defer decision, three new-tester gates and exit conditions. The exact authenticated privileged API inventory is saved in [PILOT_RPC_REVIEW_QUEUE.md](PILOT_RPC_REVIEW_QUEUE.md); its read-only drift assertion passed. This documentation step expands no access and invites no accounts.
