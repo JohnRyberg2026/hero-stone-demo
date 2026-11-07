@@ -377,13 +377,16 @@
         });save.className='primary';
       }
       if(!latest.completed_at)action(scene,'Back — Our Invitation',()=>{scene.hidden=true;intro.hidden=false;heading.focus();dialog.scrollTop=0;});
-      dialog.append(intro,scene);
+      const navigation=node('nav',undefined,'moment-navigation');
+      navigation.setAttribute('aria-label','Moment navigation');
+      action(navigation,memoriesOnly?'← Our Memories':'← Invitations',requestMomentClose);
+      dialog.append(navigation,intro,scene);
       const exits=node('div',undefined,'actions');
       action(exits,memoriesOnly?'Back — Our Memories':'Back — Invitations',requestMomentClose);
       if(!latest.completed_at)action(exits,'Stop This Invitation',()=>{if(confirm('Close this invitation for both of you?')){dialog.close();updateInvitation(c,latest,'cancelled','',card);}});
       dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
-      dialog.addEventListener('close',()=>{window.removeEventListener('beforeunload',warnBeforeLeaving);dialog.remove();if(momentDialog===dialog)momentDialog=null;});
-      document.body.append(dialog);dialog.showModal();(latest.started_at||latest.completed_at?sceneHeading:heading).focus();
+      dialog.addEventListener('close',()=>{window.removeEventListener('beforeunload',warnBeforeLeaving);dialog.remove();if(momentDialog===dialog)momentDialog=null;if(card.isConnected)card.querySelector('button')?.focus({preventScroll:true});});
+      document.body.append(dialog);dialog.showModal();(latest.started_at||latest.completed_at?sceneHeading:heading).focus({preventScroll:true});dialog.scrollTop=0;
       if(!latest.started_at&&!latest.completed_at){begin.disabled=true;scheduleEditor(c,latest,scheduleBox,(plan,pending,revision)=>{latest.plan=plan;if(Number.isInteger(revision))latest.revision=revision;introPlan.textContent=scenePlan.textContent=planText(plan);begin.disabled=pending;progress.textContent=pending?'Agree on your proposed time and place before beginning.':'When you are ready together, begin your shared moment. Both of you will see it as underway.';});}
       el('sharedInvitationStatus').textContent=latest.completed_at?'Your private memory is ready.':'Your accepted moment is ready to open.';
     }catch(e){if(version===momentVersion)el('sharedInvitationStatus').textContent=e.message;}
