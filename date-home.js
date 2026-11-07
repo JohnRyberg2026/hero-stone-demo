@@ -5,10 +5,11 @@ const DateHomeModel=(()=>{
  function validDay(s){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s)||Number(s.slice(0,4))<1900||Number(s.slice(0,4))>2199)return false;const d=new Date(s+'T12:00:00');return Number.isFinite(d.getTime())&&day(d)===s;}
  function clean(raw){if(!raw||raw.version!==1||!Array.isArray(raw.events)||raw.events.length>200||!Array.isArray(raw.hearts)||raw.hearts.length>366)throw Error('This saved calendar could not be read.');const events=raw.events.map(e=>{if(!e||typeof e.id!=='string'||e.id.length>80||!e.id||typeof e.title!=='string'||!e.title.trim()||e.title.length>120||!kinds.includes(e.kind)||!validDay(e.day))throw Error('A calendar entry is invalid.');return {id:e.id,title:e.title.trim(),kind:e.kind,day:e.day};});if(new Set(events.map(e=>e.id)).size!==events.length)throw Error('Duplicate calendar entries.');return {version:1,events,hearts:[...new Set(raw.hearts.filter(validDay))]};}
  function active(items,userId){return (Array.isArray(items)?items:[]).filter(x=>x&&x.status==='accepted'&&!x.completed_at&&(x.sender_id===userId||x.recipient_id===userId)).map(x=>({id:String(x.id),title:x.reveal_mode==='all'?String(x.title||'A moment for us').slice(0,120):'A moment waiting for us',started:!!x.started_at,day:x.plan?.whenMode==='specific'&&validDay(x.plan?.momentDate)?x.plan.momentDate:'',time:/^([01]\d|2[0-3]):[0-5]\d$/.test(x.plan?.momentTime||'')?x.plan.momentTime:'',zone:typeof x.plan?.momentZone==='string'?x.plan.momentZone.slice(0,80):''}));}
+ function planLink(day){if(!validDay(day))throw Error('Choose a valid calendar day.');return 'invitation-opening.html?planDay='+encodeURIComponent(day)+'#heart-stone-plan';}
  function momentLink(id){return 'invitation-opening.html?moment='+encodeURIComponent(String(id))+'#shared-invitations';}
  function timeLabel(time){if(!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(time))return 'Time to confirm';const [h,m]=time.split(':').map(Number);return (h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM');}
  const greeting=(hour,name)=>'Good '+(hour<12?'morning':hour<18?'afternoon':'evening')+(name?', '+name:'')+'.';
- return {kinds,day,validDay,clean,active,greeting,momentLink,timeLabel};
+ return {kinds,day,validDay,clean,active,greeting,momentLink,timeLabel,planLink};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=DateHomeModel;
 
@@ -23,7 +24,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
    el('dqEventForm').hidden=true;el('dqEventName').value='';el('dqEventDay').value='';
    el('dqGreeting').textContent='Welcome back.';el('dqMoments').replaceChildren();el('dqMomentsStatus').textContent='Sign in to see your moments.';
    for(const id of ['dqDayEvents','dqFutureWishes','dqDays'])el(id).replaceChildren();
-   for(const id of ['dqAddEvent','dqAvailability','dqImportCalendar'])el(id).disabled=true;
+   for(const id of ['dqAddEvent','dqAvailability','dqImportCalendar','dqPlanDay'])el(id).disabled=true;
    el('dqImportCalendar').hidden=true;say('Sign in to open your private calendar.');
  }
  async function authorized(expected=owner){
@@ -59,7 +60,7 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
  el('dqDayTitle').textContent=new Date(selected+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});el('dqDayEvents').replaceChildren();let count=0;
  for(const e of data.events.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p',e.kind==='wish'?'Future wish / bucket list':e.kind));n.append(action('Edit',()=>edit(e)),action('Remove',async()=>{if(busy||!readable)return;try{await authorized();if(!confirm('Remove this private calendar entry from your account?'))return;await saveNext({...data,events:data.events.filter(x=>x.id!==e.id)});say('Entry removed from your account.');}catch(err){say(err.message);}}));el('dqDayEvents').append(n);}
  for(const e of moments.filter(e=>e.day===selected)){count++;const n=node('div',undefined,'dq-event');n.append(node('strong',e.title),node('p','Accepted invitation · '+M.timeLabel(e.time)+(e.zone?' · '+e.zone:'')));const a=node('a',e.started?'Continue Our Moment':'Open Our Moment');a.href=M.momentLink(e.id);n.append(a);el('dqDayEvents').append(n);}
- if(!count)el('dqDayEvents').append(node('p','A little room for what matters. No entries for this day.'));el('dqAvailability').disabled=busy||selected<today||!readable;el('dqAvailability').textContent=data.hearts.includes(selected)&&selected>=today?'Remove my availability heart':'♡ Mark my availability for this day';el('dqFutureWishes').replaceChildren();const wishes=data.events.filter(e=>e.kind==='wish'&&e.day>=today).sort((a,b)=>a.day.localeCompare(b.day));for(const w of wishes){const b=action(w.day+' · '+w.title,()=>{selected=w.day;year=Number(w.day.slice(0,4));month=Number(w.day.slice(5,7))-1;render();});el('dqFutureWishes').append(b);}if(!wishes.length)el('dqFutureWishes').append(node('p','Something you hope to share, next month or years from now. Add a future wish to begin.'));el('dqAddEvent').disabled=busy||!readable;
+ if(!count)el('dqDayEvents').append(node('p','A little room for what matters. No entries for this day.'));el('dqAvailability').disabled=busy||selected<today||!readable;el('dqAvailability').textContent=data.hearts.includes(selected)&&selected>=today?'Remove my availability heart':'♡ Mark my availability for this day';el('dqFutureWishes').replaceChildren();const wishes=data.events.filter(e=>e.kind==='wish'&&e.day>=today).sort((a,b)=>a.day.localeCompare(b.day));for(const w of wishes){const b=action(w.day+' · '+w.title,()=>{selected=w.day;year=Number(w.day.slice(0,4));month=Number(w.day.slice(5,7))-1;render();});el('dqFutureWishes').append(b);}if(!wishes.length)el('dqFutureWishes').append(node('p','Something you hope to share, next month or years from now. Add a future wish to begin.'));el('dqAddEvent').disabled=busy||!readable;el('dqPlanDay').disabled=busy||!readable||selected<today;
  el('dqImportCalendar').disabled=busy||!readable;el('dqRefreshCalendar').disabled=busy;
  el('dqEventForm').querySelector('[type=submit]').disabled=busy||!readable;
  }
@@ -90,6 +91,13 @@ if(typeof document!=='undefined'&&document.getElementById('dqCalendarTitle'))(()
  el('dqMonth').onchange=()=>{month=Number(el('dqMonth').value);render();};
  el('dqYear').onchange=()=>{const y=Number(el('dqYear').value);if(Number.isInteger(y)&&y>=1900&&y<=2199){year=y;render();}else{el('dqYear').value=String(year);say('Choose a year from 1900 to 2199.');}};
  el('dqToday').onclick=()=>{const d=new Date();selected=M.day(d);month=d.getMonth();year=d.getFullYear();render();};
+ el('dqPlanDay').onclick=async()=>{
+   if(busy||!readable)return;
+   try{await authorized();if(selected<M.day(new Date()))throw Error('Choose today or a future day to plan a moment.');
+     if(!el('dqEventForm').hidden&&!confirm('Leave the unsaved calendar entry and plan a moment instead?'))return;
+     window.location.href=M.planLink(selected);
+   }catch(err){say(err.message);}
+ };
  el('dqAddEvent').onclick=()=>edit();
  el('dqCancelEvent').onclick=()=>{if(busy)return;el('dqEventForm').hidden=true;editing=null;if(!readable)refresh();};
  el('dqEventForm').onsubmit=async event=>{
