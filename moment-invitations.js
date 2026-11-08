@@ -360,11 +360,12 @@
       let memoryNote=null,savedMemory=memory,memorySaving=false;
       const hasUnsavedMemory=()=>memoryNote!==null&&memoryNote.value!==savedMemory;
       function requestMomentClose(){
-        if(memorySaving||scheduleBox.scheduleIsSaving?.()){progress.textContent='Your changes are still loading or saving. Please wait a moment.';return;}
+        if(memorySaving||scheduleBox.scheduleIsSaving?.()){progress.textContent='Your changes are still loading or saving. Please wait a moment.';return false;}
         if(hasUnsavedMemory()&&!confirm('Leave without saving your memory changes? Choose Cancel to keep editing.'))return;
         if(scheduleBox.scheduleHasEdits?.()&&!confirm('Leave without sharing your time-and-place suggestion? Choose Cancel to keep editing.'))return;
         dialog.close();
         if(sharedDetailsChanged)refreshInbox();
+        return true;
       }
       function warnBeforeLeaving(event){
         if(!hasUnsavedMemory()&&!memorySaving&&!scheduleBox.scheduleHasEdits?.()&&!scheduleBox.scheduleIsSaving?.())return;
@@ -440,6 +441,7 @@
       const navigation=node('nav',undefined,'moment-navigation');
       navigation.setAttribute('aria-label','Moment navigation');
       action(navigation,memoriesOnly?'← Our Memories':'← Invitations',requestMomentClose);
+      action(navigation,'Home',()=>{if(requestMomentClose())el('collectionHome').click();});
       dialog.append(navigation,intro,scene);
       const exits=node('div',undefined,'actions');
       action(exits,memoriesOnly?'Back — Our Memories':'Back — Invitations',requestMomentClose);
