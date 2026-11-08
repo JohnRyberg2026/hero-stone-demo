@@ -256,8 +256,8 @@
       await refreshInbox();return true;
     }catch(e){el('sharedInvitationStatus').textContent=e.message;buttons.forEach(b=>b.disabled=false);return false;}
   }
-  async function scheduleEditor(c,item,container,onPlan){
-    const box=node('section'),title=node('h3','Choose Our Time and Place'),status=node('p','Loading your shared details…','notice');
+  async function scheduleEditor(c,item,container,onPlan,openEditor=false){
+    const box=node('section'),title=node('h3',openEditor?'Suggest Another Time':'Choose Our Time and Place'),status=node('p','Loading your shared details…','notice');
     status.setAttribute('role','status');box.append(title,status);container.append(box);
     let state,busy=false,fields={},baseline='';
     const snapshot=()=>JSON.stringify(Object.fromEntries(Object.entries(fields).map(([key,input])=>[key,input.value])));
@@ -316,14 +316,16 @@
       }
       baseline=snapshot();
       const submit=node('button',pending?'Suggest Different Details':'Propose Our Time and Place');submit.type='submit';form.append(submit);
+      form.append(node('p','Plans can change. Your current time stays in place until you both confirm a new one.','helper'));
       form.append(node('p','These details are shared inside Heart Stone. Your partner must confirm each new proposal. No email or text message is sent.','helper'));
       form.onsubmit=e=>{e.preventDefault();if(confirm('Share these proposed details with your partner?'))save('propose',Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,v.value.trim()])));};
-      const toggle=action(box,p.status==='confirmed'?'Suggest a Change':'Add My Suggestion',()=>{form.hidden=!form.hidden;toggle.setAttribute('aria-expanded',String(!form.hidden));if(!form.hidden)fields.date.focus();});toggle.setAttribute('aria-expanded','false');form.hidden=true;box.append(form);
+      const toggle=action(box,p.status==='confirmed'?'Suggest a Change':'Add My Suggestion',()=>{form.hidden=!form.hidden;toggle.setAttribute('aria-expanded',String(!form.hidden));if(!form.hidden)fields.date.focus();});toggle.setAttribute('aria-expanded',String(openEditor));form.hidden=!openEditor;box.append(form);
+      if(openEditor){fields.date.focus();openEditor=false;}
       action(box,'Refresh Shared Details',load);
     }
     await load();
   }
-  async function openMoment(c,item,card){
+  async function openMoment(c,item,card,{editSchedule=false}={}){
     const version=++momentVersion;
     el('sharedInvitationStatus').textContent='Opening your moment…';
     try{
@@ -435,7 +437,7 @@
       dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
       dialog.addEventListener('close',()=>{window.removeEventListener('beforeunload',warnBeforeLeaving);dialog.remove();if(momentDialog===dialog)momentDialog=null;if(card.isConnected)card.querySelector('button')?.focus({preventScroll:true});});
       document.body.append(dialog);dialog.showModal();(latest.started_at||latest.completed_at?sceneHeading:heading).focus({preventScroll:true});dialog.scrollTop=0;
-      if(!latest.started_at&&!latest.completed_at){begin.disabled=true;scheduleEditor(c,latest,scheduleBox,(plan,pending,revision)=>{latest.plan=plan;if(Number.isInteger(revision))latest.revision=revision;introPlan.textContent=scenePlan.textContent=planText(plan);begin.disabled=pending;progress.textContent=pending?'Agree on your proposed time and place before beginning.':'When you are ready together, begin your shared moment. Both of you will see it as underway.';});}
+      if(!latest.started_at&&!latest.completed_at){begin.disabled=true;scheduleEditor(c,latest,scheduleBox,(plan,pending,revision)=>{latest.plan=plan;if(Number.isInteger(revision))latest.revision=revision;introPlan.textContent=scenePlan.textContent=planText(plan);begin.disabled=pending;progress.textContent=pending?'Agree on your proposed time and place before beginning.':'When you are ready together, begin your shared moment. Both of you will see it as underway.';},editSchedule);}
       el('sharedInvitationStatus').textContent=latest.completed_at?'Your private memory is ready.':'Your accepted moment is ready to open.';
     }catch(e){if(version===momentVersion)el('sharedInvitationStatus').textContent=e.message;}
   }
@@ -504,7 +506,7 @@
         details.append(summary,node('div',item.message,'quote'),node('div',planText(item.plan),'quote'));
         card.append(details);
         if(item.status==='accepted'){
-          if(!item.started_at&&!item.completed_at)action(card,'Choose Our Time and Place',()=>openMoment(c,item,card));
+          if(!item.started_at&&!item.completed_at)action(card,item.plan?.momentDate?'Suggest Another Time':'Choose Our Time and Place',()=>openMoment(c,item,card,{editSchedule:true}));
           action(card,item.completed_at?'Revisit Our Moment ❤️':item.started_at?'Return to Our Moment ❤️':'Reveal Our Moment ❤️',()=>openMoment(c,item,card)).className='primary';
           if(!item.completed_at)card.append(node('p','Saying yes to time together leaves room to change your mind or stop.','helper'));
         }else{card.append(node('p',item.story));}
