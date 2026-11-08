@@ -5,6 +5,9 @@ on:
     paths:
       - 'index.html'
       - 'date-home.js'
+      - 'account-recovery.html'
+      - 'account-recovery.mjs'
+      - 'tests/account-recovery.test.mjs'
       - 'membership-reader.mjs'
       - 'tests/membership-reader.test.mjs'
       - 'date-quest-membership.mjs'
@@ -24,6 +27,9 @@ on:
     paths:
       - 'index.html'
       - 'date-home.js'
+      - 'account-recovery.html'
+      - 'account-recovery.mjs'
+      - 'tests/account-recovery.test.mjs'
       - 'membership-reader.mjs'
       - 'tests/membership-reader.test.mjs'
       - 'date-quest-membership.mjs'
@@ -74,3 +80,5 @@ jobs:
         run: node --test tests/date-quest-membership.test.mjs
       - name: Check private membership display and account changes
         run: node --test tests/membership-reader.test.mjs
+      - name: Check isolated password recovery and activation gate
+        run: node --test tests/account-recovery.test.mjs
