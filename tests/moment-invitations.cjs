@@ -176,6 +176,18 @@ const tick=()=>new Promise(r=>setImmediate(r));
  }
  console.log('PASS: either participant opens time changes directly; opening and dismissed confirmation never propose; failed saves retain changes; explicit versioned proposals do not auto-confirm.');
 
+
+ for(const account of ['sender','partner-123456']){
+   const waiting=setup();waiting.state.user={id:account,email:'account@example.test'};
+   waiting.state.items=[{id:'pending-time',sender_id:'sender',recipient_id:'partner-123456',status:'accepted',revision:1,title:'A walk',plan:{momentDate:'2026-12-01'},time_change:{status:'pending',proposed_by:'sender'}}];
+   await waiting.els.refreshSharedInvitations.onclick();
+   const card=waiting.els.sharedInvitationList.children[0],copy=texts(card);
+   assert(copy.includes(account==='sender'?'Your time suggestion is waiting for your partner’s confirmation.':'A time change is waiting for your review.'));
+   assert(card.querySelectorAll('button').some(b=>b.textContent===(account==='sender'?'View My Time Suggestion':'Review Time Change')));
+   assert(!waiting.state.calls.some(x=>x.name==='shared_moment_schedule'&&x.args.p_action==='confirm'));
+ }
+ console.log('PASS: pending-time cards distinguish partner review from own waiting status without confirming or mutating.');
+
  const html=fs.readFileSync('invitation-opening.html','utf8');for(const [,s] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(s);new vm.Script(fs.readFileSync('moment-invitations.js','utf8'));
  for(const id of ['sharedInbox','prepareLiveSend','sendInvitationDialog','openSharedInvitations'])assert(html.includes('id="'+id+'"'));
  assert(/function screen\(id\)\{[\s\S]*?\$\("liveSendStatus"\)\.textContent="";/.test(html));
