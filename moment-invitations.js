@@ -211,16 +211,50 @@
   function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
   function action(parent,label,handler){const b=node('button',label,'secondary');b.type='button';b.style.marginTop='8px';b.onclick=handler;parent.appendChild(b);return b;}
   const statuses={pending:'Waiting for a reply',accepted:'It’s a date. Your invitation is accepted.',declined:'This invitation was declined. This invitation is closed.',reschedule:'Another time was requested. The original time is not confirmed.',cancelled:'This invitation is cancelled. No further response is needed.'};
+  function requestCancellation(c,item,card,onSaved){
+    const dialog=node('dialog'),heading=node('h2','Cancel this invitation?');
+    dialog.style.cssText='max-width:540px;width:calc(100% - 32px);max-height:85vh;overflow:auto;padding:24px;border:2px solid #c99457;border-radius:18px;background:#fffdf9;color:#2d241f';
+    heading.tabIndex=-1;dialog.setAttribute('aria-label','Cancel this invitation?');
+    dialog.append(heading,node('p','Plans can change. You don’t need to give a reason.'));
+    const editor=node('div'),label=node('label','Message for your partner (optional)'),note=node('textarea');
+    note.maxLength=400;note.setAttribute('aria-label','Cancellation message (optional)');note.placeholder='Add a few words if you’d like.';label.append(note);editor.append(label);
+    editor.append(node('p','Your cancellation and message will appear in Our Invitations. No email or text message is sent.','helper'));
+    const review=node('div');review.hidden=true;
+    const message=node('div','','quote');review.append(node('p','This invitation will close for both of you.'),message,node('p','Handle restaurant, hotel, ticket or other reservations separately and keep their cancellation confirmations.','helper'));
+    const feedback=node('p','','notice');feedback.setAttribute('role','status');
+    let busy=false,submitted='';
+    action(editor,'Review Cancellation',()=>{submitted=note.value.trim();message.textContent=submitted||'No message added.';editor.hidden=true;review.hidden=false;confirmButton.textContent=submitted?'Cancel Invitation & Share Message':'Confirm Cancellation';confirmButton.focus();});
+    const confirmButton=action(review,'Confirm Cancellation',async()=>{
+      if(busy)return;busy=true;note.disabled=true;
+      dialog.querySelectorAll('button').forEach(b=>b.disabled=true);feedback.textContent='Saving the cancellation…';
+      const saved=await updateInvitation(c,item,'cancelled',submitted,card);
+      if(saved){onSaved?.();dialog.close();return;}
+      feedback.textContent=el('sharedInvitationStatus').textContent;
+      busy=false;note.disabled=false;dialog.querySelectorAll('button').forEach(b=>b.disabled=false);
+    });confirmButton.className='primary';
+    action(review,'Back — Edit Message',()=>{review.hidden=true;editor.hidden=false;note.focus();});
+    const leave=()=>{if(busy)return;if(note.value.trim()&&!confirm('Leave without sharing this cancellation message?'))return;dialog.close();};
+    dialog.append(editor,review,feedback);action(dialog,'Keep This Invitation',leave);
+    const warn=event=>{if(note.value.trim()||busy){event.preventDefault();event.returnValue='';}};
+    dialog.addEventListener('cancel',event=>{event.preventDefault();leave();});
+    const accountChanged=()=>dialog.close();
+    window.addEventListener('heartstone:invitation-account',accountChanged);
+    dialog.addEventListener('close',()=>{window.removeEventListener('beforeunload',warn);window.removeEventListener('heartstone:invitation-account',accountChanged);dialog.remove();});
+    window.addEventListener('beforeunload',warn);
+    document.body.append(dialog);dialog.showModal();heading.focus();
+  }
   async function updateInvitation(c,item,response,note,card){
     const buttons=[...card.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);
     el('sharedInvitationStatus').textContent='Saving your response…';
     try{
       const current=await context();
       if(current.user.id!==c.user.id||current.hs!==c.hs)throw new Error('Your account changed. Refresh invitations before responding.');
-      const result=await current.sb.rpc(response==='cancelled'?'cancel_moment_invitation':'respond_moment_invitation_revision',response==='cancelled'?{p_invitation_id:item.id}:{p_invitation_id:item.id,p_expected_revision:item.revision||0,p_response:response,p_note:note||''});
-      if(result.error)throw new Error('We couldn’t save this response. It may already have been answered or closed. Refresh invitations before trying again.');
-      await refreshInbox();
-    }catch(e){el('sharedInvitationStatus').textContent=e.message;buttons.forEach(b=>b.disabled=false);}
+      const result=await current.sb.rpc(response==='cancelled'?'cancel_moment_invitation_revision':'respond_moment_invitation_revision',response==='cancelled'?{p_invitation_id:item.id,p_expected_user:c.user.id,p_expected_revision:item.revision||0,p_note:note||''}:{p_invitation_id:item.id,p_expected_revision:item.revision||0,p_response:response,p_note:note||''});
+      if(result.error||(response==='cancelled'&&result.data!=='cancelled'))throw new Error('We couldn’t save this response. It may already have been answered or closed. Refresh invitations before trying again.');
+      const verified=await current.sb.auth.getUser();
+      if(verified.error||verified.data?.user?.id!==c.user.id)throw Error('Your account changed. Refresh invitations before continuing.');
+      await refreshInbox();return true;
+    }catch(e){el('sharedInvitationStatus').textContent=e.message;buttons.forEach(b=>b.disabled=false);return false;}
   }
   async function scheduleEditor(c,item,container,onPlan){
     const box=node('section'),title=node('h3','Choose Our Time and Place'),status=node('p','Loading your shared details…','notice');
@@ -397,7 +431,7 @@
       dialog.append(navigation,intro,scene);
       const exits=node('div',undefined,'actions');
       action(exits,memoriesOnly?'Back — Our Memories':'Back — Invitations',requestMomentClose);
-      if(!latest.completed_at)action(exits,'Stop This Invitation',()=>{if(confirm('Close this invitation for both of you?')){dialog.close();updateInvitation(c,latest,'cancelled','',card);}});
+      if(!latest.completed_at)action(exits,'Cancel This Invitation',()=>requestCancellation(c,latest,card,()=>dialog.close()));
       dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
       dialog.addEventListener('close',()=>{window.removeEventListener('beforeunload',warnBeforeLeaving);dialog.remove();if(momentDialog===dialog)momentDialog=null;if(card.isConnected)card.querySelector('button')?.focus({preventScroll:true});});
       document.body.append(dialog);dialog.showModal();(latest.started_at||latest.completed_at?sceneHeading:heading).focus({preventScroll:true});dialog.scrollTop=0;
@@ -475,6 +509,7 @@
           if(!item.completed_at)card.append(node('p','Saying yes to time together leaves room to change your mind or stop.','helper'));
         }else{card.append(node('p',item.story));}
         if(item.response_note)card.append(node('div','Suggested time: '+item.response_note,'quote'));
+        if(item.status==='cancelled'&&item.cancellation_note)card.append(node('div','Cancellation message: '+item.cancellation_note,'quote'));
         if(!incoming&&item.status==='reschedule')revisedTimeForm(c,item,card);
         if(incoming&&item.status==='pending'){
           action(card,'I’d love to ❤️',()=>{if(confirm('Accept this invitation? Your partner will see your response.'))updateInvitation(c,item,'accepted','',card);});
@@ -486,7 +521,7 @@
           action(reschedule,'Back — Keep Deciding',()=>{reschedule.hidden=true;rescheduleButton.setAttribute('aria-expanded','false');rescheduleButton.focus();});card.append(reschedule);
           action(card,'Thank you for asking. I’ll pass this time.',()=>{if(confirm('Decline this invitation? Your partner will see that it is closed.'))updateInvitation(c,item,'declined','',card);});
         }
-        if(!item.completed_at&&['pending','accepted','reschedule'].includes(item.status))action(card,incoming?'Stop This Invitation':'Cancel This Invitation',()=>{if(confirm('Close this invitation for both of you?'))updateInvitation(c,item,'cancelled','',card);});
+        if(!item.completed_at&&['pending','accepted','reschedule'].includes(item.status))action(card,'Cancel This Invitation',()=>requestCancellation(c,item,card));
         el('sharedInvitationList').append(card);
       }
       el('sharedInvitationStatus').textContent=memoryView?(items.length?items.length+' completed moment'+(items.length===1?'':'s')+'. Your written memories stay private.':'Your story has room to grow. Completed moments will appear here.') : items.length?items.length+' invitation'+(items.length===1?'':'s')+' in your collection. Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
