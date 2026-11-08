@@ -38,7 +38,7 @@ Live Auth settings show public email signup enabled, email confirmation required
 **HOLD:** disable public signup for the controlled pilot, reverify the live setting, and confirm the administrator-issued invitation route. Available connected tools do not support Auth configuration updates; no setting was changed and no account or email was created. See [live verification and exact next step](PILOT_ENROLLMENT_VERIFICATION.md). This is not a full GraphQL audit.
 
 ### A3 — Resolve the new-account password/recovery decision
-The advisor reports leaked-password protection disabled. Session expiry recovery is implemented; a password-reset UI is not. These are different features.
+The advisor reports leaked-password protection disabled. Session expiry recovery is implemented. A dedicated password-recovery screen/controller is now built, but recovery email requests remain disabled pending actual redirect, template and delivery verification. Mocked tests do not clear this gate.
 
 **Exit:** before creating external tester accounts, record the supported password-protection setting and an operational recovery/support route. Enable available protection or document an explicit, bounded alternative appropriate to a small controlled pilot. Confirm delivery/access for that route once; do not claim it is working from a mocked test.
 
@@ -84,3 +84,6 @@ Existing audit details and remediation references remain in [PILOT_ACCESS_REVIEW
 Reverified live Auth: signup remains enabled, email confirmation required, anonymous signup disabled; effective REST schemas remain public and graphql_public. The unfinished dashboard sign-in did not change those settings. A2 remains HOLD. A3 remains HOLD: password-protection warning and missing complete password-recovery/delivery evidence remain.
 
 Next coding priority is account recovery. This checkpoint is not pilot enrollment, billing or launch clearance.
+
+## Recovery implementation checkpoint — November 8, 2026
+[Account recovery](ACCOUNT_RECOVERY_CHECKPOINT.md) now has an isolated in-memory Auth client, verified recovery-event/account checks, bounded failures and 19 mocked checks. Forgot password opens separately to avoid navigating away from open drafts. Email requests remain off until the exact canonical redirect and controlled real delivery/update/sign-in evidence pass. No email, password or Auth configuration was changed; A2 and A3 remain HOLD.
