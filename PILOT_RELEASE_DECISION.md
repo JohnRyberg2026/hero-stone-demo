@@ -77,3 +77,10 @@ Once A1–A3 have recorded acceptable outcomes, take a release snapshot and perf
 The [read-only surface assertion](database/test-pilot-access-surface.sql) detects newly callable public privileged functions and newly anonymous privileged functions outside the recorded signatures. It passed against the current database. It does not mark partial/unresolved functions safe and does not run automatically in GitHub without a database runner. Browser/server CI uses mocked transport; database role tests use synthetic rollback fixtures.
 
 Existing audit details and remediation references remain in [PILOT_ACCESS_REVIEW.md](PILOT_ACCESS_REVIEW.md). Sources, tests and database migration records are a reviewable development checkpoint, not a guarantee that every live interaction or every part of the broader Heartstone platform has been audited.
+
+## Locked development baseline — November 8, 2026
+[Locked checkpoint](DATE_QUEST_LOCKED_CHECKPOINT_2026-11-08.md) pins source `5c2d57b91b3a6f7a64ac66d7b0d018f6b4fdf6f4`, successful relevant GitHub regression/deployment and 15 passing database scripts. It records the newer membership, cancellation, pending-change visibility, independent/paged Memories and guarded Home behavior.
+
+Reverified live Auth: signup remains enabled, email confirmation required, anonymous signup disabled; effective REST schemas remain public and graphql_public. The unfinished dashboard sign-in did not change those settings. A2 remains HOLD. A3 remains HOLD: password-protection warning and missing complete password-recovery/delivery evidence remain.
+
+Next coding priority is account recovery. This checkpoint is not pilot enrollment, billing or launch clearance.
