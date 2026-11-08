@@ -188,6 +188,23 @@ const tick=()=>new Promise(r=>setImmediate(r));
  }
  console.log('PASS: pending-time cards distinguish partner review from own waiting status without confirming or mutating.');
 
+
+ const replyView=setup();
+ replyView.state.items=[
+ {id:'incoming',status:'pending',sender_id:'partner-123456',recipient_id:'sender',title:'Incoming',plan:{}},
+ {id:'reschedule',status:'reschedule',sender_id:'sender',recipient_id:'partner-123456',title:'Change requested',plan:{}},
+ {id:'time-review',status:'accepted',sender_id:'sender',recipient_id:'partner-123456',title:'Time review',plan:{},time_change:{status:'pending',proposed_by:'partner-123456'}},
+ {id:'waiting',status:'pending',sender_id:'sender',recipient_id:'partner-123456',title:'Waiting',plan:{}},
+ {id:'own-time',status:'accepted',sender_id:'sender',recipient_id:'partner-123456',title:'Own change',plan:{},time_change:{status:'pending',proposed_by:'sender'}}
+ ];
+ await replyView.els.refreshSharedInvitations.onclick();
+ assert(replyView.els.sharedInvitationStatus.textContent.includes('Showing 5 invitations.'));
+ assert(replyView.els.sharedInvitationStatus.textContent.includes('3 awaiting your reply.'));
+ assert(texts(replyView.els.sharedInvitationList.children[0]).includes('Your reply is needed.'));
+ assert(texts(replyView.els.sharedInvitationList.children[1]).includes('Your reply is needed.'));
+ assert(!texts(replyView.els.sharedInvitationList.children[3]).includes('Your reply is needed.'));
+ console.log('PASS: reply count and labels include incoming replies and partner time changes, exclude own waiting suggestions.');
+
  const html=fs.readFileSync('invitation-opening.html','utf8');for(const [,s] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(s);new vm.Script(fs.readFileSync('moment-invitations.js','utf8'));
  for(const id of ['sharedInbox','prepareLiveSend','sendInvitationDialog','openSharedInvitations'])assert(html.includes('id="'+id+'"'));
  assert(/function screen\(id\)\{[\s\S]*?\$\("liveSendStatus"\)\.textContent="";/.test(html));
