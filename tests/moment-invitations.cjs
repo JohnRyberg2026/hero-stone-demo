@@ -12,7 +12,7 @@ function setup(){
  Object.assign(els.message,{value:'I miss you.'});els.experienceTitle.value='Our hideaway';els.experienceStory.value='A quiet moment';els.revealMode.value='surprise';
  els.sharedInbox.append(Object.assign(new Element('.eyebrow'),{textContent:''}),new Element('h1'),new Element('.storyOpening'));
  const state={user:{id:'sender',email:'sender@example.test'},hs:'hs',partners:[{id:'partner-123456',name:'Partner'}],items:[],calls:[],failSend:false};
- const sb={auth:{getUser:async()=>({data:{user:state.user}}),onAuthStateChange:f=>{state.authListener=f;}},from:()=>({select(){return this},eq(){return this},limit:async()=>({data:[{heart_stone_id:state.hs}]})}),rpc:async(name,args)=>{state.calls.push({name,args});if(name==='shared_moment_schedule'){if(state.failSchedule)return {error:{message:'Schedule changed. Refresh.'}};if(args.p_action==='propose')state.schedule={version:1,proposal:{...args.p_details,status:'pending',proposed_by:state.user.id},plan:{}};return {data:state.schedule||{version:0,proposal:{},plan:{}}};}if(name==='finish_shared_moment'){if(state.failFinish)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).completed_at='2026-10-21T13:00:00Z';return {data:'2026-10-21T13:00:00Z'};}if(name==='my_shared_moment_memory'){if(state.failMemory)return {error:{message:'network'}};if(args.p_note!==undefined)state.memory=args.p_note;return {data:state.memory||''};}if(name==='begin_shared_moment'){if(state.failStart)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).started_at='2026-10-21T12:00:00Z';return {data:'2026-10-21T12:00:00Z'};}if(name==='cancel_moment_invitation_revision'){if(state.failCancel)return {error:{message:'network'}};const item=state.items.find(x=>x.id===args.p_invitation_id);item.status='cancelled';item.cancellation_note=args.p_note;return {data:'cancelled'};}if(name==='my_moment_profile_picture')return {data:args.p_picture||'sun'};if(name==='get_moment_invitation_partners')return {data:state.partners};if(name==='list_moment_invitations')return {data:state.items};if(name==='send_checked_moment_invitation'&&state.failSend)return {error:{message:'network'}};return {data:'invitation-id'};}};
+ const sb={auth:{getUser:async()=>({data:{user:state.user}}),onAuthStateChange:f=>{state.authListener=f;}},from:()=>({select(){return this},eq(){return this},limit:async()=>({data:[{heart_stone_id:state.hs}]})}),rpc:async(name,args)=>{state.calls.push({name,args});if(name==='shared_moment_schedule'){if(state.failSchedule)return {error:{message:'Schedule changed. Refresh.'}};if(args.p_action==='propose')state.schedule={version:1,proposal:{...args.p_details,status:'pending',proposed_by:state.user.id},plan:state.schedule?.plan||{}};return {data:state.schedule||{version:0,proposal:{},plan:{}}};}if(name==='finish_shared_moment'){if(state.failFinish)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).completed_at='2026-10-21T13:00:00Z';return {data:'2026-10-21T13:00:00Z'};}if(name==='my_shared_moment_memory'){if(state.failMemory)return {error:{message:'network'}};if(args.p_note!==undefined)state.memory=args.p_note;return {data:state.memory||''};}if(name==='begin_shared_moment'){if(state.failStart)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).started_at='2026-10-21T12:00:00Z';return {data:'2026-10-21T12:00:00Z'};}if(name==='cancel_moment_invitation_revision'){if(state.failCancel)return {error:{message:'network'}};const item=state.items.find(x=>x.id===args.p_invitation_id);item.status='cancelled';item.cancellation_note=args.p_note;return {data:'cancelled'};}if(name==='my_moment_profile_picture')return {data:args.p_picture||'sun'};if(name==='get_moment_invitation_partners')return {data:state.partners};if(name==='list_moment_invitations')return {data:state.items};if(name==='send_checked_moment_invitation'&&state.failSend)return {error:{message:'network'}};return {data:'invitation-id'};}};
  const storage=new Map();const document={body:new Element('body'),getElementById:id=>{assert(els[id],id);return els[id]},createTextNode:text=>Object.assign(new Element('text'),{textContent:text}),createElement:tag=>new Element(tag),head:{appendChild:s=>s.onload()}};
  const ctx=vm.createContext({document,Event,Intl,setTimeout,clearTimeout,URL,URLSearchParams,window:{location:{search:'',hash:''},addEventListener(){},removeEventListener(){},dispatchEvent(){},supabase:{createClient:()=>sb}},Option:function(t,v){const e=new Element('option');e.textContent=t;e.value=v;return e;},TextEncoder,crypto:webcrypto,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},confirm:()=>state.confirm!==false,planDraft:()=>({whenMode:'together',length:'About 2 hours',meetMode:'home'}),kind:'date',screen:id=>{state.screen=id;}});
  vm.runInContext(fs.readFileSync('moment-invitations.js','utf8'),ctx);
@@ -78,7 +78,7 @@ const tick=()=>new Promise(r=>setImmediate(r));
  const sched=setup();sched.state.items=[{id:'sched',sender_id:'sender',recipient_id:'partner-123456',status:'accepted',revision:0,title:'Our time',plan:{}}];
  await sched.els.refreshSharedInvitations.onclick();await sched.els.sharedInvitationList.querySelectorAll('button').find(b=>b.textContent==='Choose Our Time and Place').onclick();await tick();await tick();
  const sd=sched.body.children.at(-1);assert(texts(sd).includes('Suggest a time and place'));assert(!sched.state.calls.some(x=>x.args.p_action==='propose'));
- sd.querySelectorAll('button').find(b=>b.textContent==='Add My Suggestion').onclick();const sf=sd.querySelectorAll('form')[0],si=sf.querySelectorAll('input');['2026-12-01','18:00','America/New_York','At home','Two hours'].forEach((v,i)=>si[i].value=v);
+ assert.equal(sd.querySelectorAll('form')[0].hidden,false);const sf=sd.querySelectorAll('form')[0],si=sf.querySelectorAll('input');['2026-12-01','18:00','America/New_York','At home','Two hours'].forEach((v,i)=>si[i].value=v);
  assert(texts(sd).includes('← Invitations'));
  const callsBeforeRefresh=sched.state.calls.length;
  sched.state.confirm=false;
@@ -151,6 +151,30 @@ const tick=()=>new Promise(r=>setImmediate(r));
  state.user={id:'other'};await cancelDialog.querySelectorAll('button').find(b=>b.textContent==='Confirm Cancellation').onclick();
  assert(!state.calls.some(x=>x.name==='cancel_moment_invitation_revision'));
  console.log('PASS: cancellation review/back/keep never save; explicit confirmation sends account/revision/note; failure preserves message; changed accounts block writes.');
+
+
+ for(const account of ['sender','partner-123456']){
+   const edit=setup();edit.state.user={id:account,email:'account@example.test'};
+   edit.state.items=[{id:'change-time',sender_id:'sender',recipient_id:'partner-123456',status:'accepted',revision:2,title:'Together',story:'A walk',plan:{whenMode:'specific',momentDate:'2026-12-01',momentTime:'18:00',momentZone:'America/New_York',meetPlace:'Garden'}}];
+   edit.state.schedule={version:7,revision:2,proposal:{status:'confirmed',date:'2026-12-01',time:'18:00',zone:'America/New_York',place:'Garden'},plan:edit.state.items[0].plan};
+   await edit.els.refreshSharedInvitations.onclick();
+   await edit.els.sharedInvitationList.querySelectorAll('button').find(b=>b.textContent==='Suggest Another Time').onclick();await tick();await tick();
+   const d=edit.body.children.at(-1),form=d.querySelectorAll('form')[0];
+   assert.equal(form.hidden,false);assert.equal(form.querySelectorAll('input')[0].value,'2026-12-01');
+   assert.equal(edit.state.calls.filter(x=>x.name==='shared_moment_schedule'&&x.args.p_action==='propose').length,0);
+   form.querySelectorAll('input')[0].value='2026-12-03';
+   edit.state.confirm=false;form.onsubmit({preventDefault(){}});await tick();
+   assert.equal(edit.state.calls.filter(x=>x.name==='shared_moment_schedule'&&x.args.p_action==='propose').length,0);
+   edit.state.confirm=true;edit.state.failSchedule=true;form.onsubmit({preventDefault(){}});await tick();await tick();
+   assert.equal(form.querySelectorAll('input')[0].value,'2026-12-03');assert(!form.querySelectorAll('input')[0].disabled);
+   edit.state.failSchedule=false;form.onsubmit({preventDefault(){}});await tick();await tick();
+   const proposal=edit.state.calls.filter(x=>x.name==='shared_moment_schedule'&&x.args.p_action==='propose').at(-1);
+   assert.equal(proposal.args.p_expected_user,account);assert.equal(proposal.args.p_version,7);assert.equal(proposal.args.p_details.date,'2026-12-03');
+   assert.equal(edit.state.items[0].status,'accepted');assert.equal(edit.state.items[0].plan.momentDate,'2026-12-01');
+   assert(!edit.state.calls.some(x=>x.name==='shared_moment_schedule'&&x.args.p_action==='confirm'));
+   assert(!d.querySelectorAll('button').some(b=>b.textContent==='Confirm Our Time and Place ❤️'));
+ }
+ console.log('PASS: either participant opens time changes directly; opening and dismissed confirmation never propose; failed saves retain changes; explicit versioned proposals do not auto-confirm.');
 
  const html=fs.readFileSync('invitation-opening.html','utf8');for(const [,s] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(s);new vm.Script(fs.readFileSync('moment-invitations.js','utf8'));
  for(const id of ['sharedInbox','prepareLiveSend','sendInvitationDialog','openSharedInvitations'])assert(html.includes('id="'+id+'"'));
