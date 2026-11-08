@@ -326,6 +326,7 @@
     await load();
   }
   async function openMoment(c,item,card,{editSchedule=false}={}){
+    let sharedDetailsChanged=false,scheduleLoaded=false;
     const version=++momentVersion;
     el('sharedInvitationStatus').textContent='Opening your moment…';
     try{
@@ -355,6 +356,7 @@
         if(hasUnsavedMemory()&&!confirm('Leave without saving your memory changes? Choose Cancel to keep editing.'))return;
         if(scheduleBox.scheduleHasEdits?.()&&!confirm('Leave without sharing your time-and-place suggestion? Choose Cancel to keep editing.'))return;
         dialog.close();
+        if(sharedDetailsChanged)refreshInbox();
       }
       function warnBeforeLeaving(event){
         if(!hasUnsavedMemory()&&!memorySaving&&!scheduleBox.scheduleHasEdits?.()&&!scheduleBox.scheduleIsSaving?.())return;
@@ -437,7 +439,7 @@
       dialog.append(exits,node('p','You can leave this view at any time. Save any memory edits before leaving.','helper'));
       dialog.addEventListener('close',()=>{window.removeEventListener('beforeunload',warnBeforeLeaving);dialog.remove();if(momentDialog===dialog)momentDialog=null;if(card.isConnected)card.querySelector('button')?.focus({preventScroll:true});});
       document.body.append(dialog);dialog.showModal();(latest.started_at||latest.completed_at?sceneHeading:heading).focus({preventScroll:true});dialog.scrollTop=0;
-      if(!latest.started_at&&!latest.completed_at){begin.disabled=true;scheduleEditor(c,latest,scheduleBox,(plan,pending,revision)=>{latest.plan=plan;if(Number.isInteger(revision))latest.revision=revision;introPlan.textContent=scenePlan.textContent=planText(plan);begin.disabled=pending;progress.textContent=pending?'Agree on your proposed time and place before beginning.':'When you are ready together, begin your shared moment. Both of you will see it as underway.';},editSchedule);}
+      if(!latest.started_at&&!latest.completed_at){begin.disabled=true;scheduleEditor(c,latest,scheduleBox,(plan,pending,revision)=>{if(scheduleLoaded)sharedDetailsChanged=true;scheduleLoaded=true;latest.plan=plan;if(Number.isInteger(revision))latest.revision=revision;introPlan.textContent=scenePlan.textContent=planText(plan);begin.disabled=pending;progress.textContent=pending?'Agree on your proposed time and place before beginning.':'When you are ready together, begin your shared moment. Both of you will see it as underway.';},editSchedule);}
       el('sharedInvitationStatus').textContent=latest.completed_at?'Your private memory is ready.':'Your accepted moment is ready to open.';
     }catch(e){if(version===momentVersion)el('sharedInvitationStatus').textContent=e.message;}
   }
@@ -484,6 +486,8 @@
       let calendarTarget=null;
       for(const item of items){
         const incoming=item.recipient_id===c.user.id;
+        const pendingTime=item.status==='accepted'&&!item.started_at&&!item.completed_at&&item.time_change?.status==='pending';
+        const needsTimeReview=pendingTime&&item.time_change.proposed_by!==c.user.id;
         const other=c.partners.find(x=>x.id===(incoming?item.sender_id:item.recipient_id));
         const card=node('article',undefined,'card invitationLetter'+(item.status==='accepted'?' acceptedLetter':''));card.style.marginTop='16px';
         if(calendarMoment===String(item.id))calendarTarget={item,card};
@@ -501,12 +505,13 @@
           card.append(node('p',item.completed_at?'Your time together has come to a close. Your own words can keep a little of it.':item.started_at?'Come back to the moment you have begun together.':'You have a little time together to look forward to.','letterAnticipation'));
         }
         card.append(node('h2',item.status==='accepted'&&incoming&&!item.started_at?'A moment waiting for us':item.title));
-        card.append(node('p',item.completed_at?'This shared moment has come to a close.':item.status==='accepted'&&item.started_at?'Your shared moment is underway.':item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
+        card.append(node('p',item.completed_at?'This shared moment has come to a close.':pendingTime?(needsTimeReview?'A time change is waiting for your review.':'Your time suggestion is waiting for your partner’s confirmation.'):item.status==='accepted'&&item.started_at?'Your shared moment is underway.':item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
         const details=node('details'),summary=node('summary','View invitation details');
         details.append(summary,node('div',item.message,'quote'),node('div',planText(item.plan),'quote'));
         card.append(details);
+        if(pendingTime)card.append(node('p','Your current time stays in place until you both confirm a change.','helper'));
         if(item.status==='accepted'){
-          if(!item.started_at&&!item.completed_at)action(card,item.plan?.momentDate?'Suggest Another Time':'Choose Our Time and Place',()=>openMoment(c,item,card,{editSchedule:true}));
+          if(!item.started_at&&!item.completed_at)action(card,pendingTime?(needsTimeReview?'Review Time Change':'View My Time Suggestion'):item.plan?.momentDate?'Suggest Another Time':'Choose Our Time and Place',()=>openMoment(c,item,card,{editSchedule:!pendingTime}));
           action(card,item.completed_at?'Revisit Our Moment ❤️':item.started_at?'Return to Our Moment ❤️':'Reveal Our Moment ❤️',()=>openMoment(c,item,card)).className='primary';
           if(!item.completed_at)card.append(node('p','Saying yes to time together leaves room to change your mind or stop.','helper'));
         }else{card.append(node('p',item.story));}
