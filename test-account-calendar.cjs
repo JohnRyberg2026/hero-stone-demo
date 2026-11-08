@@ -134,3 +134,10 @@ const submit=async(d,title)=>{d.get('dqAddEvent').onclick();d.get('dqEventName')
  console.log('PASS: cancelled removal, failed removal, undo restoration, failed undo retry, account-change undo guard.');
  console.log('PASS: account saves, reload on a second device, stale conflict protection, failed-save draft retention, separate owners, explicit import, account-switch read guard.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
+const calendarProjection=require('./date-home.js');
+const cancellationFixture={id:'cancellation-model',status:'accepted',sender_id:'first',recipient_id:'second',reveal_mode:'all',title:'Together',plan:{whenMode:'specific',momentDate:'2026-11-20',momentTime:'18:00'}};
+for(const account of ['first','second'])assert.equal(calendarProjection.active([cancellationFixture],account).length,1);
+cancellationFixture.status='cancelled';
+for(const account of ['first','second'])assert.equal(calendarProjection.active([cancellationFixture],account).length,0);
+console.log('PASS: refreshed calendar projections remove a cancelled shared moment for both participants.');
