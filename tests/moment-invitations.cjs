@@ -1,9 +1,9 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),{webcrypto}=require('crypto');
 class Element{
  constructor(tag='div'){this.isConnected=true;this.tagName=tag;this.children=[];this.value='';this.textContent='';this.style={};this.disabled=false;this.hidden=false;this.open=false;this.listeners={};this.dataset={};}
- append(...nodes){this.children.push(...nodes);} appendChild(n){this.children.push(n);return n;} add(n){this.children.push(n);}
+ append(...nodes){for(const n of nodes){n.parent=this;this.children.push(n);}} appendChild(n){this.append(n);return n;} add(n){this.children.push(n);}
  replaceChildren(...nodes){this.children=[...nodes];} setAttribute(k,v){this[k]=v;} addEventListener(k,f){this.listeners[k]=f;}
- showModal(){this.open=true;} close(){this.open=false;} remove(){} querySelector(tag){return this.querySelectorAll(tag)[0]||null;} removeAttribute(k){delete this[k];} focus(){this.focused=true;}
+ showModal(){this.open=true;} close(){this.open=false;} remove(){if(this.parent)this.parent.children=this.parent.children.filter(n=>n!==this);} querySelector(tag){return this.querySelectorAll(tag)[0]||null;} removeAttribute(k){delete this[k];} focus(){this.focused=true;}
  querySelectorAll(tag){return this.children.flatMap(n=>[...(n.tagName===tag?[n]:[]),...n.querySelectorAll(tag)]);}
 }
 function setup(initialHash=''){
@@ -12,7 +12,12 @@ function setup(initialHash=''){
  Object.assign(els.message,{value:'I miss you.'});els.experienceTitle.value='Our hideaway';els.experienceStory.value='A quiet moment';els.revealMode.value='surprise';
  els.sharedInbox.append(Object.assign(new Element('.eyebrow'),{textContent:''}),new Element('h1'),new Element('.storyOpening'));
  const state={user:{id:'sender',email:'sender@example.test'},hs:'hs',partners:[{id:'partner-123456',name:'Partner'}],items:[],calls:[],failSend:false};
- const sb={auth:{getUser:async()=>({data:{user:state.user}}),onAuthStateChange:f=>{state.authListener=f;}},from:()=>({select(){return this},eq(){return this},limit:async()=>({data:[{heart_stone_id:state.hs}]})}),rpc:async(name,args)=>{state.calls.push({name,args});if(name==='shared_moment_schedule'){if(state.failSchedule)return {error:{message:'Schedule changed. Refresh.'}};if(args.p_action==='propose')state.schedule={version:1,proposal:{...args.p_details,status:'pending',proposed_by:state.user.id},plan:state.schedule?.plan||{}};return {data:state.schedule||{version:0,proposal:{},plan:{}}};}if(name==='finish_shared_moment'){if(state.failFinish)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).completed_at='2026-10-21T13:00:00Z';return {data:'2026-10-21T13:00:00Z'};}if(name==='my_shared_moment_memory'){if(state.failMemory)return {error:{message:'network'}};if(args.p_note!==undefined)state.memory=args.p_note;return {data:state.memory||''};}if(name==='begin_shared_moment'){if(state.failStart)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).started_at='2026-10-21T12:00:00Z';return {data:'2026-10-21T12:00:00Z'};}if(name==='cancel_moment_invitation_revision'){if(state.failCancel)return {error:{message:'network'}};const item=state.items.find(x=>x.id===args.p_invitation_id);item.status='cancelled';item.cancellation_note=args.p_note;return {data:'cancelled'};}if(name==='my_moment_profile_picture')return {data:args.p_picture||'sun'};if(name==='get_moment_invitation_partners')return {data:state.partners};if(name==='list_moment_invitations')return {data:state.items};if(name==='list_completed_moment_invitations')return {data:state.items.filter(x=>x.status==='accepted'&&x.completed_at&&(!args.p_invitation_id||x.id===args.p_invitation_id))};if(name==='send_checked_moment_invitation'&&state.failSend)return {error:{message:'network'}};return {data:'invitation-id'};}};
+ const sb={auth:{getUser:async()=>({data:{user:state.user}}),onAuthStateChange:f=>{state.authListener=f;}},from:()=>({select(){return this},eq(){return this},limit:async()=>({data:[{heart_stone_id:state.hs}]})}),rpc:async(name,args)=>{state.calls.push({name,args});if(name==='shared_moment_schedule'){if(state.failSchedule)return {error:{message:'Schedule changed. Refresh.'}};if(args.p_action==='propose')state.schedule={version:1,proposal:{...args.p_details,status:'pending',proposed_by:state.user.id},plan:state.schedule?.plan||{}};return {data:state.schedule||{version:0,proposal:{},plan:{}}};}if(name==='finish_shared_moment'){if(state.failFinish)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).completed_at='2026-10-21T13:00:00Z';return {data:'2026-10-21T13:00:00Z'};}if(name==='my_shared_moment_memory'){if(state.failMemory)return {error:{message:'network'}};if(args.p_note!==undefined)state.memory=args.p_note;return {data:state.memory||''};}if(name==='begin_shared_moment'){if(state.failStart)return {error:{message:'network'}};state.items.find(x=>x.id===args.p_invitation_id).started_at='2026-10-21T12:00:00Z';return {data:'2026-10-21T12:00:00Z'};}if(name==='cancel_moment_invitation_revision'){if(state.failCancel)return {error:{message:'network'}};const item=state.items.find(x=>x.id===args.p_invitation_id);item.status='cancelled';item.cancellation_note=args.p_note;return {data:'cancelled'};}if(name==='my_moment_profile_picture')return {data:args.p_picture||'sun'};if(name==='get_moment_invitation_partners')return {data:state.partners};if(name==='list_moment_invitations')return {data:state.items};if(name==='page_completed_moment_invitations'){
+ if(state.failEarlier&&args.p_before_id)return {error:{message:'network'}};
+ let rows=state.items.filter(x=>x.status==='accepted'&&x.completed_at).sort((a,b)=>b.completed_at.localeCompare(a.completed_at)||b.id.localeCompare(a.id));
+ if(args.p_before_id)rows=rows.filter(x=>x.completed_at<args.p_before_completed_at||(x.completed_at===args.p_before_completed_at&&x.id<args.p_before_id));
+ return {data:rows.slice(0,51)};
+ }if(name==='list_completed_moment_invitations')return {data:state.items.filter(x=>x.status==='accepted'&&x.completed_at&&(!args.p_invitation_id||x.id===args.p_invitation_id))};if(name==='send_checked_moment_invitation'&&state.failSend)return {error:{message:'network'}};return {data:'invitation-id'};}};
  const storage=new Map();const document={body:new Element('body'),getElementById:id=>{assert(els[id],id);return els[id]},createTextNode:text=>Object.assign(new Element('text'),{textContent:text}),createElement:tag=>new Element(tag),head:{appendChild:s=>s.onload()}};
  const ctx=vm.createContext({document,Event,Intl,setTimeout,clearTimeout,URL,URLSearchParams,window:{location:{search:'',hash:initialHash},addEventListener(){},removeEventListener(){},dispatchEvent(){},supabase:{createClient:()=>sb}},Option:function(t,v){const e=new Element('option');e.textContent=t;e.value=v;return e;},TextEncoder,crypto:webcrypto,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},confirm:()=>state.confirm!==false,planDraft:()=>({whenMode:'together',length:'About 2 hours',meetMode:'home'}),kind:'date',screen:id=>{state.screen=id;}});
  vm.runInContext(fs.readFileSync('moment-invitations.js','utf8'),ctx);
@@ -209,13 +214,38 @@ const tick=()=>new Promise(r=>setImmediate(r));
  const collection=setup('#our-memories');
  collection.state.items=[...Array.from({length:55},(_,n)=>({id:'pending-'+n,status:'pending',sender_id:'partner-123456',recipient_id:'sender',title:'Active',plan:{}})),{id:'older-completed',status:'accepted',sender_id:'sender',recipient_id:'partner-123456',title:'Old completed moment',story:'Together',completed_at:'2026-10-01T12:00:00Z',started_at:'2026-10-01T11:00:00Z',plan:{}}];
  await tick();await tick();
- assert(collection.state.calls.some(x=>x.name==='list_completed_moment_invitations'));
+ assert(collection.state.calls.some(x=>x.name==='page_completed_moment_invitations'));
  assert(texts(collection.els.sharedInvitationList).includes('Old completed moment'));
  assert(!texts(collection.els.sharedInvitationList).includes('Active'));
  assert(collection.els.sharedInvitationStatus.textContent.includes('Showing 1 completed moment'));
  await collection.els.sharedInvitationList.querySelectorAll('button').find(b=>b.textContent==='Revisit Our Moment ❤️').onclick();
  assert(collection.state.calls.some(x=>x.name==='list_completed_moment_invitations'&&x.args.p_invitation_id==='older-completed'));
  console.log('PASS: Memories uses completed-only RPC and reopens selected completed item independently of active collection limit.');
+
+
+ const pages=setup('#our-memories');
+ pages.state.items=Array.from({length:60},(_,n)=>({id:'memory-'+String(n+1).padStart(3,'0'),status:'accepted',sender_id:'sender',recipient_id:'partner-123456',title:'Saved '+(n+1),completed_at:'2026-10-01T12:00:00Z',started_at:'2026-10-01T11:00:00Z',plan:{}}));
+ await tick();await tick();
+ let older=pages.els.sharedInvitationList.querySelectorAll('button').find(b=>b.textContent==='Load Earlier Memories');
+ assert(older);assert.equal(pages.els.sharedInvitationList.children.filter(n=>n.tagName==='article').length,50);
+ pages.state.failEarlier=true;await older.onclick();
+ assert.equal(pages.els.sharedInvitationList.children.filter(n=>n.tagName==='article').length,50);assert(!older.disabled);
+ assert(pages.els.sharedInvitationStatus.textContent.includes('couldn’t load your memories'));
+ pages.state.failEarlier=false;
+ pages.state.items.push({id:'new-after-first-page',status:'accepted',sender_id:'sender',recipient_id:'partner-123456',title:'New completion',completed_at:'2026-10-02T12:00:00Z',plan:{}});
+ await older.onclick();
+ const pageCall=pages.state.calls.filter(x=>x.name==='page_completed_moment_invitations').at(-1);
+ assert.equal(pageCall.args.p_before_id,'memory-011');assert.equal(pageCall.args.p_before_completed_at,'2026-10-01T12:00:00Z');
+ assert.equal(pages.els.sharedInvitationList.children.filter(n=>n.tagName==='article').length,60);
+ assert(!pages.els.sharedInvitationList.querySelectorAll('button').some(b=>b.textContent==='Load Earlier Memories'));
+ assert(pages.els.sharedInvitationStatus.textContent.includes('Showing 60 completed moments'));
+ await pages.els.refreshSharedInvitations.onclick();
+ assert.equal(pages.els.sharedInvitationList.children.filter(n=>n.tagName==='article').length,50);
+ assert(texts(pages.els.sharedInvitationList.children[0]).includes('New completion'));
+ assert.equal(pages.state.calls.filter(x=>x.name==='page_completed_moment_invitations').at(-1).args.p_before_id,undefined);
+ pages.state.authListener('SIGNED_OUT',null);
+ assert.equal(pages.els.sharedInvitationList.children.length,0);
+ console.log('PASS: earlier-memory pages append, equal timestamps use ID cursor, failed loads retain rows/retry, newer completions do not duplicate pages, refresh resets, signout clears history.');
 
  const html=fs.readFileSync('invitation-opening.html','utf8');for(const [,s] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(s);new vm.Script(fs.readFileSync('moment-invitations.js','utf8'));
  for(const id of ['sharedInbox','prepareLiveSend','sendInvitationDialog','openSharedInvitations'])assert(html.includes('id="'+id+'"'));
