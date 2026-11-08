@@ -60,3 +60,8 @@ Profile & Settings has a collapsed **My Date Quest Membership** section. It load
 Database owner/partner/outsider/null/signed-out/anonymous, direct-table and self-enrollment tests passed with rollback fixtures. Enrollment regression still passes after the schema-usage change. Seven UI logic tests passed, covering saved terms, unenrolled display, malformed responses, changed accounts, signout, errors and stale timeout results. No real accounts were enrolled. The display is not an authorization gate, subscription or billing integration.
 
 Security advisor counts remain six anonymous and 98 authenticated privileged public functions, 25 RLS-without-policy INFO (private deny-default tables), and the existing leaked-password protection warning. New tester HOLD remains.
+
+## Administrator preview completed — November 8, 2026
+Applied `administrator_founding_enrollment_preview`. The private, stable service-only preview checks candidate accounts, quotas, existing enrollment and request reuse without modifying records or reserving capacity. Saved enrollment retries return original dates; new dates are explicitly estimates. Commit remains a separate action and revalidates capacity. No browser admin route was added.
+
+The [operator review guide](FOUNDING_ENROLLMENT_REVIEW.md) records the review/commit distinction and response reasons. [Rollback verification](database/test-founding-enrollment-preview.sql) passed, including exact before/after persisted-row comparison and a stale preview whose commit is rejected after capacity fills. No real account was enrolled; release HOLD remains.
