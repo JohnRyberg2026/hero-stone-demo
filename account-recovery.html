@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Account recovery · Heartstone</title>
+<style>:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f7f2ea;color:#2d241f;font:16px/1.5 system-ui,sans-serif}.card{max-width:520px;margin:32px auto;padding:28px;background:#fffdf9;border:1px solid #dfcdb8;border-radius:20px}h1{color:#174c3e;font:34px/1.2 Georgia,serif}label{display:block;font-weight:650;margin-top:16px}input,button{width:100%;font:inherit;min-height:48px;padding:12px;border:1px solid #bba995;border-radius:10px}button{margin-top:18px;background:#862a3d;color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.6;cursor:default}a{color:#174c3e;font-weight:700;display:inline-block;padding:12px 0}.small{font-size:14px}#recoveryStatus{padding:12px;background:#f5ecdf;border-radius:10px}[hidden]{display:none!important}:focus-visible{outline:3px solid #285b89;outline-offset:3px}@media(max-width:560px){.card{margin:12px;padding:22px}}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body>
+<main class="card"><a href="index.html#date-quest">← Back to Sign In</a><h1>Let’s get you back in.</h1>
+<p>Your invitations, calendar and saved memories stay in your account. This page does not edit them.</p>
+<p id="recoveryStatus" role="status" aria-live="polite">Opening account recovery…</p>
+<form id="requestRecovery"><label for="recoveryEmail">Account email</label><input id="recoveryEmail" type="email" autocomplete="email" required><button id="sendRecovery" type="submit" disabled>Request Recovery Link</button></form>
+<form id="changePassword" hidden><p class="small">Use a long, unique password with at least 12 characters.</p><label for="newPassword">New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required><label for="confirmPassword">Confirm new password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required><button id="saveRecoveryPassword" type="submit">Save New Password</button></form>
+<p id="recoveryDone" hidden>You can close this recovery page after returning to sign in.</p>
+<noscript>Enable JavaScript to use account recovery, or contact your pilot coordinator.</noscript></main>
+<script type="module">
+import { createRecovery, RECOVERY_EMAIL_ENABLED } from './account-recovery.mjs?v=1';
+const el=id=>document.getElementById(id);
+function startRecovery(){
+if(!window.supabase){el('recoveryStatus').textContent='Recovery could not load. Check your connection and reload this page.';return;}
+// Recovery uses an isolated in-memory session, never the main app's stored login.
+const fragment=new URLSearchParams(location.hash.slice(1));
+const hasLink=['access_token','error','error_code','type'].some(key=>fragment.has(key))||new URLSearchParams(location.search).has('code');
+const client=window.supabase.createClient('https://iqxhqxlcraatdheslqeo.supabase.co','sb_publishable_SIhJh737mEWvvmOm_4zuSw_4jh_BU_h',{auth:{flowType:'implicit',persistSession:false,autoRefreshToken:false,detectSessionInUrl:true}});
+const cleanUrl=()=>history.replaceState(null,'',location.pathname);
+const controller=createRecovery({auth:client.auth,cleanUrl,clearPasswords:()=>{el('newPassword').value='';el('confirmPassword').value='';},render:state=>{
+ el('recoveryStatus').textContent=state.message;
+ el('requestRecovery').hidden=state.phase!=='request';el('changePassword').hidden=state.phase!=='password';el('recoveryDone').hidden=state.phase!=='done';
+ el('sendRecovery').disabled=state.busy||!RECOVERY_EMAIL_ENABLED;el('recoveryEmail').disabled=state.busy||!RECOVERY_EMAIL_ENABLED;
+ for(const id of ['newPassword','confirmPassword','saveRecoveryPassword'])el(id).disabled=state.busy;
+}});
+client.auth.onAuthStateChange((event,session)=>controller.onAuth(event,session));
+client.auth.getSession().then(result=>controller.finishInitialLink(hasLink,result.error)).catch(()=>controller.finishInitialLink(hasLink,true));
+el('requestRecovery').onsubmit=event=>{event.preventDefault();controller.request(el('recoveryEmail').value);};
+el('changePassword').onsubmit=event=>{event.preventDefault();controller.update(el('newPassword').value,el('confirmPassword').value);};
+window.addEventListener('beforeunload',event=>{if(el('newPassword').value||el('confirmPassword').value){event.preventDefault();event.returnValue='';}});
+}
+startRecovery();
+</script></body></html>
