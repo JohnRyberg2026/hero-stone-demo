@@ -338,7 +338,7 @@
     try{
       const current=await readWithTimeout(()=>context());
       if(current.user.id!==c.user.id||current.hs!==c.hs)throw Error('Your account changed. Refresh invitations to continue.');
-      const result=await readWithTimeout(()=>current.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs}));
+      const result=await readWithTimeout(()=>current.sb.rpc(item.completed_at?'list_completed_moment_invitations':'list_moment_invitations',item.completed_at?{p_heart_stone_id:c.hs,p_invitation_id:item.id}:{p_heart_stone_id:c.hs}));
       const verify=await readWithTimeout(()=>current.sb.auth.getUser());
       if(version!==momentVersion)return;
       if(result.error||verify.error||verify.data?.user?.id!==c.user.id)throw Error('We couldn’t open this moment. Refresh invitations and try again.');
@@ -482,7 +482,7 @@
     el('sharedInvitationStatus').textContent=memoryView?'Opening your memories…':'Checking shared invitations…';
     try{
       const c=await readWithTimeout(()=>context());
-      const result=await readWithTimeout(()=>c.sb.rpc('list_moment_invitations',{p_heart_stone_id:c.hs}));
+      const result=await readWithTimeout(()=>c.sb.rpc(memoryView?'list_completed_moment_invitations':'list_moment_invitations',{p_heart_stone_id:c.hs}));
       if(result.error)throw new Error('We couldn’t load your shared invitations. Please try again.');
       const verify=await readWithTimeout(()=>c.sb.auth.getUser());
       if(verify.error||verify.data?.user?.id!==c.user.id)throw new Error('Your account changed. Refresh invitations to continue.');
@@ -539,7 +539,7 @@
         if(!item.completed_at&&['pending','accepted','reschedule'].includes(item.status))action(card,'Cancel This Invitation',()=>requestCancellation(c,item,card));
         el('sharedInvitationList').append(card);
       }
-      el('sharedInvitationStatus').textContent=memoryView?(items.length?items.length+' completed moment'+(items.length===1?'':'s')+'. Your written memories stay private.':'Your story has room to grow. Completed moments will appear here.') : items.length?'Showing '+items.length+' invitation'+(items.length===1?'':'s')+'. '+(items.filter(item=>needsMyReply(item,c.user.id)).length?items.filter(item=>needsMyReply(item,c.user.id)).length+' awaiting your reply. ':'')+'Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
+      el('sharedInvitationStatus').textContent=memoryView?(items.length?'Showing '+items.length+' completed moment'+(items.length===1?'':'s')+'. Your written memories stay private.':'Your story has room to grow. Completed moments will appear here.') : items.length?'Showing '+items.length+' invitation'+(items.length===1?'':'s')+'. '+(items.filter(item=>needsMyReply(item,c.user.id)).length?items.filter(item=>needsMyReply(item,c.user.id)).length+' awaiting your reply. ':'')+'Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
       if(calendarMoment){
         const target=calendarTarget;
         calendarMoment=null;
