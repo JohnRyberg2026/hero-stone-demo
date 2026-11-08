@@ -238,3 +238,10 @@ Memories shows **Load Earlier Memories** when more history exists. Loading appen
 Synthetic rollback tests with 60 equal-timestamp completions verify first-page lookahead, ID tie-break, 10 remaining rows, no overlap, empty final cursor, malformed/infinite cursor denial and outsider/anonymous boundaries. A newer completion inserted between page reads does not disturb the older cursor; refresh includes it. UI regressions cover append, failure/retry, preserving loaded cards, cursor values, new-completion stability, refresh reset and signout clearing. Earlier tests continue to cover private memory isolation and inactive-pair exclusion. No real account history was changed.
 
 This remains refresh-based loading without push/email/text delivery. Stored private words are fetched only through their existing account-scoped API. Store and enrollment/billing remain unchanged; new tester HOLD remains.
+
+## Guarded Home navigation — November 8, 2026
+The existing collection Home anchor now enters the same planner Home handler as other exits and prevents native navigation before the guard decides. A clean draft returns directly to index.html#date-quest; an edited draft opens the existing save/discard/stay dialog. Saved beginnings are retained. No backend or storage-format change was made.
+
+Moment windows now have Home beside the sticky collection-back button. It first uses the existing unsaved-memory/schedule and in-progress-save guards, then delegates to the guarded collection Home control. Rejected discard leaves the moment and words in place. Successful save permits Home; failed saves do not bypass the draft warning. The sticky moment controls share a compact row.
+
+Nine planner-draft tests passed, including new clean exit, edited anchor prevention and successful/failed-save exit behavior. The invitation lifecycle suite passed, including new unsaved-memory rejection, in-progress-save blocking and guarded Home delegation. No real account, invitation, memory, membership, store or Auth setting was changed.
