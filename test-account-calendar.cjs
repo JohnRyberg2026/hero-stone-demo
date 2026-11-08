@@ -141,3 +141,15 @@ for(const account of ['first','second'])assert.equal(calendarProjection.active([
 cancellationFixture.status='cancelled';
 for(const account of ['first','second'])assert.equal(calendarProjection.active([cancellationFixture],account).length,0);
 console.log('PASS: refreshed calendar projections remove a cancelled shared moment for both participants.');
+
+const pendingTimeFixture={id:'time-change',status:'accepted',sender_id:'first',recipient_id:'second',title:'Current plan',reveal_mode:'all',plan:{whenMode:'specific',momentDate:'2026-12-01',momentTime:'18:00'},time_change:{status:'pending',proposed_by:'first'}};
+assert.equal(calendarProjection.active([pendingTimeFixture],'first')[0].timeChangeNeedsReview,false);
+assert.equal(calendarProjection.active([pendingTimeFixture],'second')[0].timeChangeNeedsReview,true);
+assert.equal(calendarProjection.active([pendingTimeFixture],'second')[0].day,'2026-12-01');
+assert.equal(calendarProjection.attention([pendingTimeFixture],'first'),0);
+assert.equal(calendarProjection.attention([pendingTimeFixture],'second'),1);
+assert.equal(calendarProjection.attention([pendingTimeFixture],'outsider'),0);
+pendingTimeFixture.time_change=null;
+assert.equal(calendarProjection.active([pendingTimeFixture],'second')[0].timeChangePending,false);
+assert.equal(calendarProjection.attention([pendingTimeFixture],'second'),0);
+console.log('PASS: pending-time calendar flags and attention belong to the reviewer; old day stays until confirmation; confirmed changes clear attention.');
