@@ -8,6 +8,12 @@
   let momentDialog=null,momentVersion=0;
   let calendarMoment=new URLSearchParams(window.location.search).get('moment');
   let memoriesOnly=window.location?.hash==='#our-memories';
+  function needsMyReply(item,userId){
+    if(!userId||(item.sender_id!==userId&&item.recipient_id!==userId))return false;
+    return item.status==='pending'&&item.recipient_id===userId
+      ||item.status==='reschedule'&&item.sender_id===userId
+      ||item.status==='accepted'&&!item.started_at&&!item.completed_at&&item.time_change?.status==='pending'&&item.time_change.proposed_by!==userId;
+  }
   function completedMoments(items,userId){return items.filter(item=>item.status==='accepted'&&item.completed_at&&(item.sender_id===userId||item.recipient_id===userId)).sort((a,b)=>String(b.completed_at).localeCompare(String(a.completed_at)));}
   function collectionLabels(){
     const inbox=el('sharedInbox');
@@ -488,6 +494,7 @@
         const incoming=item.recipient_id===c.user.id;
         const pendingTime=item.status==='accepted'&&!item.started_at&&!item.completed_at&&item.time_change?.status==='pending';
         const needsTimeReview=pendingTime&&item.time_change.proposed_by!==c.user.id;
+        const replyNeeded=needsMyReply(item,c.user.id);
         const other=c.partners.find(x=>x.id===(incoming?item.sender_id:item.recipient_id));
         const card=node('article',undefined,'card invitationLetter'+(item.status==='accepted'?' acceptedLetter':''));card.style.marginTop='16px';
         if(calendarMoment===String(item.id))calendarTarget={item,card};
@@ -506,6 +513,7 @@
         }
         card.append(node('h2',item.status==='accepted'&&incoming&&!item.started_at?'A moment waiting for us':item.title));
         card.append(node('p',item.completed_at?'This shared moment has come to a close.':pendingTime?(needsTimeReview?'A time change is waiting for your review.':'Your time suggestion is waiting for your partner’s confirmation.'):item.status==='accepted'&&item.started_at?'Your shared moment is underway.':item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
+        if(replyNeeded&&!pendingTime)card.append(node('p','Your reply is needed.','helper'));
         const details=node('details'),summary=node('summary','View invitation details');
         details.append(summary,node('div',item.message,'quote'),node('div',planText(item.plan),'quote'));
         card.append(details);
@@ -531,7 +539,7 @@
         if(!item.completed_at&&['pending','accepted','reschedule'].includes(item.status))action(card,'Cancel This Invitation',()=>requestCancellation(c,item,card));
         el('sharedInvitationList').append(card);
       }
-      el('sharedInvitationStatus').textContent=memoryView?(items.length?items.length+' completed moment'+(items.length===1?'':'s')+'. Your written memories stay private.':'Your story has room to grow. Completed moments will appear here.') : items.length?items.length+' invitation'+(items.length===1?'':'s')+' in your collection. Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
+      el('sharedInvitationStatus').textContent=memoryView?(items.length?items.length+' completed moment'+(items.length===1?'':'s')+'. Your written memories stay private.':'Your story has room to grow. Completed moments will appear here.') : items.length?'Showing '+items.length+' invitation'+(items.length===1?'':'s')+'. '+(items.filter(item=>needsMyReply(item,c.user.id)).length?items.filter(item=>needsMyReply(item,c.user.id)).length+' awaiting your reply. ':'')+'Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
       if(calendarMoment){
         const target=calendarTarget;
         calendarMoment=null;
