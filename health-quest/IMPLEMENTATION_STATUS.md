@@ -34,3 +34,29 @@ test goals, observations, correction, stop-follow-up, export and deletion with
 two real nonproduction accounts. Run hosted security advisors and test PostgREST
 permissions before deployment. This change is a storage foundation, not a
 completed private profile, conversational integration or live pilot.
+
+## Member screen milestone — November 11, 2026
+
+Added `health-quest/member.html` and an account-bound controller using the storage
+adapter. Supports new goals/observations, planned/reported status, explicit review,
+correction, follow-up preference removal, confirmed deletion and private JSON
+export. Auth changes clear displayed notes, drafts and pending review; stale
+asynchronous responses cannot render after sign-out. Saved text uses textContent.
+No chat/model integration or automated follow-up is included yet.
+
+The development configuration is deliberately null. Configure only an isolated
+test project's URL and publishable key in a development checkout; this screen
+must not silently connect to production. Existing home navigation is unchanged
+until the test backend and account journey are verified.
+
+Validation: 28 Health Quest checks pass (PostgreSQL/PGlite storage and jsdom UI
+behavior); 12 existing conversation regression checks pass. UI tests use a fake
+transport. Hosted Supabase Auth/PostgREST, browser rendering, voice input, real
+account continuity and cross-device behavior remain unverified. No production
+migration, deployment or real profile import was performed.
+
+Next: provision or select an isolated nonproduction Supabase environment, apply
+the reviewed migration there, connect the screen, and exercise two test accounts
+through sign-in, save, correction, sign-out, return and account isolation. Then
+add the approved conversational entry path and import John's reviewed profile
+privately. Do not put his profile into this public repository.

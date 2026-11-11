@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Health Quest · Heartstone</title>
+<link rel="stylesheet" href="member.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
+</head>
+<body><main>
+<a href="../index.html">← Heartstone home</a>
+<header><p class="eyebrow">HEARTSTONE · HEALTH QUEST</p><h1>A little progress, your way.</h1>
+<p>Your goals and everyday observations, kept together.</p></header>
+<p class="notice">Development screen. Private storage must be enabled in a test environment before use.</p>
+<p id="status" role="status" aria-live="polite">Opening your Health Quest…</p>
+<section id="workspace" hidden>
+<nav aria-label="Health Quest"><button id="refresh" type="button">Refresh my notes</button><button id="export" type="button">Export my notes</button></nav>
+<section class="card"><h2 id="editor-title">What would you like to remember?</h2>
+<form id="editor">
+<label>A goal or an observation<select id="kind"><option value="goal">My goal</option><option value="observation">My observation</option></select></label>
+<label>In your own words<textarea id="text" rows="4" maxlength="2000" required placeholder="For example, I want to build a comfortable walking routine."></textarea></label>
+<label>Status<select id="state"><option value="reported">Reported</option><option value="planned">Planned</option><option value="paused">Paused</option><option value="completed">Completed</option></select></label>
+<label class="check"><input type="checkbox" id="followup"> Allow future follow-up about this item</label>
+<p class="subtle">This records your preference; automated follow-up is not enabled in this development version.</p>
+<button type="submit">Review before saving</button><button type="button" id="cancel">Clear draft</button>
+</form>
+<section id="review" hidden aria-label="Review your note"><h3>Review your note</h3><p id="review-text"></p><p id="review-details"></p>
+<button id="confirm" type="button">Save this privately</button><button id="back" type="button">Keep editing</button></section>
+</section>
+<section class="card"><h2>My notes</h2><p class="subtle">Plans and reported experiences stay separate. These notes are not shared with partners or friends.</p><div id="records"></div></section>
+</section>
+<noscript>Enable JavaScript to open your private Health Quest notes.</noscript>
+</main><script type="module">
+import { mountMember } from './member.mjs';
+import { developmentConfig } from './development-config.mjs';
+if (developmentConfig) {
+  const client = supabase.createClient(developmentConfig.url, developmentConfig.publishableKey);
+  mountMember(document, client);
+} else {
+  document.getElementById('status').textContent = 'This development screen is waiting for its test environment. Your live account has not been changed.';
+}
+</script></body></html>
