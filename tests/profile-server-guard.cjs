@@ -1,0 +1,33 @@
+const {PGlite}=require('@electric-sql/pglite'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const runtime=require('../profile-adventure-runtime.js'),db=new PGlite(),read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
+const alice='10000000-0000-0000-0000-000000000001',bob='10000000-0000-0000-0000-000000000002',eve='10000000-0000-0000-0000-000000000003',couple='20000000-0000-0000-0000-000000000001',request='30000000-0000-0000-0000-000000000001',rec='40000000-0000-0000-0000-000000000001',adv='50000000-0000-0000-0000-000000000001';
+const auth=async u=>{await db.query("select set_config('request.jwt.claim.sub',$1,false)",[u||'']);};
+const answer=async(key,value,user=bob,skipped=false)=>db.query('insert into public.user_onboarding_answers values($1,$2,$3,$4)',[user,'account_profile_v1_'+key,JSON.stringify({value}),skipped]);
+const expectError=async(sql,code)=>{try{await db.exec(sql);assert.fail('Expected '+code)}catch(e){assert.equal(e.message,code);assert(!JSON.stringify(e.message).includes('PRIVATE'));}};
+(async()=>{
+ await db.exec(read('tests/fixtures/profile-server-schema.sql'));await db.exec(read('tests/fixtures/demo-rpc-baseline.sql'));await db.exec(read('database/demo_profile_requirements_guard.sql'));
+ await db.query('insert into public.heart_stone_memberships values($1,$2,\'active\'),($1,$3,\'active\')',[couple,alice,bob]);await auth(alice);
+ // JS/SQL requirement classification stays aligned, including malformed data and independent none/notes.
+ const cases={hard_no_details:['PRIVATE note','',null,' \t\n',false,[],{}],hard_no_categories:[null,[],['Nothing comes to mind right now'],['Crowds'],['Nothing comes to mind right now','Crowds'],'bad'],accommodation_needs:[['Minimal walking'],['No accommodations right now']],transport_considerations:[['Nothing in particular'],['Avoid highways']],surprise_essentials:[['Cost'],['Nothing—keep the surprise']],past_place_1_feedback:['Never suggest again','Not for us','Loved it — bring us back'],weather_avoid:[['Rain']],enjoyed_interests:[['Nature & wildlife']]};
+ for(const [key,values] of Object.entries(cases))for(const value of values){const result=await db.query('select heartstone_private.profile_answer_requires_review($1,$2,false) as blocked',['account_profile_v1_'+key,JSON.stringify({value})]);assert.equal(result.rows[0].blocked,runtime.needsReview({[key]:value}).length>0,key+JSON.stringify(value));}
+ await db.exec(`insert into public.recommendation_requests values('${request}','${couple}','${alice}',true,'date'); insert into public.recommendations(id,request_id,heart_stone_id,title,is_demo) values('${rec}','${request}','${couple}','Test',true); insert into public.adventures(id,heart_stone_id,status,created_by_user_id,is_demo) values('${adv}','${couple}','proposed','${alice}',true)`);
+ await answer('hard_no_details','PRIVATE partner-only requirement');await db.exec('set role authenticated');assert.equal((await db.query('select * from public.user_onboarding_answers')).rows.length,0);await expectError(`select public.begin_demo_quest('${couple}','date','today',120,'moderate')`,'PROFILE_REQUIREMENTS_UNVERIFIED');await db.exec('reset role');
+ const begin=`select public.begin_demo_quest('${couple}','date','today',120,'moderate')`;
+ await expectError(begin,'PROFILE_REQUIREMENTS_UNVERIFIED');assert.equal((await db.query('select * from public.test_writes')).rows.length,0);
+ await expectError(`select * from public.refresh_demo_recommendations('${request}')`,'PROFILE_REQUIREMENTS_UNVERIFIED');assert.equal((await db.query('select * from public.recommendations')).rows.length,1);
+ await expectError(`select public.propose_demo_recommendation('${rec}')`,'PROFILE_REQUIREMENTS_UNVERIFIED');
+ await expectError(`select public.set_demo_invitation_style('${adv}','romantic')`,'PROFILE_REQUIREMENTS_UNVERIFIED');await auth(bob);await expectError(`select public.respond_demo_date_invitation('${adv}',true)`,'PROFILE_REQUIREMENTS_UNVERIFIED');
+ // Declining remains available even while requirements prevent acceptance.
+ assert.equal((await db.query(`select public.respond_demo_date_invitation('${adv}',false) as result`)).rows[0].result,'declined');
+ await db.exec(`update public.adventures set status='active' where id='${adv}'`);await expectError(`select public.reveal_demo_adventure('${adv}')`,'PROFILE_REQUIREMENTS_UNVERIFIED');
+ await auth(eve);await expectError(begin,'PLANNING_UNAVAILABLE');await auth(null);await expectError(begin,'AUTH_REQUIRED');await auth(alice);
+ await db.exec('delete from public.user_onboarding_answers');await answer('hard_no_categories',['Nothing comes to mind right now']);await answer('hard_no_details','PRIVATE note');await expectError(begin,'PROFILE_REQUIREMENTS_UNVERIFIED');
+ await db.exec('delete from public.user_onboarding_answers');await answer('hard_no_details','PRIVATE skipped',bob,true);await answer('weather_avoid',['Rain']);await db.exec(begin);assert.equal((await db.query('select * from public.test_writes')).rows.length,1);
+ // Clear requirements permit the existing send/accept/reveal/propose/refresh behavior.
+ await db.exec(`update public.adventures set status='proposed' where id='${adv}'`);await auth(alice);assert.equal((await db.query(`select public.set_demo_invitation_style('${adv}','romantic') as result`)).rows[0].result,'romantic');await auth(bob);assert.equal((await db.query(`select public.respond_demo_date_invitation('${adv}',true) as result`)).rows[0].result,'accepted');assert.equal((await db.query(`select public.reveal_demo_adventure('${adv}') as result`)).rows[0].result,'revealed');await auth(alice);
+ await db.exec('delete from public.adventures');const proposed=(await db.query(`select public.propose_demo_recommendation('${rec}') as id`)).rows[0].id;assert(proposed);assert.equal((await db.query(`select * from public.refresh_demo_recommendations('${request}')`)).rows.length,0);
+ await db.exec('set role anon');await expectError(begin,'permission denied for function begin_demo_quest');await db.exec('reset role');
+ await db.exec('set role authenticated');await expectError(`select heartstone_private.require_demo_profile_requirements('${couple}')`,'permission denied for schema heartstone_private');await db.exec('reset role');
+ await db.query("update public.heart_stone_memberships set status='inactive' where user_id=$1",[bob]);await expectError(begin,'PLANNING_UNAVAILABLE');
+ console.log('PASS: local PostgreSQL draft, JS/SQL parity, both-member checks, six demo RPC stops, private RLS isolation, outsider/anon/private-helper denial, no blocked writes, and decline remains available.');await db.close();
+})().catch(async e=>{console.error(e);await db.close();process.exitCode=1});

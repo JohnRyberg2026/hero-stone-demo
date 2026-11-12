@@ -1,0 +1,57 @@
+// Run with Node and jsdom 26.1.0 installed: node tests/account-profile.cjs
+const {JSDOM}=require('jsdom');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..');
+const dom=new JSDOM(fs.readFileSync(path.join(root,'account-profile.html'),'utf8'),{runScripts:'outside-only',url:'https://example.test/account-profile.html'});
+const w=dom.window;let user={id:'alice',email:'alice@example.test'},store={},fail=false,delay=0,authChange,writes=[],authReply=null,afterRead=null,readResult,saveReply=null;
+w.supabase={createClient:()=>({auth:{getUser:async()=>authReply||({data:{user}}),onAuthStateChange:fn=>authChange=fn},from:()=>{let rows=null,id=null;const b={select(){return b},eq(k,v){id=v;return b},like(){return b},upsert(r){rows=r;return b},then(resolve,reject){return (async()=>{if(rows){await new Promise(r=>setTimeout(r,delay));if(fail)return {error:{message:'offline'}};writes.push(rows);rows.forEach(r=>store[r.user_id+':'+r.question_key]=r);return {data:saveReply?saveReply(rows):rows}}if(afterRead)afterRead();return readResult!==undefined?readResult:{data:Object.values(store).filter(r=>r.user_id===id)};})().then(resolve,reject)}};return b}})};
+const vm=require('node:vm');vm.runInContext(fs.readFileSync(path.join(root,'account-profile.js'),'utf8'),dom.getInternalVMContext());
+const run=s=>vm.runInContext(s,dom.getInternalVMContext()),read=k=>store['alice:account_profile_v1_'+k]?.answer_json.value;
+(async()=>{
+ await run('boot()');await run("navigate('about')");
+ // A repeated sign-in event for the same user (such as refocusing a tab) keeps pending edits.
+ run("stage('everyday_life','Refocused draft')");authChange('SIGNED_IN',{user});await new Promise(r=>setTimeout(r,5));assert.equal(run('answers.everyday_life'),'Refocused draft');
+ run("stage('everyday_life','Slow weekends')");await run("navigate('interests')");assert.equal(read('everyday_life'),'Slow weekends');
+ const btn=name=>[...w.document.querySelectorAll('button')].find(b=>b.textContent===name);
+ btn('Nature').click();btn('Bookstores').click();assert.equal(btn('Nature').getAttribute('aria-pressed'),'true');await run('flush()');assert.deepEqual(Array.from(read('interests')),['Nature','Bookstores']);
+ await run('boot()');await run("navigate(answers.resume)");assert.equal(btn('Nature').getAttribute('aria-pressed'),'true');
+ fail=true;btn('Music').click();await run("navigate('avoid')");assert.equal(run('current'),'interests');assert(w.document.getElementById('status').textContent.includes('Not saved'));
+ fail=false;await run('flush()');assert(read('interests').includes('Music'));
+ btn('Leave Unanswered').click();assert.equal(w.document.activeElement.id,'clear-interests');assert(w.document.activeElement.getAttribute('aria-label').includes('Leave Unanswered:'));await run('flush()');assert.equal(read('interests'),null);
+ btn('Save & Finish Later').click();await run('flush()');await new Promise(r=>setTimeout(r,0));assert.equal(w.document.activeElement.textContent,'Your living profile');
+ await run("navigate('avoid')");run("stage('avoid','Loud crowds')");btn('Skip for Now').click();await run('flush()');assert.equal(read('avoid'),'Loud crowds');
+ // Save confirmation requires each exact answer key once; uncertain responses retain the full retry batch.
+ for(const reply of [r=>[...r.slice(1),{question_key:'unrelated_key'}],r=>r.map(()=>r[0]),()=>null,()=>({length:2})]){
+  saveReply=reply;run("stage('food_likes','Confirmed food');stage('food_dislikes','Confirmed dislikes')");assert.equal(await run('flush()'),false);
+  assert(run('pending.has("food_likes") && pending.has("food_dislikes")'));assert.equal(run('retryNeeded'),true);assert(w.document.getElementById('status').textContent.includes('could not be confirmed'));
+ }
+ saveReply=r=>[...r].reverse();assert.equal(await run('flush()'),true);assert.equal(run('pending.size'),0);assert.equal(run('retryNeeded'),false);saveReply=null;
+ // Waiting edits must never migrate to another person's account.
+ run("stage('food_likes','Alice private note')");user={id:'bob',email:'bob@example.test'};await run('boot()');assert.equal(run('answers.food_likes'),undefined);assert(writes.every(b=>b.every(r=>r.user_id==='alice')));
+ // Overlapping saves are serialized; newest value wins.
+ user={id:'alice',email:'alice@example.test'};await run('boot()');delay=20;run("stage('food_likes','Older')");const first=run('flush()');await new Promise(r=>setTimeout(r,5));run("stage('food_likes','Newer')");const second=run('flush()');await Promise.all([first,second]);assert.equal(read('food_likes'),'Newer');
+ await run("navigate('review')");assert(!w.document.querySelector('progress'));assert.equal([...w.document.querySelectorAll('dt')].filter(n=>n.textContent==='When we’re planning something for you, how adventurous do you want me to be?').length,1);
+ // Content is rendered as text, including user-entered markup.
+ run("stage('avoid','<img src=x onerror=alert(1)>')");await run('flush()');await run("navigate('review')");assert.equal(w.document.querySelectorAll('img').length,0);
+ // A failed save never traps the person: canceling departure preserves edits; explicit departure drops only the local queue.
+ fail=true;run("stage('food_likes','Unsaved departure draft')");await run('flush()');
+ assert.equal(w.document.getElementById('leaveUnsaved').hidden,false);
+ let departures=0;w.confirm=()=>false;w.testDeparture=()=>departures++;run('returnToHeartStone=testDeparture');
+ assert.equal(run('leaveWithoutSaving()'),false);assert.equal(departures,0);assert(run('pending.has("food_likes")'));
+ const savedBefore=read('food_likes'),writeCount=writes.length;
+ w.confirm=()=>true;assert.equal(run('leaveWithoutSaving()'),true);assert.equal(departures,1);assert.equal(run('pending.size'),0);assert.equal(read('food_likes'),savedBefore);
+ await run('flush()');assert.equal(writes.length,writeCount);assert.equal(w.document.getElementById('leaveUnsaved').hidden,true);
+ fail=false;await run('boot()');assert.notEqual(run('answers.food_likes'),'Unsaved departure draft');
+ // Never treat an unconfirmed read as an empty editable profile or leave an auth race stuck loading.
+ const savedRows=JSON.stringify(store),beforeLoadWrites=writes.length;
+ for(const mode of ['auth-error','account-changed','missing-rows','malformed-rows']){
+  authReply=null;afterRead=()=>{if(mode==='auth-error')authReply={data:{user},error:{message:'unverified'}};if(mode==='account-changed')authReply={data:{user:{id:'bob'}}};};
+  readResult=mode==='missing-rows'?{data:null}:mode==='malformed-rows'?{data:{}}:undefined;
+  await run('boot()');assert.equal(run('owner'),null);assert.equal(run('loading'),false);assert(btn('Retry Load'));assert.equal(w.document.activeElement.textContent,'Try loading again');
+  const beforeDeparture=departures;await run('leaveProfile()');assert.equal(departures,beforeDeparture+1);
+  run("stage('food_likes','Must not save')");await run('flush()');assert.equal(writes.length,beforeLoadWrites);assert.equal(JSON.stringify(store),savedRows);
+ }
+ authReply=null;afterRead=null;readResult=undefined;await run('boot()');assert.equal(run('owner'),'alice');assert.equal(btn('Retry Load'),undefined);
+ user=null;await run('boot()');assert(w.document.querySelector('h2').textContent.includes('Sign in'));assert.equal(run('owner'),null);
+ console.log('PASS: save/resume, selection, skip preservation, unknown reset, failed-save recovery, serialized edits, account isolation, safe rendering, sign-out.');dom.window.close();
+})().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

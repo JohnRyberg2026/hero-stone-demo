@@ -1,0 +1,23 @@
+-- Minimal isolated fixtures; no production rows, credentials, or personal data.
+create role anon; create role authenticated;
+create schema auth; create schema extensions;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+create domain public.adventure_type as text;
+create domain public.adventure_status as text;
+create domain public.recommendation_class as text;
+create table public.heart_stone_memberships(heart_stone_id uuid,user_id uuid,status text);
+create table public.user_onboarding_answers(user_id uuid,question_key text,answer_json jsonb,skipped boolean default false);
+alter table public.user_onboarding_answers enable row level security;
+grant select on public.user_onboarding_answers to authenticated;
+create policy owner_only on public.user_onboarding_answers to authenticated using(user_id=auth.uid());
+create table public.test_writes(action text);
+create table public.recommendation_requests(id uuid primary key,heart_stone_id uuid,created_by_user_id uuid,is_demo boolean,adventure_type public.adventure_type);
+create table public.recommendations(id uuid primary key,request_id uuid,heart_stone_id uuid,recommendation_class public.recommendation_class,title text,summary text,shared_reason text,estimated_duration_minutes integer,estimated_budget text,distance_label text,synthetic_key text,created_at timestamptz,selected_at timestamptz,selected_by_user_id uuid,source_discovery_candidate_id uuid,recommendation_reason_key text,novelty_label text,is_demo boolean);
+create table public.adventures(id uuid primary key default gen_random_uuid(),heart_stone_id uuid,type public.adventure_type,title text,status public.adventure_status,planned_for timestamptz,estimated_duration_minutes integer,estimated_budget text,recommendation_class public.recommendation_class,created_by_user_id uuid,source_recommendation_id uuid,is_demo boolean,invitation_style text,started_at timestamptz,invitation_accepted_at timestamptz,adventure_revealed_at timestamptz,updated_at timestamptz);
+create table public.adventure_steps(adventure_id uuid,position integer,step_type text,title text,description text,estimated_duration_minutes integer,status text);
+create table public.recommendation_candidate_evaluations(request_id uuid,candidate_id uuid,total_score numeric,couple_fit_score numeric,context_score numeric,novelty_score numeric,status text);
+create table public.discovery_candidates(id uuid,title text,summary text,locality text,region text);
+create function public.is_active_heart_stone_member(h uuid) returns boolean language sql as $$ select exists(select 1 from public.heart_stone_memberships where heart_stone_id=h and user_id=auth.uid() and status='active') $$;
+create function public.require_active_heart_stone_member(h uuid) returns void language plpgsql as $$ begin if not public.is_active_heart_stone_member(h) then raise exception 'NOT_ACTIVE_HEART_STONE_MEMBER'; end if; end $$;
+create function public.consume_recommendation_request(r uuid) returns void language sql as $$ insert into public.test_writes values ('consume') $$;
+create function public.begin_alpha_quest(uuid,public.adventure_type,text,integer,text,text[],integer,text,integer) returns uuid language plpgsql as $$ begin insert into public.test_writes values ('begin'); return '30000000-0000-0000-0000-000000000001'::uuid; end $$;

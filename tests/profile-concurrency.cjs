@@ -1,0 +1,20 @@
+const {PGlite}=require('@electric-sql/pglite'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const db=new PGlite(),read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
+const alice='10000000-0000-0000-0000-000000000001',bob='10000000-0000-0000-0000-000000000002',couple='20000000-0000-0000-0000-000000000001';
+const begin=`select public.begin_demo_quest('${couple}','date','today',120,'moderate')`;
+const expectStop=async(sql,message)=>{try{await db.exec(sql);assert.fail('Expected '+message)}catch(e){assert.equal(e.message,message)}};
+(async()=>{
+ await db.exec(read('tests/fixtures/profile-server-schema.sql'));await db.exec(read('tests/fixtures/demo-rpc-baseline.sql'));await db.exec(read('database/demo_profile_requirements_guard.sql'));
+ await db.exec(`create table public.profiles(id uuid primary key);create table public.heart_stones(id uuid primary key);insert into public.profiles values('${alice}'),('${bob}');insert into public.heart_stones values('${couple}');insert into public.heart_stone_memberships values('${couple}','${alice}','active'),('${couple}','${bob}','active');`);
+ await db.exec(read('database/demo_profile_concurrency.sql'));await db.query("select set_config('request.jwt.claim.sub',$1,false)",[alice]);
+ await db.exec('begin');await db.exec(begin);
+ const locks=(await db.query("select c.relname,l.mode from pg_locks l join pg_class c on c.oid=l.relation where l.pid=pg_backend_pid() and l.mode='RowShareLock' and c.relname in ('profiles','heart_stones')")).rows.map(r=>r.relname).sort();assert.deepEqual(locks,['heart_stones','profiles']);await db.exec('rollback');
+ await db.exec('begin');await db.exec(`insert into public.user_onboarding_answers values('${bob}','account_profile_v1_call_me','{"value":"Test"}',false)`);assert((await db.query("select 1 from pg_locks l join pg_class c on c.oid=l.relation where l.pid=pg_backend_pid() and l.mode='RowShareLock' and c.relname='profiles'")).rows.length);await db.exec('rollback');
+ await db.exec('begin');await db.exec(`update public.heart_stone_memberships set status='inactive' where user_id='${bob}'`);assert((await db.query("select 1 from pg_locks l join pg_class c on c.oid=l.relation where l.pid=pg_backend_pid() and l.mode='RowShareLock' and c.relname='heart_stones'")).rows.length);await db.exec('rollback');
+ await db.exec(`insert into public.user_onboarding_answers values('${bob}','account_profile_v1_hard_no_details','{"value":"PRIVATE new need"}',false)`);await expectStop(begin,'PROFILE_REQUIREMENTS_UNVERIFIED');assert.equal((await db.query('select * from public.test_writes')).rows.length,0);
+ await db.exec(`update public.user_onboarding_answers set answer_json='{"value":null}' where user_id='${bob}'`);await db.exec(begin);await db.exec(`delete from public.user_onboarding_answers where user_id='${bob}'`);await db.exec(begin);
+ await db.exec(`update public.heart_stone_memberships set status='inactive' where user_id='${bob}'`);await expectStop(begin,'PLANNING_UNAVAILABLE');await db.exec(`update public.heart_stone_memberships set status='active' where user_id='${bob}'`);
+ await db.exec('begin isolation level repeatable read');await expectStop(begin,'PLANNING_RETRY_REQUIRED');await db.exec('rollback');
+ await db.exec(`delete from public.profiles where id='${bob}'`);await expectStop(begin,'PLANNING_UNAVAILABLE');
+ console.log('PASS: local PostgreSQL concurrency draft installs, parent locks remain transaction-held, edits are freshly rechecked, inactive/missing parents stop planning, and stale isolation is rejected.');await db.close();
+})().catch(async e=>{console.error(e);await db.close();process.exitCode=1});

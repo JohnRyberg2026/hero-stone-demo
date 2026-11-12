@@ -1,0 +1,14 @@
+{
+  "name": "heart-stone-profile",
+  "private": true,
+  "scripts": {
+    "test": "node tests/account-profile.cjs && node tests/profile-starter.cjs && node tests/profile-adventure-runtime.cjs && node tests/profile-preview.cjs && node tests/profile-planning-guard.cjs && node tests/profile-server-guard.cjs && node tests/profile-access-hardening.cjs && node tests/profile-read-privacy.cjs && node tests/profile-concurrency.cjs && node tests/profile-bundle.cjs && node tests/profile-preflight.cjs && node tests/profile-planning-errors.cjs",
+    "test:browser": "node tests/profile-starter-browser.cjs",
+    "test:planning-browser": "node tests/profile-planning-browser.cjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
+    "jsdom": "26.1.0",
+    "playwright": "1.62.1"
+  }
+}
