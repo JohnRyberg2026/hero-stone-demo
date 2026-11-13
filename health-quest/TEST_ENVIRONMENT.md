@@ -56,3 +56,16 @@ Two actual Auth users are still required. No account invitation or email was
 sent and no raw Auth users/credentials were inserted through SQL. Hosted login,
 account isolation and cross-device behavior remain unverified until those test
 accounts exist. The supported connector has no Auth admin user-creation tool.
+
+## Test accounts confirmed — November 13, 2026
+
+Both healthquest-a@example.com and healthquest-b@example.com were created by John
+through the Auth dashboard and confirmed via hosted read-only query. Matching
+owner profile rows were inserted in the isolated project only. No passwords were
+read, requested in chat or stored in source. Added test-signin.html, a downloadable
+single-file page bundling existing session/member adapters and public test config.
+It loads the pinned Supabase SDK from its existing CDN and needs internet access.
+Bundle syntax check passes. The 80 prior automated checks remain the latest suite
+result; no source behavior changed. Next: John signs into A in his own browser,
+saves a fictional note, returns after sign-out, then checks B cannot see it. Full
+hosted password-auth integration still not claimed until observed.

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Health Quest · Heartstone</title>
+<style>:root{color-scheme:light;font:18px/1.6 system-ui,sans-serif;color:#243b32;background:#f6f5ee}*{box-sizing:border-box}body{margin:0}main{max-width:840px;margin:auto;padding:28px 22px 60px}a{color:#285e47}header{padding:28px 0}h1{font:clamp(2.1rem,6vw,3.4rem)/1.15 Georgia,serif;margin:12px 0}h2{font:1.6rem/1.3 Georgia,serif}.eyebrow{font-size:.8rem;letter-spacing:.16em}.card{background:#fff;border:1px solid #cbd6ca;border-radius:16px;padding:26px;margin-top:24px}.notice{border-left:4px solid #8a6c32;padding:12px 16px;background:#f1ead9}.subtle{font-size:.9rem;color:#4d6055}label{display:block;margin:16px 0}input,select,textarea,button{font:inherit}select,textarea{display:block;width:100%;padding:12px;border:1px solid #738477;border-radius:8px;background:white;color:inherit}textarea{resize:vertical}.check{display:flex;gap:12px;align-items:center}.check input{width:22px;height:22px}button{cursor:pointer;min-height:48px;padding:10px 18px;margin:6px 8px 6px 0;border:1px solid #305c45;border-radius:8px;background:#305c45;color:white}button:disabled{opacity:.55;cursor:wait}button:focus-visible,a:focus-visible{outline:3px solid #9b6b18;outline-offset:3px}article{border-top:1px solid #dce3d9;padding:18px 0;overflow-wrap:anywhere}article p,#review-text{white-space:pre-wrap;overflow-wrap:anywhere}.tag{font-size:.8rem;color:#405a48}#status{min-height:30px}[hidden]{display:none!important}@media(max-width:520px){.card{padding:18px}button{width:100%;margin-right:0}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
+</head>
+<body><main>
+<p>Health Quest Test · Private notes test</p>
+<header><p class="eyebrow">HEARTSTONE · HEALTH QUEST</p><h1>A little progress, your way.</h1>
+<p>Your goals and everyday observations, kept together.</p></header>
+<p class="notice">Health Quest Test · Separate from live Heartstone. Use fictional test notes only.</p>
+<section class="card"><h2>Test account</h2><p id="session-status" role="status" aria-live="polite">Checking your test session…</p><form id="test-signin"><label>Test email<input id="test-email" type="email" autocomplete="username" required></label><label>Test password<input id="test-password" type="password" autocomplete="current-password" required></label><button id="test-login" type="submit">Sign in to Health Quest Test</button></form><button id="test-signout" type="button" hidden>Sign out of test account</button><p class="subtle">An existing test account is required. This screen does not create accounts or send emails. Your live Heartstone password will only work if that account was separately created in this test project.</p></section>
+<p id="status" role="status" aria-live="polite">Opening your Health Quest…</p>
+<section id="workspace" hidden>
+<nav aria-label="Health Quest"><button id="refresh" type="button">Refresh my notes</button><button id="export" type="button">Export my notes</button></nav>
+<section class="card"><h2 id="editor-title">What would you like to remember?</h2>
+<form id="editor">
+<label>A goal or an observation<select id="kind"><option value="goal">My goal</option><option value="observation">My observation</option></select></label>
+<label>In your own words<textarea id="text" rows="4" maxlength="2000" required placeholder="For example, I want to build a comfortable walking routine."></textarea></label>
+<label>Status<select id="state"><option value="reported">Reported</option><option value="planned">Planned</option><option value="paused">Paused</option><option value="completed">Completed</option></select></label>
+<label class="check"><input type="checkbox" id="followup"> Allow future follow-up about this item</label>
+<p class="subtle">This records your preference; automated follow-up is not enabled in this development version.</p>
+<button type="submit">Review before saving</button><button type="button" id="cancel">Clear draft</button>
+</form>
+<section id="review" hidden aria-label="Review your note"><h3>Review your note</h3><p id="review-text"></p><p id="review-details"></p>
+<button id="confirm" type="button">Save this privately</button><button id="back" type="button">Keep editing</button></section>
+</section>
+<section class="card"><h2>My notes</h2><p class="subtle">Plans and reported experiences stay separate. These notes are not shared with partners or friends.</p><div id="records"></div></section>
+</section>
+<noscript>Enable JavaScript to open your private Health Quest notes.</noscript>
+</main><script type="module">
+// Account-bound Health Quest storage. No model calls or shared Quest memory.
+export function privateRecords(client, expectedUser) {
+  if (!expectedUser) throw new Error('Sign in to Health Quest.');
+  async function account() {
+    const { data, error } = await client.auth.getUser();
+    if (error || data?.user?.id !== expectedUser) throw new Error('Account changed. Reopen Health Quest.');
+  }
+  return {
+    async list() {
+      await account();
+      const { data, error } = await client.from('health_quest_records').select('*')
+        .eq('owner_id', expectedUser).neq('state', 'deleted').order('created_at');
+      if (error) throw new Error('Health Quest could not load your records.');
+      await account();
+      return data;
+    },
+    async save({ id, kind, text, state = 'reported', followup = false,
+      occurredAt = null, revision = 0, actionId, approved = false }) {
+      if (approved !== true) throw new Error('Review and approve before saving.');
+      if (!['goal', 'observation'].includes(kind) || typeof text !== 'string' ||
+          !text.trim() || text.length > 2000 || !actionId || !id ||
+          !['planned', 'reported', 'paused', 'completed', 'deleted'].includes(state) ||
+          !Number.isInteger(revision) || revision < 0 || typeof followup !== 'boolean') {
+        throw new Error('Invalid Health Quest record.');
+      }
+      await account();
+      const { data, error } = await client.rpc('health_quest_save_record', {
+        p_expected_user: expectedUser, p_id: id, p_kind: kind, p_text: text.trim(),
+        p_state: state, p_followup: followup, p_occurred_at: occurredAt,
+        p_revision: revision, p_action_id: actionId, p_approved: true
+      });
+      if (error) throw new Error('Record was not confirmed saved. Reload before trying again.', { cause: error });
+      await account();
+      if (!data || data.id !== id) throw new Error('Save could not be confirmed.');
+      return data;
+    }
+  };
+}
+
+
+export async function mountMember(doc, client, { uuid = () => crypto.randomUUID(), download } = {}) {
+  const q = id => doc.getElementById(id);
+  let owner=null, store=null, rows=[], editing=null, pending=null, generation=0, busy=false;
+  function status(message){q('status').textContent=message;}
+  function lock(value){busy=value;q('workspace').querySelectorAll('button,input,select,textarea').forEach(b=>b.disabled=value);q('kind').disabled=value||!!editing;}
+  function draft(){editing=null;pending=null;q('editor').reset();q('kind').disabled=false;q('editor').hidden=false;q('review').hidden=true;q('review-text').textContent='';q('review-details').textContent='';q('editor-title').textContent='What would you like to remember?';}
+  function clear(){generation++;owner=null;store=null;rows=[];draft();q('records').replaceChildren();q('workspace').hidden=true;lock(false);}
+  function render(){
+    q('records').replaceChildren();
+    if(!rows.length){q('records').textContent='No saved notes yet. Start with whatever matters to you.';return;}
+    for(const row of rows){
+      const article=doc.createElement('article'),meta=doc.createElement('p'),text=doc.createElement('p');
+      meta.className='tag';meta.textContent=`${row.kind==='goal'?'Goal':'Observation'} · ${row.state} · Follow-up ${row.followup?'allowed':'off'}`;
+      text.textContent=row.text;article.append(meta,text);
+      const edit=doc.createElement('button');edit.type='button';edit.textContent='Correct this note';
+      edit.onclick=()=>{draft();editing=row;q('kind').value=row.kind;q('kind').disabled=true;q('text').value=row.text;q('state').value=row.state;q('followup').checked=row.followup;q('editor-title').textContent='Correct your note';q('text').focus();};article.append(edit);
+      const remove=doc.createElement('button');remove.type='button';remove.textContent='Delete this note';
+      remove.onclick=()=>review({...row,text:row.text,id:row.id,kind:row.kind,revision:row.revision,state:'deleted',followup:false,occurredAt:row.occurred_at});article.append(remove);
+      if(row.followup){const stop=doc.createElement('button');stop.type='button';stop.textContent='Stop follow-up';stop.onclick=()=>review({...row,id:row.id,kind:row.kind,revision:row.revision,state:row.state,followup:false,occurredAt:row.occurred_at});article.append(stop);}
+      q('records').append(article);
+    }
+  }
+  function review(input){
+    pending={...input,actionId:uuid(),approved:true};q('editor').hidden=true;q('review').hidden=false;
+    q('review-text').textContent=input.text;
+    q('review-details').textContent=input.state==='deleted'?'Delete this note? Its saved text will be cleared. Provider backups may retain earlier data.':`${input.kind==='goal'?'Goal':'Observation'} · ${input.state} · Follow-up ${input.followup?'allowed':'off'}`;
+    q('confirm').textContent=input.state==='deleted'?'Delete this note':'Save this privately';q('confirm').focus();
+  }
+  async function load(){
+    if(busy)return;const token=++generation;lock(true);status('Loading your private notes…');
+    try{
+      const auth=await client.auth.getUser();if(token!==generation)return;
+      if(auth.error||!auth.data?.user)throw Error('Sign in on the Heartstone home page, then return here.');
+      const id=auth.data.user.id, candidate=privateRecords(client,id),data=await candidate.list();
+      if(token!==generation)return;owner=id;store=candidate;rows=data;draft();render();q('workspace').hidden=false;status('Your private notes are ready.');
+    }catch(e){if(token===generation){clear();status(e.message);}}
+    finally{if(token===generation)lock(false);}
+  }
+  q('editor').onsubmit=e=>{e.preventDefault();if(busy)return;const text=q('text').value.trim();if(!text){status('Add a few words before reviewing.');return;}
+    review({id:editing?.id||uuid(),kind:q('kind').value,text,state:q('state').value,followup:q('followup').checked,revision:editing?.revision||0,occurredAt:editing?.occurred_at||null});};
+  q('confirm').onclick=async()=>{
+    if(busy||!pending||!store)return;const token=generation,input=pending,storage=store;lock(true);status('Saving your note…');
+    try{const row=await storage.save(input);if(token!==generation)return;rows=rows.filter(r=>r.id!==row.id);if(row.state!=='deleted')rows.push(row);draft();render();status(row.state==='deleted'?'Note deleted.':'Saved privately.');}
+    catch(e){if(token===generation){if(e.message.startsWith('Account changed'))clear();status(e.message);}}
+    finally{if(token===generation)lock(false);}
+  };
+  q('cancel').onclick=draft;q('back').onclick=()=>{pending=null;q('review').hidden=true;q('editor').hidden=false;};
+  q('refresh').onclick=load;
+  q('export').onclick=async()=>{
+    if(busy||!store)return;const token=generation;lock(true);
+    try{const data=await store.list();if(token!==generation)return;const content=JSON.stringify({records:data},null,2);
+      if(download)download(content);else{const url=URL.createObjectURL(new Blob([content],{type:'application/json'}));const a=doc.createElement('a');a.href=url;a.download='health-quest-notes.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}status('Your notes were exported. Keep the downloaded file private.');
+    }catch(e){if(token===generation){if(e.message.startsWith('Account changed'))clear();status(e.message);}}finally{if(token===generation)lock(false);}
+  };
+  const {data:subscription}=client.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'||(owner&&session?.user?.id!==owner)){clear();status('Your account changed. Return to Heartstone to sign in.');}
+  });
+  doc.defaultView?.addEventListener('pagehide',clear);
+  doc.defaultView?.addEventListener('pageshow',e=>{if(e.persisted)load();});
+  await load();
+  return { reload:load, destroy(){clear();subscription?.subscription?.unsubscribe();} };
+}
+
+export async function mountTestSession(doc,client,{openMember=mountMember}={}){
+ const q=id=>doc.getElementById(id);let member=null,owner=null,epoch=0,busy=false;
+ const message=text=>q('session-status').textContent=text;
+ function controls(){q('test-signin').hidden=!!owner;q('test-signout').hidden=!owner;q('test-signout').disabled=busy;q('test-login').disabled=busy;}
+ function close(){epoch++;member?.destroy();member=null;owner=null;q('workspace').hidden=true;q('records').replaceChildren();q('text').value='';q('review-text').textContent='';q('review-details').textContent='';q('test-password').value='';controls();}
+ async function open(user){const token=++epoch;member?.destroy();member=null;owner=null;controls();
+  const profile=await client.from('profiles').upsert({id:user.id},{onConflict:'id',ignoreDuplicates:true});
+  if(token!==epoch)return;
+  if(profile.error)throw Error('Your test profile could not be prepared.');
+  const current=await client.auth.getUser();if(token!==epoch)return;
+  if(current.error||current.data?.user?.id!==user.id)throw Error('Your account changed. Sign in again.');
+  owner=user.id;controls();const mounted=await openMember(doc,client);
+  if(token!==epoch){mounted.destroy();return;}member=mounted;message('Signed into Health Quest Test. Use fictional notes only.');
+ }
+ q('test-signin').onsubmit=async event=>{event.preventDefault();if(busy)return;busy=true;controls();message('Signing into the test project…');
+  const credentials={email:q('test-email').value.trim(),password:q('test-password').value};
+  q('test-password').value='';
+  try{const result=await client.auth.signInWithPassword(credentials);if(result.error||!result.data?.user)throw Error('Test sign-in failed. Check the account and password.');await open(result.data.user);}
+  catch{close();message('Could not open your test account. Check sign-in details and test-project configuration.');}
+  finally{busy=false;controls();}
+ };
+ q('test-signout').onclick=async()=>{if(busy)return;busy=true;close();controls();try{const result=await client.auth.signOut();if(result.error)throw Error('failed');message('Signed out. Private notes cleared from this screen.');}catch{message('Screen cleared, but server sign-out was not confirmed.');}finally{busy=false;controls();}};
+ const subscription=client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(owner&&owner!==session?.user?.id)){close();message('Account changed. Sign in or reload to continue.');}});
+ try{const auth=await client.auth.getUser();if(!auth.error&&auth.data?.user)await open(auth.data.user);else message('Use an existing account from Health Quest Test, separate from live Heartstone.');}catch{close();message('Could not restore the test session. Sign in again.');}
+ controls();return {destroy(){close();subscription.data?.subscription?.unsubscribe();}};
+}
+
+// Isolated Health Quest Test project. Public URL/key only; never live credentials.
+export const developmentConfig = {
+ url: 'https://vkwrcozaximcjedvtloc.supabase.co',
+ publishableKey: 'sb_publishable_PhWOFrT2Oo-QAwUb0P32TQ_IL3lahMa'
+};
+
+if (typeof supabase === 'undefined') { document.getElementById('session-status').textContent = 'Could not load the sign-in library. Check your internet connection, then reload this file.'; } else if (developmentConfig) {
+  const client = supabase.createClient(developmentConfig.url, developmentConfig.publishableKey);
+  mountTestSession(document, client);
+} else {
+  document.getElementById('status').textContent = 'This development screen is waiting for its test environment. Your live account has not been changed.';
+}
+</script></body></html>
