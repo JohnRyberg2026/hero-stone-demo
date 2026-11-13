@@ -1,0 +1,41 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+test('private immutable plan versions and explicit approvals',async t=>{
+ const db=new PGlite();t.after(()=>db.close());
+ const a='00000000-0000-4000-8000-000000000001',b='00000000-0000-4000-8000-000000000002',p='00000000-0000-4000-8000-000000000010';
+ let n=100;const aid=()=>`00000000-0000-4000-8000-${String(++n).padStart(12,'0')}`;
+ await db.exec(`create role anon;create role authenticated;create schema auth;grant usage on schema auth to authenticated;create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create table profiles(id uuid primary key);insert into profiles values('${a}'),('${b}');create schema health_quest_internal;`);
+ await db.exec(await readFile(new URL('../supabase/migrations/20261113213149_health_quest_private_plans.sql',import.meta.url),'utf8'));
+ const as=async(u,role='authenticated')=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[u]);await db.exec(`set role ${role}`);};
+ const payload={days:30,daily:3,ingredients:[['Moringa',1400],['Baobab',800],['Jabuticaba',600],['Flax',700],['Chia',700],['Hemp hearts',700],['Pumpkin',700]]};
+ const propose=async(v,action=aid(),body=payload,user=a)=>(await db.query('select health_quest_propose_plan($1,$2,$3,$4,$5) as result',[user,p,v,body,action])).rows[0].result;
+ const approve=async(v,ok=true,action=aid())=>(await db.query('select health_quest_approve_plan($1,$2,$3,$4,$5) as result',[a,p,v,action,ok])).rows[0].result;
+ await as(a);const action=aid();
+ await t.test('save version one',async()=>assert.equal((await propose(0,action)).version,1));
+ await t.test('retry is idempotent',async()=>assert.equal((await propose(0,action)).version,1));
+ await t.test('reused action cannot change content',()=>assert.rejects(propose(0,action,{...payload,days:20}),/reused/));
+ await t.test('stale proposal rejected',()=>assert.rejects(propose(0),/Plan changed/));
+ await t.test('invalid mass rejected',()=>assert.rejects(propose(1,aid(),{...payload,ingredients:payload.ingredients.map(([name])=>[name,0])}),/serving mass/));
+ await t.test('approval must be explicit',()=>assert.rejects(approve(1,false),/Explicit/));
+ const approvalAction=aid();await t.test('approve version one',async()=>assert.equal((await approve(1,true,approvalAction)).version,1));
+ await t.test('approval retry is idempotent',async()=>assert.equal((await approve(1,true,approvalAction)).version,1));
+ await t.test('new proposal preserves approved version',async()=>{await propose(1);assert.equal((await db.query('select version from health_quest_plan_approvals')).rows[0].version,1);});
+ await t.test('old proposal cannot receive new approval',()=>assert.rejects(approve(1),/latest proposal/));
+ await t.test('saved versions cannot be edited',()=>assert.rejects(db.query("update health_quest_plan_versions set payload='{}'"),/permission denied/));
+ await t.test('approvals cannot be deleted',()=>assert.rejects(db.query('delete from health_quest_plan_approvals'),/permission denied/));
+ await as(b);
+ await t.test('second account sees no versions or approvals',async()=>{for(const table of ['health_quest_plan_versions','health_quest_plan_approvals'])assert.equal((await db.query(`select * from ${table}`)).rows.length,0);});
+ await t.test('second account cannot impersonate owner',()=>assert.rejects(propose(2),/Account changed/));
+ await as('','anon');await t.test('anonymous access denied',()=>assert.rejects(db.query('select * from health_quest_plan_versions'),/permission denied/));
+ await as(a);await t.test('owner return retrieves both versions',async()=>assert.equal((await db.query('select * from health_quest_plan_versions')).rows.length,2));
+});
+
+test('adapter blocks unreviewed actions and account switching',async()=>{
+ const {privatePlans}=await import('./private-plans.mjs');
+ const plans=privatePlans({auth:{getUser:async()=>({data:{user:{id:'other'}}})}},'expected');
+ await assert.rejects(plans.propose({}),/Review/);
+ await assert.rejects(plans.approve({}),/Explicit/);
+ await assert.rejects(plans.list(),/Account changed/);
+});

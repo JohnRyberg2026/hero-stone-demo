@@ -246,3 +246,9 @@ submission and raw auth errors are not rendered. Hosted runner also prepares
 owner profile rows. 80 local checks pass. Auth-user creation is not exposed by
 the connector; two test users remain a concrete prerequisite before running the
 hosted two-account journey. No invitation, email or real profile import occurred.
+
+## Private plan storage — November 13, 2026
+
+Installed `20261113213149_health_quest_private_plans.sql` in **Health Quest Test only**. Owner-scoped immutable proposal versions and separate exact-version approvals preserve previously approved plans. Expected versions reject stale proposals; action IDs support safe retries. The account-bound `private-plans.mjs` adapter checks the signed-in user before and after operations.
+
+Validation: 18 local PostgreSQL/adapter tests passed for RLS separation, anonymous denial, immutable records, explicit approval, latest-proposal checks, stale versions, invalid mass, and retries. Hosted migration succeeded. No member plan data was created. Plan screen wiring and authenticated hosted plan testing remain next. This is fictional sample-plan storage, with no production, clinician, payment or clinical validation authority. Retention/deletion controls remain required before real health plan use.
