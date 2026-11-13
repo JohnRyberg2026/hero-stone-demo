@@ -216,3 +216,9 @@ export function compareProposal(state){
  add('Sample selling price',before.total,after.total,'cents');add('Sample production cost',before.productionCost,after.productionCost,'cents');
  return {active:current.id,proposed:proposed.id,source:proposed.source,changes};
 }
+
+export function approvedSummary(state,{includeGoals=false,includeUse=false}={}){
+ const plan=state.versions.find(v=>v.id===state.active);if(!plan)throw Error('Approve a sample plan before preparing its summary.');
+ const amounts=calculate(plan);
+ return {label:'Fictional Health Quest test plan — not a clinical recommendation',version:plan.id,days:plan.days,daily:plan.daily,servingGrams:amounts.servingGrams,ingredients:copy(amounts.ingredients),totalGrams:amounts.grams,packages:amounts.packages,samplePrice:amounts.total,goals:includeGoals?plan.request:null,reportedUse:includeUse?useSummary(state):null,hasPendingProposal:state.versions.at(-1)?.id!==plan.id};
+}

@@ -205,3 +205,12 @@ ingredient grams, serving weight, monthly powder, package quantities, sample
 selling price and production-cost total. Shows source/version and reinforces
 that active plan is unchanged until approval. Comparison clears after approval;
 no clinical benefit or suitability inference. 72 Health Quest checks pass.
+
+## Printable approved summary — November 13, 2026
+
+Added member-reviewed approved-plan summary and browser print control. Uses exact
+active version even when a newer proposal exists. Goals and aggregate reported
+use are opt-in; production costs, support and conversations are excluded. Changing
+options or model state invalidates the preview before printing. Print stylesheet
+isolates the summary; no outbound sharing occurs. Browser print/PDF dialog itself
+has not been visually tested. 74 Health Quest automated checks pass.
