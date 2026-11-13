@@ -187,3 +187,13 @@ Exact reviewed order summaries are rechecked before submission; duplicate action
 references do not create duplicate requests. Local receipt explicitly does not
 claim delivery to staff, live monitoring or response-time commitments. There is
 no outbound messaging integration. 66 Health Quest checks pass.
+
+## Sample ingredient exclusions — November 13, 2026
+
+Added optional seven-ingredient exclusions to member request intake. Conflicts
+are visible and block member approval, production review, custom plan checkout
+and refill preparation. Setting an excluded ingredient to zero creates a new
+version that can be reviewed without rewriting earlier records. This covers
+only named sample ingredients, not cross-contact, medications, contraindications
+or individualized medical suitability. Standard-store product exclusion checks
+are not implemented. 69 Health Quest checks pass.

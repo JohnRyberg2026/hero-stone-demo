@@ -44,9 +44,18 @@ export function propose(state, options={}){
  const plan={id:next.versions.length+1,days:options.days??parent?.days??30,daily:options.daily??parent?.daily??3,pricing:options.pricing??parent?.pricing??'standard',source:options.source||'Member request',request:next.request,costs:copy(options.costs??parent?.costs??sampleCosts),ingredients:copy(options.ingredients??parent?.ingredients??baseIngredients)};
  calculate(plan);next.versions.push(plan);next.events.push(`Proposed version ${plan.id}; active plan unchanged.`);return next;
 }
+
+export function exclusionConflicts(state,plan){
+ const avoided=state.exclusions||[];
+ if(!Array.isArray(avoided)||avoided.some(name=>!baseIngredients.some(([ingredient])=>ingredient===name)))throw Error('Unknown excluded ingredient.');
+ return (plan.ingredients??baseIngredients).filter(([name,mg])=>mg>0&&avoided.includes(name)).map(([name])=>name);
+}
+function requireNoExclusions(state,plan){const conflicts=exclusionConflicts(state,plan);if(conflicts.length)throw Error(`Revise the formula: excluded ingredients present — ${conflicts.join(', ')}.`);}
+
 export function approve(state,id){
  const next=copy(state),plan=next.versions.find(v=>v.id===id);if(!plan)throw Error('Proposal missing.');
  if(id!==next.versions.at(-1)?.id)throw Error('Review the latest proposal first.');
+ requireNoExclusions(state,plan);
  next.active=id;next.production=null;next.events.push(`Member approved version ${id}. Production review required.`);return next;
 }
 export function physicianView(state){
@@ -74,13 +83,14 @@ export function applyRecommendation(state,id,accept){
 export function productionReview(state){
  if(!state.active||state.active!==state.versions.at(-1)?.id)throw Error('Member must approve the latest proposal.');
  if(state.recommendations.some(r=>r.status==='pending'))throw Error('Resolve the pending recommendation first.');
+ requireNoExclusions(state,state.versions.find(v=>v.id===state.active));
  const next=copy(state);next.production=state.active;next.events.push(`Demo manufacturer reviewed exact version ${state.active}.`);return next;
 }
 export function addToCart(state,id){
  const next=copy(state);
  if(id==='plan'){
   if(state.recommendations.some(r=>r.status==='pending')||!state.active||state.production!==state.active||state.active!==state.versions.at(-1)?.id)throw Error('Approve and review the latest plan first.');
-  const plan=state.versions.find(v=>v.id===state.active),totals=calculate(plan);
+  const plan=state.versions.find(v=>v.id===state.active),totals=calculate(plan);requireNoExclusions(state,plan);
   if(next.cart.some(item=>item.id==='plan'))throw Error('This sample plan is already in the cart.');
   next.cart.push({id:'plan',name:`Monthly sample plan · version ${plan.id}`,cents:totals.total,quantity:1,plan:copy(plan)});
  }else{
@@ -102,6 +112,7 @@ export function checkout(state,options,key){
  if(!state.cart.length)throw Error('Your sample cart is empty.');
  const plan=state.cart.find(item=>item.id==='plan');
  if(plan&&(state.recommendations.some(r=>r.status==='pending')||plan.plan.id!==state.active||state.production!==state.active||state.active!==state.versions.at(-1)?.id))throw Error('Plan changed. Remove it and add the newly approved version.');
+ if(plan)requireNoExclusions(state,plan.plan);
  if(plan?.refill){const current=refillQuote(state);if(JSON.stringify(current)!==JSON.stringify(plan.refill))throw Error('Supply changed. Remove this refill and prepare a new proposal.');}
  const total=quote(state,options),next=copy(state);
  next.orders.push({id:`DEMO-${next.orders.length+1}`,key,items:copy(next.cart),...total,paymentStatus:total.payment==='online'?'Simulated paid':'Simulated payment due',status:'Simulated received',createdAt:new Date().toISOString()});next.cart=[];return next;
@@ -160,6 +171,7 @@ export function refillQuote(state){
  const plan=state.versions.find(v=>v.id===state.active);
  if(!plan||state.active!==state.versions.at(-1)?.id||state.production!==state.active)throw Error('Approve and review the latest plan before preparing a refill.');
  if(state.recommendations.some(r=>r.status==='pending'))throw Error('Resolve the pending recommendation first.');
+ requireNoExclusions(state,plan);
  const totals=calculate(plan),mix=JSON.stringify(plan.ingredients??baseIngredients);
  const supply=supplySummary(state).find(row=>row.versions.some(id=>JSON.stringify(state.versions.find(v=>v.id===id)?.ingredients??baseIngredients)===mix));
  if(supply?.pendingGrams>0)throw Error('A matching sample order is still pending. Complete or review it before preparing another refill.');

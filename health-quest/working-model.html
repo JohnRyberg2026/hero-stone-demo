@@ -4,7 +4,7 @@
 <p class="notice"><strong>TEST MODEL ONLY</strong> · Fictional profile, illustrative formulas and sample prices. All role views are simulations on this device. No real physician access, orders, payments or shipping. Do not enter private health information.</p>
 <nav aria-label="Model sections"><button data-tab="plan">My Targeted Wellness</button><button data-tab="progress">My daily use</button><button data-tab="physician">Physician preview</button><button data-tab="production">Production preview</button><button data-tab="store">Heartstone Store</button><button data-tab="orders">My demo orders</button><button data-tab="help">Contact a Person</button></nav>
 <p id="status" role="status" aria-live="polite">Ready to explore.</p>
-<section id="plan" data-section><div class="grid"><section class="card"><h2>Start with what matters</h2><form id="request-form"><label>Sample goals and preferences<textarea id="request" maxlength="1500" rows="4"></textarea></label><label>Monthly sample budget ($)<input id="budget" type="number" value="100" min="1" max="10000" step="1" required></label><button>Prepare my sample plan</button></form><p class="subtle">30 days · three daily smoothies · rotating midday themes. This is a workflow example, not a consumption recommendation.</p></section><section class="card"><h2>My plan</h2><div id="plan-summary"></div><button id="budget-revise">Try the lower-cost bundle</button><button id="approve">Approve this exact version</button><div id="version-status"></div></section></div>
+<section id="plan" data-section><div class="grid"><section class="card"><h2>Start with what matters</h2><form id="request-form"><label>Sample goals and preferences<textarea id="request" maxlength="1500" rows="4"></textarea></label><label>Monthly sample budget ($)<input id="budget" type="number" value="100" min="1" max="10000" step="1" required></label><fieldset><legend>Sample ingredient exclusions</legend><div id="exclusion-inputs"></div></fieldset><p class="subtle">These checks cover only the seven sample ingredients. They do not establish allergy safety, cross-contact control, medication compatibility or medical suitability.</p><button>Prepare my sample plan</button></form><p class="subtle">30 days · three daily smoothies · rotating midday themes. This is a workflow example, not a consumption recommendation.</p></section><section class="card"><h2>My plan</h2><div id="plan-summary"></div><button id="budget-revise">Try the lower-cost bundle</button><button id="approve">Approve this exact version</button><div id="version-status"></div><p id="exclusion-status" role="status"></p></section></div>
 <section class="card"><h2>Sample amounts and monthly variety</h2><div id="amounts"></div><details><summary>Edit the illustrative formula</summary><form id="formula-form"><p class="subtle">Sample quantities only. Change grams per serving to test recalculation. Retail prices remain the fixed demonstration prices; sample costs can be edited in the production preview; suitability is not calculated.</p><div id="formula-inputs"></div><button id="revise-formula">Prepare revised formula</button></form></details><details><summary>View the 30-day schedule</summary><div id="calendar"></div></details><details><summary>Version history</summary><div id="versions"></div></details></section>
 <section class="card"><h2>You choose what to share</h2><label class="check"><input id="share-formula" type="checkbox"> Share formula and serving schedule with the demo physician</label><label class="check"><input id="share-request" type="checkbox"> Also share my sample goals</label><button id="save-sharing">Save sharing choices</button><p class="subtle">Unchecking sharing removes the formula from the physician preview. This does not invite or contact anyone.</p><div id="recommendations"></div></section></section>
 <section id="progress" data-section hidden class="card"><h2>My daily use</h2><p>Record what actually happened. A planned smoothie is never counted as taken. This is the fictional sample month; no calendar reminders or real health tracking are enabled.</p><div id="use-summary"></div><h3>My sample supply</h3><div id="supply-summary"></div><details><summary>Plan a sample refill</summary><p class="subtle">Covers another full plan period using the estimated leftover supply. Confirm physical stock before a real reorder. Sample refill price is proportional to filled grams at the current sample plan price; real package pricing is not connected.</p><div id="refill-summary"></div><button id="add-refill">Add this sample refill to cart</button></details><p class="subtle">Only completed simulated orders add supply. Estimates subtract reported use only; unrecorded use, spills and outside purchases are not included. Different ingredient mixes stay separate. No automatic reorder.</p><form id="use-form"><label>Sample plan day<input id="use-day" type="number" min="1" max="90" value="1" required></label><label>Smoothie slot<select id="use-slot"></select></label><label>What happened?<select id="use-status"><option value="taken">Taken</option><option value="skipped">Skipped</option><option value="unrecorded">Clear current report / unknown</option></select></label><button id="save-use">Save sample report</button></form><p class="subtle">Saving the same day and slot corrects that entry. It does not add another serving. Earlier versions and corrections remain in its history. Missed smoothies never create catch-up servings.</p><div id="use-entries"></div></section>
@@ -62,9 +62,18 @@ export function propose(state, options={}){
  const plan={id:next.versions.length+1,days:options.days??parent?.days??30,daily:options.daily??parent?.daily??3,pricing:options.pricing??parent?.pricing??'standard',source:options.source||'Member request',request:next.request,costs:copy(options.costs??parent?.costs??sampleCosts),ingredients:copy(options.ingredients??parent?.ingredients??baseIngredients)};
  calculate(plan);next.versions.push(plan);next.events.push(`Proposed version ${plan.id}; active plan unchanged.`);return next;
 }
+
+export function exclusionConflicts(state,plan){
+ const avoided=state.exclusions||[];
+ if(!Array.isArray(avoided)||avoided.some(name=>!baseIngredients.some(([ingredient])=>ingredient===name)))throw Error('Unknown excluded ingredient.');
+ return (plan.ingredients??baseIngredients).filter(([name,mg])=>mg>0&&avoided.includes(name)).map(([name])=>name);
+}
+function requireNoExclusions(state,plan){const conflicts=exclusionConflicts(state,plan);if(conflicts.length)throw Error(`Revise the formula: excluded ingredients present — ${conflicts.join(', ')}.`);}
+
 export function approve(state,id){
  const next=copy(state),plan=next.versions.find(v=>v.id===id);if(!plan)throw Error('Proposal missing.');
  if(id!==next.versions.at(-1)?.id)throw Error('Review the latest proposal first.');
+ requireNoExclusions(state,plan);
  next.active=id;next.production=null;next.events.push(`Member approved version ${id}. Production review required.`);return next;
 }
 export function physicianView(state){
@@ -92,13 +101,14 @@ export function applyRecommendation(state,id,accept){
 export function productionReview(state){
  if(!state.active||state.active!==state.versions.at(-1)?.id)throw Error('Member must approve the latest proposal.');
  if(state.recommendations.some(r=>r.status==='pending'))throw Error('Resolve the pending recommendation first.');
+ requireNoExclusions(state,state.versions.find(v=>v.id===state.active));
  const next=copy(state);next.production=state.active;next.events.push(`Demo manufacturer reviewed exact version ${state.active}.`);return next;
 }
 export function addToCart(state,id){
  const next=copy(state);
  if(id==='plan'){
   if(state.recommendations.some(r=>r.status==='pending')||!state.active||state.production!==state.active||state.active!==state.versions.at(-1)?.id)throw Error('Approve and review the latest plan first.');
-  const plan=state.versions.find(v=>v.id===state.active),totals=calculate(plan);
+  const plan=state.versions.find(v=>v.id===state.active),totals=calculate(plan);requireNoExclusions(state,plan);
   if(next.cart.some(item=>item.id==='plan'))throw Error('This sample plan is already in the cart.');
   next.cart.push({id:'plan',name:`Monthly sample plan · version ${plan.id}`,cents:totals.total,quantity:1,plan:copy(plan)});
  }else{
@@ -120,6 +130,7 @@ export function checkout(state,options,key){
  if(!state.cart.length)throw Error('Your sample cart is empty.');
  const plan=state.cart.find(item=>item.id==='plan');
  if(plan&&(state.recommendations.some(r=>r.status==='pending')||plan.plan.id!==state.active||state.production!==state.active||state.active!==state.versions.at(-1)?.id))throw Error('Plan changed. Remove it and add the newly approved version.');
+ if(plan)requireNoExclusions(state,plan.plan);
  if(plan?.refill){const current=refillQuote(state);if(JSON.stringify(current)!==JSON.stringify(plan.refill))throw Error('Supply changed. Remove this refill and prepare a new proposal.');}
  const total=quote(state,options),next=copy(state);
  next.orders.push({id:`DEMO-${next.orders.length+1}`,key,items:copy(next.cart),...total,paymentStatus:total.payment==='online'?'Simulated paid':'Simulated payment due',status:'Simulated received',createdAt:new Date().toISOString()});next.cart=[];return next;
@@ -178,6 +189,7 @@ export function refillQuote(state){
  const plan=state.versions.find(v=>v.id===state.active);
  if(!plan||state.active!==state.versions.at(-1)?.id||state.production!==state.active)throw Error('Approve and review the latest plan before preparing a refill.');
  if(state.recommendations.some(r=>r.status==='pending'))throw Error('Resolve the pending recommendation first.');
+ requireNoExclusions(state,plan);
  const totals=calculate(plan),mix=JSON.stringify(plan.ingredients??baseIngredients);
  const supply=supplySummary(state).find(row=>row.versions.some(id=>JSON.stringify(state.versions.find(v=>v.id===id)?.ingredients??baseIngredients)===mix));
  if(supply?.pendingGrams>0)throw Error('A matching sample order is still pending. Complete or review it before preparing another refill.');
@@ -229,6 +241,7 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
  function options(){return {fulfillment:q('fulfillment').value,payment:q('payment').value,member:q('member').checked};}
  function renderQuote(){try{const total=quote(state,options());q('checkout-total').textContent=`Items ${money(total.subtotal)} · fulfillment ${money(total.fee)} · sample tax ${money(total.tax)} · total ${money(total.total)}`;q('place-order').disabled=!state.cart.length;}catch(e){q('checkout-total').textContent=e.message;q('place-order').disabled=true;}}
  function render(){
+  q('exclusion-inputs').replaceChildren();baseIngredients.forEach(([name])=>{const label=node('label',`Avoid ${name}`),input=doc.createElement('input');input.type='checkbox';input.value=name;input.dataset.exclusion=name;input.checked=(state.exclusions||[]).includes(name);label.className='check';label.prepend(input);q('exclusion-inputs').append(label);});
   q('request').value=state.request;q('budget').value=state.budget/100;q('share-formula').checked=state.sharing.formula;q('share-request').checked=state.sharing.request;
   const latest=state.versions.at(-1),totals=latest?calculate(latest):null,active=state.versions.find(v=>v.id===state.active);
   q('plan-summary').replaceChildren();q('amounts').replaceChildren();q('formula-inputs').replaceChildren();q('revise-formula').disabled=!latest;q('calendar').replaceChildren();q('versions').replaceChildren();
@@ -239,8 +252,9 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
    totals.ingredients.forEach((i,index)=>{const label=node('label',`${i.name} (g per serving)`),input=doc.createElement('input');input.type='number';input.min='0';input.max='20';input.step='0.001';input.required=true;input.value=i.perServing;input.dataset.ingredient=String(index);label.append(input);q('formula-inputs').append(label);const row=doc.createElement('tr');[i.name,i.perServing,i.totalGrams].forEach(t=>row.append(node('td',String(t))));table.append(row);});q('amounts').append(table,node('p','Nutrient totals: not measured or estimated in this sample. Monthly themes illustrate variety; their example ingredient mix is identical.'));
    totals.calendar.forEach(day=>q('calendar').append(node('p',`Day ${day.day}: ${day.slots.join(' · ')}`)));
   }else q('plan-summary').textContent='Prepare a sample plan to begin.';
+  const conflicts=latest?exclusionConflicts(state,latest):[];q('exclusion-status').textContent=conflicts.length?`Excluded ingredients present: ${conflicts.join(', ')}. Revise amounts to zero or review the sample exclusions before approval.`:'No listed sample exclusions conflict with this proposal. This is not a suitability clearance.';
   q('version-status').textContent=active?`Active approved version: ${active.id}. ${latest.id!==active.id?'New proposal awaits your approval; the active plan is unchanged.':'Latest version approved.'}`:'No approved plan yet.';
-  q('approve').disabled=!latest||latest.id===state.active;q('budget-revise').disabled=!latest||latest.pricing==='bundle';
+  q('approve').disabled=conflicts.length>0||!latest||latest.id===state.active;q('budget-revise').disabled=!latest||latest.pricing==='bundle';
   state.versions.forEach(v=>q('versions').append(node('p',`Version ${v.id} · ${v.source} · ${money(calculate(v).total)}${v.id===state.active?' · ACTIVE':''}`)));
   const view=physicianView(state);q('physician-summary').replaceChildren();q('physician-ingredients').replaceChildren();q('recommend-form').hidden=!view?.plan;
   if(view?.plan){calculate(view.plan).ingredients.forEach((item,index)=>{const label=node('label',`Proposed ${item.name} (g per serving)`),input=doc.createElement('input');input.type='number';input.min='0';input.max='20';input.step='0.001';input.required=true;input.value=item.perServing;input.dataset.physicianIngredient=String(index);label.append(input);q('physician-ingredients').append(label);});q('physician-summary').append(node('p',`Member-shared version ${view.plan.id} · ${view.plan.days} days · ${view.plan.daily}/day`),node('p',view.request||'Goals are not shared.'),node('p',`Formula: ${calculate(view.plan).ingredients.map(i=>`${i.name} ${i.perServing} g`).join(', ')} per serving. Nutrient totals unavailable.`));}
@@ -276,7 +290,7 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
   q('events').replaceChildren();state.events.forEach(event=>q('events').append(node('p',event)));
  }
  doc.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
- q('request-form').onsubmit=e=>{e.preventDefault();action(()=>{const budget=Number(q('budget').value)*100;if(!Number.isInteger(budget)||budget<100||budget>1000000)throw Error('Choose a sample budget from $1 to $10,000.');const next={...state,request:q('request').value.trim(),budget};commit(propose(next),'Sample proposal prepared. Nothing is approved or ordered yet.');});};
+ q('request-form').onsubmit=e=>{e.preventDefault();action(()=>{const budget=Number(q('budget').value)*100;if(!Number.isInteger(budget)||budget<100||budget>1000000)throw Error('Choose a sample budget from $1 to $10,000.');const next={...state,request:q('request').value.trim(),budget,exclusions:[...q('exclusion-inputs').querySelectorAll('input:checked')].map(input=>input.value)};commit(propose(next),'Sample proposal prepared. Nothing is approved or ordered yet.');});};
  q('formula-form').onsubmit=e=>{e.preventDefault();action(()=>{const latest=state.versions.at(-1);if(!latest)throw Error('Prepare a plan first.');const ingredients=calculate(latest).ingredients.map((item,index)=>{const grams=Number(q('formula-inputs').querySelector(`[data-ingredient="${index}"]`).value);return [item.name,Math.round(grams*1000)];});commit(propose(state,{ingredients,source:'Member sample formula revision'}),'Revised formula proposed. The active plan is unchanged until approval; new production review is required.');});};
  q('budget-revise').onclick=()=>action(()=>commit(propose(state,{pricing:'bundle',source:'Member budget revision'}),'Lower-cost sample proposal prepared. Your approved plan remains unchanged.'));
  q('approve').onclick=()=>action(()=>commit(approve(state,state.versions.at(-1)?.id),'Exact proposal approved in the model. Production review is next.'));
