@@ -1,4 +1,4 @@
-import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder,recordUse,useSummary,supplySummary,refillQuote,addRefill,supportPreview,submitSupport,replySupport,baseIngredients,exclusionConflicts } from './model.mjs';
+import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder,recordUse,useSummary,supplySummary,refillQuote,addRefill,supportPreview,submitSupport,replySupport,baseIngredients,exclusionConflicts,compareProposal } from './model.mjs';
 export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
  const q=id=>doc.getElementById(id),money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100),key='heartstone-health-quest-fictional-model-v1';
  let state=initialModel(),checkoutKey=uuid(),storageAvailable=true,supportDraft=null;
@@ -30,6 +30,11 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
   }else q('plan-summary').textContent='Prepare a sample plan to begin.';
   const conflicts=latest?exclusionConflicts(state,latest):[];q('exclusion-status').textContent=conflicts.length?`Excluded ingredients present: ${conflicts.join(', ')}. Revise amounts to zero or review the sample exclusions before approval.`:'No listed sample exclusions conflict with this proposal. This is not a suitability clearance.';
   q('version-status').textContent=active?`Active approved version: ${active.id}. ${latest.id!==active.id?'New proposal awaits your approval; the active plan is unchanged.':'Latest version approved.'}`:'No approved plan yet.';
+  q('proposal-comparison').replaceChildren();const comparison=compareProposal(state);
+  if(comparison){q('proposal-comparison').append(node('h3','Review what changes'),node('p',`Active version ${comparison.active} → proposed version ${comparison.proposed}. Source: ${comparison.source}. Your active plan stays unchanged until approval.`));
+   if(!comparison.changes.length)q('proposal-comparison').append(node('p','No amount, package, schedule or total-price changes. Review the proposal source and details before approval.'));
+   else{const table=doc.createElement('table'),head=doc.createElement('tr');['Change','Current','Proposed'].forEach(label=>head.append(node('th',label)));table.append(head);comparison.changes.forEach(change=>{const row=doc.createElement('tr'),format=value=>change.unit==='cents'?money(value):`${value} ${change.unit}`;row.append(node('th',change.field),node('td',format(change.before)),node('td',format(change.after)));table.append(row);});q('proposal-comparison').append(table);}
+  }
   q('approve').disabled=conflicts.length>0||!latest||latest.id===state.active;q('budget-revise').disabled=!latest||latest.pricing==='bundle';
   state.versions.forEach(v=>q('versions').append(node('p',`Version ${v.id} · ${v.source} · ${money(calculate(v).total)}${v.id===state.active?' · ACTIVE':''}`)));
   const view=physicianView(state);q('physician-summary').replaceChildren();q('physician-ingredients').replaceChildren();q('recommend-form').hidden=!view?.plan;

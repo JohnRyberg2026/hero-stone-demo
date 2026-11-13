@@ -197,3 +197,11 @@ version that can be reviewed without rewriting earlier records. This covers
 only named sample ingredients, not cross-contact, medications, contraindications
 or individualized medical suitability. Standard-store product exclusion checks
 are not implemented. 69 Health Quest checks pass.
+
+## Before-and-after proposal review — November 13, 2026
+
+Added current versus proposed comparison for plan length, daily servings,
+ingredient grams, serving weight, monthly powder, package quantities, sample
+selling price and production-cost total. Shows source/version and reinforces
+that active plan is unchanged until approval. Comparison clears after approval;
+no clinical benefit or suitability inference. 72 Health Quest checks pass.

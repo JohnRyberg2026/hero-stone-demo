@@ -204,3 +204,15 @@ export function replySupport(state,id,text){
  const next=copy(state),request=(next.support||[]).find(item=>item.id===id);if(!request)throw Error('Support request missing.');
  request.replies.push({author:'Demo Heartstone team',text:text.trim(),at:new Date().toISOString()});request.status='Simulated replied';return next;
 }
+
+export function compareProposal(state){
+ const current=state.versions.find(v=>v.id===state.active),proposed=state.versions.at(-1);
+ if(!current||!proposed||current.id===proposed.id)return null;
+ const before=calculate(current),after=calculate(proposed),changes=[];
+ const add=(field,oldValue,newValue,unit)=>{if(oldValue!==newValue)changes.push({field,before:oldValue,after:newValue,unit});};
+ add('Plan length',current.days,proposed.days,'days');add('Daily smoothies',current.daily,proposed.daily,'per day');
+ before.ingredients.forEach((ingredient,index)=>add(ingredient.name,ingredient.perServing,after.ingredients[index].perServing,'g per serving'));
+ add('Serving weight',before.servingGrams,after.servingGrams,'g');add('Monthly powder',before.grams,after.grams,'g');add('Packages',before.packages,after.packages,'× 28 g');
+ add('Sample selling price',before.total,after.total,'cents');add('Sample production cost',before.productionCost,after.productionCost,'cents');
+ return {active:current.id,proposed:proposed.id,source:proposed.source,changes};
+}
