@@ -7,6 +7,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
+    "@supabase/supabase-js": "2.49.8",
     "jsdom": "26.1.0"
   }
 }

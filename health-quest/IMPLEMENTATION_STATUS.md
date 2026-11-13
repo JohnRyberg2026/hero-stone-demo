@@ -214,3 +214,14 @@ use are opt-in; production costs, support and conversations are excluded. Changi
 options or model state invalidates the preview before printing. Print stylesheet
 isolates the summary; no outbound sharing occurs. Browser print/PDF dialog itself
 has not been visually tested. 74 Health Quest automated checks pass.
+
+## Hosted integration preparation and blocker — November 13, 2026
+
+Read-only connected inventory showed only live Heartstone and default main.
+Attempted isolated branch creation; Supabase returned Pro-plan requirement.
+No branch created, charges accepted, plan upgrade or live schema changes.
+Prepared dedicated-project/two-account integration runner with live-target and
+secret-key refusal, ephemeral SDK sessions and fictional test data cleanup.
+77 local checks passed. Runner's unconfigured execution stopped before network
+access; hosted integration remains unexecuted. Details: HOSTED_INTEGRATION.md.
+Dedicated test backend and test-account credentials are required to proceed.
