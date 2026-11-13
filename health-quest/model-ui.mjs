@@ -1,0 +1,59 @@
+import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog } from './model.mjs';
+export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
+ const q=id=>doc.getElementById(id),money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100),key='heartstone-health-quest-fictional-model-v1';
+ let state=initialModel(),checkoutKey=uuid(),storageAvailable=true;
+ try{const raw=storage.getItem(key);if(raw){const loaded=JSON.parse(raw);if(loaded.schema!==1||!Array.isArray(loaded.versions)||!Array.isArray(loaded.orders)||!Array.isArray(loaded.cart)||!Array.isArray(loaded.recommendations)||!Array.isArray(loaded.events)||!loaded.sharing||typeof loaded.request!=='string')throw Error('Invalid sample state');loaded.versions.forEach(calculate);state=loaded;}}
+ catch{storageAvailable=false;q('status').textContent='Could not restore sample data. Reset the fictional model to start again.';}
+ const node=(tag,text)=>{const element=doc.createElement(tag);element.textContent=text;return element;};
+ function message(text){q('status').textContent=text;}
+ function commit(next,notice){
+  if(!storageAvailable)throw Error('Browser storage is unavailable. Reset the fictional model before changing it.');
+  try{storage.setItem(key,JSON.stringify(next));}catch{throw Error('Could not save sample data. Your previous model is unchanged.');}
+  state=next;render();message(notice);
+ }
+ function action(fn){try{fn();}catch(e){message(e.message);}}
+ function tab(id){doc.querySelectorAll('[data-section]').forEach(section=>section.hidden=section.id!==id);doc.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===id)));}
+ function buttons(container,label,handler){const b=node('button',label);b.type='button';b.onclick=()=>action(handler);container.append(b);return b;}
+ function options(){return {fulfillment:q('fulfillment').value,payment:q('payment').value,member:q('member').checked};}
+ function renderQuote(){try{const total=quote(state,options());q('checkout-total').textContent=`Items ${money(total.subtotal)} · fulfillment ${money(total.fee)} · sample tax ${money(total.tax)} · total ${money(total.total)}`;q('place-order').disabled=!state.cart.length;}catch(e){q('checkout-total').textContent=e.message;q('place-order').disabled=true;}}
+ function render(){
+  q('request').value=state.request;q('budget').value=state.budget/100;q('share-formula').checked=state.sharing.formula;q('share-request').checked=state.sharing.request;
+  const latest=state.versions.at(-1),totals=latest?calculate(latest):null,active=state.versions.find(v=>v.id===state.active);
+  q('plan-summary').replaceChildren();q('amounts').replaceChildren();q('calendar').replaceChildren();q('versions').replaceChildren();
+  if(latest){q('plan-summary').append(node('p',`Proposal version ${latest.id} · ${latest.days} days · ${latest.daily} smoothies/day`),node('p',money(totals.total)),node('p',`Sample budget ${money(state.budget)} · ${totals.total<=state.budget?'within budget':'above budget'}`));
+   q('plan-summary').append(node('p',`${money(totals.subtotal)} base − ${money(totals.discount)} sample monthly-bundle discount. The bundle keeps the same schedule and illustrative formula.`));
+   q('amounts').append(node('p',`${totals.servings} scheduled servings · ${totals.grams} g total · ${totals.packages} × 28 g packages · ${totals.leftover} g expected leftover.`));
+   const table=doc.createElement('table'),head=doc.createElement('tr');['Illustrative ingredient','g / serving','g / plan'].forEach(t=>head.append(node('th',t)));table.append(head);
+   totals.ingredients.forEach(i=>{const row=doc.createElement('tr');[i.name,i.perServing,i.totalGrams].forEach(t=>row.append(node('td',String(t))));table.append(row);});q('amounts').append(table,node('p','Nutrient totals: not measured or estimated in this sample. Monthly themes illustrate variety; their example ingredient mix is identical.'));
+   totals.calendar.forEach(day=>q('calendar').append(node('p',`Day ${day.day}: ${day.slots.join(' · ')}`)));
+  }else q('plan-summary').textContent='Prepare a sample plan to begin.';
+  q('version-status').textContent=active?`Active approved version: ${active.id}. ${latest.id!==active.id?'New proposal awaits your approval; the active plan is unchanged.':'Latest version approved.'}`:'No approved plan yet.';
+  q('approve').disabled=!latest||latest.id===state.active;q('budget-revise').disabled=!latest||latest.pricing==='bundle';
+  state.versions.forEach(v=>q('versions').append(node('p',`Version ${v.id} · ${v.source} · ${money(calculate(v).total)}${v.id===state.active?' · ACTIVE':''}`)));
+  const view=physicianView(state);q('physician-summary').replaceChildren();q('recommend-form').hidden=!view?.plan;
+  if(view?.plan){q('physician-summary').append(node('p',`Member-shared version ${view.plan.id} · ${view.plan.days} days · ${view.plan.daily}/day`),node('p',view.request||'Goals are not shared.'),node('p',`Formula: ${calculate(view.plan).ingredients.map(i=>`${i.name} ${i.perServing} g`).join(', ')} per serving. Nutrient totals unavailable.`));}
+  else q('physician-summary').textContent='No formula shared. The member controls access in My Targeted Wellness.';
+  q('recommendations').replaceChildren();state.recommendations.forEach(rec=>{const block=node('article','');block.append(node('p',`${rec.author} · ${rec.date.slice(0,10)} · version ${rec.version}: ${rec.daily} daily smoothies. ${rec.reason} Status: ${rec.status}`));if(rec.status==='pending'){
+   buttons(block,'Accept for recalculation',()=>commit(applyRecommendation(state,rec.id,true),'New proposal prepared. Review and approve it before changing the active plan.'));
+   buttons(block,'Decline recommendation',()=>commit(applyRecommendation(state,rec.id,false),'Recommendation declined. Active plan unchanged.'));}q('recommendations').append(block);});
+  q('production-summary').textContent=active?`Member-approved version ${active.id} · ${calculate(active).grams} g · ${money(calculate(active).total)}. ${state.production===active.id?'Demo production review recorded.':'Awaiting demo production review.'}`:'Waiting for member approval.';
+  q('production-approve').disabled=!active||state.active!==latest?.id||state.recommendations.some(r=>r.status==='pending');q('add-plan').disabled=state.recommendations.some(r=>r.status==='pending')||!active||state.production!==active.id||state.active!==latest?.id;
+  q('products').replaceChildren();catalog.forEach(product=>{const card=node('section','');card.className='card';card.append(node('p',product.category),node('h3',product.name),node('p',`${product.size} · ${money(product.cents)} sample price`));buttons(card,'Learn about these ingredients',()=>{q('education-content').textContent=product.ingredients;q('education').showModal();});buttons(card,'Add sample to cart',()=>commit(addToCart(state,product.id),'Sample product added.'));q('products').append(card);});
+  q('cart').replaceChildren();if(!state.cart.length)q('cart').textContent='Your sample cart is empty.';state.cart.forEach((item,index)=>{const line=node('article',`${item.name} × ${item.quantity} · ${money(item.cents*item.quantity)}`);buttons(line,'Remove',()=>{const next=structuredClone(state);next.cart.splice(index,1);commit(next,'Removed from sample cart.');});q('cart').append(line);});renderQuote();
+  q('order-list').replaceChildren();if(!state.orders.length)q('order-list').textContent='No simulated orders yet.';state.orders.toReversed().forEach(order=>{const block=node('article',`${order.id} · ${money(order.total)} · ${order.fulfillment} · ${order.paymentStatus} · ${order.status}`);order.items.forEach(item=>block.append(node('p',`${item.name} × ${item.quantity}`)));q('order-list').append(block);});
+  q('events').replaceChildren();state.events.forEach(event=>q('events').append(node('p',event)));
+ }
+ doc.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+ q('request-form').onsubmit=e=>{e.preventDefault();action(()=>{const budget=Number(q('budget').value)*100;if(!Number.isInteger(budget)||budget<100||budget>1000000)throw Error('Choose a sample budget from $1 to $10,000.');const next={...state,request:q('request').value.trim(),budget};commit(propose(next),'Sample proposal prepared. Nothing is approved or ordered yet.');});};
+ q('budget-revise').onclick=()=>action(()=>commit(propose(state,{pricing:'bundle',source:'Member budget revision'}),'Lower-cost sample proposal prepared. Your approved plan remains unchanged.'));
+ q('approve').onclick=()=>action(()=>commit(approve(state,state.versions.at(-1)?.id),'Exact proposal approved in the model. Production review is next.'));
+ q('save-sharing').onclick=()=>action(()=>{const next=structuredClone(state);next.sharing={formula:q('share-formula').checked,request:q('share-formula').checked&&q('share-request').checked};commit(next,'Sample sharing choices saved. No invitation was sent.');});
+ q('recommend-form').onsubmit=e=>{e.preventDefault();action(()=>commit(recommend(state,Number(q('recommended-daily').value)),'Demo recommendation recorded. The active plan has not changed.'));};
+ q('production-approve').onclick=()=>action(()=>commit(productionReview(state),'Demo production review recorded for the exact approved version.'));
+ q('add-plan').onclick=()=>action(()=>{commit(addToCart(state,'plan'),'Approved sample plan added to cart.');tab('store');});
+ ['fulfillment','payment','member'].forEach(id=>q(id).onchange=renderQuote);
+ q('checkout-form').onsubmit=e=>{e.preventDefault();action(()=>{commit(checkout(state,options(),checkoutKey),'Simulated order saved. No money was charged and nothing was sent.');checkoutKey=uuid();tab('orders');});};
+ q('reset').onclick=()=>action(()=>{try{storage.removeItem(key);storageAvailable=true;commit(initialModel(),'Fictional model reset.');checkoutKey=uuid();tab('plan');}catch{throw Error('Could not reset browser storage.');}});
+ q('close-education').onclick=()=>q('education').close();render();tab('plan');return {getState:()=>structuredClone(state)};
+}
+if(typeof document!=='undefined')mountModel(document,localStorage);

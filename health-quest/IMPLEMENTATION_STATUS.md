@@ -60,3 +60,43 @@ the reviewed migration there, connect the screen, and exercise two test accounts
 through sign-in, save, correction, sign-out, return and account isolation. Then
 add the approved conversational entry path and import John's reviewed profile
 privately. Do not put his profile into this public repository.
+
+## Connected fictional working model — November 13, 2026
+
+Latest scope reconciled with Nov 12 target-build and store notes, and subsequent
+phone direction: test-only model; assume sample formulas and prices completed;
+no real orders/payments. Physician view is included; exercise/meals remain later.
+
+Added model.html plus a pure calculation/workflow engine and UI. Demonstrates
+30 days × 3 smoothies, 90 servings / 504g / 18 sample 28g packs; illustrative
+ingredient amounts; rotating midday themes; $120 standard vs $98 bundle; member
+approval of exact proposal; optional selected physician summary and revocation;
+attributed demo recommendations; member acceptance for recalculation; renewed
+approval; exact-version production review; shared sample product cart; fulfillment
+payment rules; immutable simulated order snapshots and duplicate-submit handling.
+All roles are simulated in one browser, not authenticated authorization boundaries.
+Sample role sharing is not a substitute for production RLS/permissions tests.
+
+The browser walkthrough verified plan creation, budget revision, optional formula
+sharing while goals stayed private, physician recommendation, recalculation with
+active plan unchanged until approval, production review, plan plus standard
+product checkout, and order retrieval after reload. No real personal information
+was entered. Sample tax/shipping are fixed demonstrations, not service quotes.
+No Square setup was inspected or connected: the repo search found no integration
+in the inspected storefront files, and no Square connector was exposed.
+
+40 Health Quest automated checks and 12 conversation regression checks pass.
+Sample persistence is browser localStorage, separate from private-record backend;
+do not enter private health data. Browser storage failures are visible and do not
+silently adopt unsaved state. Formula themes use the same illustrative mix, not
+actual sellable recipes or measured nutrient totals.
+
+Open model.html through `npm run dev --prefix health-quest`, or generate/open the
+self-contained working-model.html with `node health-quest/build-model.mjs`.
+The standalone copy contains no external scripts, network APIs or payment calls.
+
+Next work: editable sample formula/ingredient catalog and stronger end-to-end
+formulation revisions; then connect nonproduction identity/private persistence
+and actual member/physician/manufacturer permissions. Real catalog readiness,
+Square sandbox, packed UPS quotes, support and production policies remain launch
+requirements. The shared Heartstone AI is not completed by this demo.

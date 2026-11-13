@@ -1,1 +1,12 @@
-{"private":true,"type":"module","scripts":{"test":"node --test *.test.mjs"},"devDependencies":{"@electric-sql/pglite":"0.3.14","jsdom":"26.1.0"}}
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test *.test.mjs",
+    "dev": "node serve-preview.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
+    "jsdom": "26.1.0"
+  }
+}
