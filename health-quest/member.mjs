@@ -4,7 +4,7 @@ export async function mountMember(doc, client, { uuid = () => crypto.randomUUID(
   const q = id => doc.getElementById(id);
   let owner=null, store=null, rows=[], editing=null, pending=null, generation=0, busy=false;
   function status(message){q('status').textContent=message;}
-  function lock(value){busy=value;doc.querySelectorAll('button,input,select,textarea').forEach(b=>b.disabled=value);q('kind').disabled=value||!!editing;}
+  function lock(value){busy=value;q('workspace').querySelectorAll('button,input,select,textarea').forEach(b=>b.disabled=value);q('kind').disabled=value||!!editing;}
   function draft(){editing=null;pending=null;q('editor').reset();q('kind').disabled=false;q('editor').hidden=false;q('review').hidden=true;q('review-text').textContent='';q('review-details').textContent='';q('editor-title').textContent='What would you like to remember?';}
   function clear(){generation++;owner=null;store=null;rows=[];draft();q('records').replaceChildren();q('workspace').hidden=true;lock(false);}
   function render(){

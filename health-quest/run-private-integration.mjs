@@ -6,7 +6,7 @@ import { integrationConfig } from './integration-config.mjs';
 import { privateRecords } from './private-records.mjs';
 const options={auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}};
 const clients=[];let last=null,storage=null;const id=randomUUID();
-async function login(config,credentials){const client=createClient(config.url,config.key,options);clients.push(client);const result=await client.auth.signInWithPassword(credentials);assert.ok(!result.error&&result.data.user,'Test-account sign-in failed.');return {client,user:result.data.user.id};}
+async function login(config,credentials){const client=createClient(config.url,config.key,options);clients.push(client);const result=await client.auth.signInWithPassword(credentials);assert.ok(!result.error&&result.data.user,'Test-account sign-in failed.');const profile=await client.from('profiles').upsert({id:result.data.user.id},{onConflict:'id',ignoreDuplicates:true});assert.equal(profile.error,null,'Test profile setup failed.');return {client,user:result.data.user.id};}
 try{
  const config=integrationConfig(process.env);
  const a=await login(config,config.a),b=await login(config,config.b);

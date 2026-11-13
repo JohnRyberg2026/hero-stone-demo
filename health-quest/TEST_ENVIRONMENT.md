@@ -44,3 +44,15 @@ Resume: establish two test accounts through supported Supabase Auth administrati
 or member sign-up, prepare owner profile rows in this project, run the integration
 script, then extend real persistence to approved formula versions. Preserve the
 single existing Heartstone identity architecture for eventual production.
+
+## Test sign-in screen — follow-up
+
+member.html now has an existing-account test sign-in and sign-out entry, session
+restoration and owner-only profile-row creation after verified authentication.
+The integration runner likewise prepares each signed-in user's test profile row.
+No new identity system is introduced in production. Password fields clear after
+submission; credentials are not committed or logged. 80 local checks pass.
+Two actual Auth users are still required. No account invitation or email was
+sent and no raw Auth users/credentials were inserted through SQL. Hosted login,
+account isolation and cross-device behavior remain unverified until those test
+accounts exist. The supported connector has no Auth admin user-creation tool.

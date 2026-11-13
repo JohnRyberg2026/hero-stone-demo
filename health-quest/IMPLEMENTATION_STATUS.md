@@ -236,3 +236,13 @@ test backend. No real profiles/accounts, messages or production changes. Securit
 advisor only intentional default-deny audit INFO. Two authenticated fictional
 accounts and test sign-in entry remain before the hosted integration runner can
 verify cross-account save/correct/return. See TEST_ENVIRONMENT.md.
+
+## Test sign-in entry — November 13, 2026
+
+Connected development member page to an existing-account test sign-in controller,
+sign-out, session restoration and authenticated owner-only profile-row preparation.
+Private workspace clears on sign-out/account changes; password field clears on
+submission and raw auth errors are not rendered. Hosted runner also prepares
+owner profile rows. 80 local checks pass. Auth-user creation is not exposed by
+the connector; two test users remain a concrete prerequisite before running the
+hosted two-account journey. No invitation, email or real profile import occurred.

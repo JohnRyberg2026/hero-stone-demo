@@ -9,7 +9,8 @@
 <a href="../index.html">← Heartstone home</a>
 <header><p class="eyebrow">HEARTSTONE · HEALTH QUEST</p><h1>A little progress, your way.</h1>
 <p>Your goals and everyday observations, kept together.</p></header>
-<p class="notice">Development screen. Private storage must be enabled in a test environment before use.</p>
+<p class="notice">Health Quest Test · Separate from live Heartstone. Use fictional test notes only.</p>
+<section class="card"><h2>Test account</h2><p id="session-status" role="status" aria-live="polite">Checking your test session…</p><form id="test-signin"><label>Test email<input id="test-email" type="email" autocomplete="username" required></label><label>Test password<input id="test-password" type="password" autocomplete="current-password" required></label><button id="test-login" type="submit">Sign in to Health Quest Test</button></form><button id="test-signout" type="button" hidden>Sign out of test account</button><p class="subtle">An existing test account is required. This screen does not create accounts or send emails. Your live Heartstone password will only work if that account was separately created in this test project.</p></section>
 <p id="status" role="status" aria-live="polite">Opening your Health Quest…</p>
 <section id="workspace" hidden>
 <nav aria-label="Health Quest"><button id="refresh" type="button">Refresh my notes</button><button id="export" type="button">Export my notes</button></nav>
@@ -29,11 +30,11 @@
 </section>
 <noscript>Enable JavaScript to open your private Health Quest notes.</noscript>
 </main><script type="module">
-import { mountMember } from './member.mjs';
+import { mountTestSession } from './test-session.mjs';
 import { developmentConfig } from './development-config.mjs';
 if (developmentConfig) {
   const client = supabase.createClient(developmentConfig.url, developmentConfig.publishableKey);
-  mountMember(document, client);
+  mountTestSession(document, client);
 } else {
   document.getElementById('status').textContent = 'This development screen is waiting for its test environment. Your live account has not been changed.';
 }
