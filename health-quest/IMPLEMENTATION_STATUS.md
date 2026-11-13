@@ -124,3 +124,14 @@ labeled net profit. Cost revisions preserve original versions and require fresh
 member approval/production review. Existing saved plans use explicit sample
 cost defaults. No supplier price lookup or real cost claims.
 46 Health Quest checks pass, including full-package costing and UI cost edits.
+
+## Simulated order fulfillment — November 13, 2026
+
+Added fulfillment-specific order transitions, separate simulated payment
+collection, timestamped per-order history, stale-status rejection and idempotent
+action references. Pickup uses preparing -> arrival at location -> handover;
+delivery uses preparing -> out for delivery -> handover; shipping uses preparing
+-> carrier handoff -> completion. Preparation never marks payment as collected.
+Completion requires simulated payment. No real notifications, charges, carrier
+updates or deliveries occur. Existing order item/version/price snapshots stay
+unchanged. 50 Health Quest checks pass, including UI fulfillment controls.

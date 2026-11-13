@@ -101,3 +101,24 @@ export function checkout(state,options,key){
  const total=quote(state,options),next=copy(state);
  next.orders.push({id:`DEMO-${next.orders.length+1}`,key,items:copy(next.cart),...total,paymentStatus:total.payment==='online'?'Simulated paid':'Simulated payment due',status:'Simulated received',createdAt:new Date().toISOString()});next.cart=[];return next;
 }
+
+export function orderActions(order){
+ const next={'Simulated received':'prepare','Simulated preparing':{pickup:'ready',delivery:'dispatch',shipping:'ship'}[order.fulfillment],'Simulated ready for pickup':'complete','Simulated out for delivery':'complete','Simulated shipped':'complete'}[order.status];
+ const actions=[];
+ if(order.paymentStatus==='Simulated payment due')actions.push('collect');
+ if(next&&!(next==='complete'&&order.paymentStatus!=='Simulated paid'))actions.push(next);
+ return actions;
+}
+export function updateOrder(state,id,action,actionId,expectedStatus){
+ if(!actionId)throw Error('Missing order action reference.');
+ const next=copy(state),order=next.orders.find(o=>o.id===id);if(!order)throw Error('Order missing.');
+ const previous=(order.history||[]).find(event=>event.actionId===actionId);
+ if(previous){if(previous.action!==action)throw Error('Order action reference reused.');return next;}
+ if(order.status!==expectedStatus)throw Error('Order changed. Reload its current status.');
+ if(!orderActions(order).includes(action))throw Error('This order action is not available.');
+ const states={prepare:'Simulated preparing',ready:'Simulated ready for pickup',dispatch:'Simulated out for delivery',ship:'Simulated shipped',complete:'Simulated completed'};
+ if(action==='collect')order.paymentStatus='Simulated paid';else order.status=states[action];
+ order.history??=[];order.history.push({actionId,action,status:order.status,paymentStatus:order.paymentStatus,at:new Date().toISOString()});
+ next.events.push(`${order.id}: ${action==='collect'?'simulated payment collected':order.status}.`);
+ return next;
+}

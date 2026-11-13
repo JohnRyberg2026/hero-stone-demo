@@ -1,4 +1,4 @@
-import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog } from './model.mjs';
+import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder } from './model.mjs';
 export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
  const q=id=>doc.getElementById(id),money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100),key='heartstone-health-quest-fictional-model-v1';
  let state=initialModel(),checkoutKey=uuid(),storageAvailable=true;
@@ -47,7 +47,12 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
   q('production-approve').disabled=!active||state.active!==latest?.id||state.recommendations.some(r=>r.status==='pending');q('add-plan').disabled=state.recommendations.some(r=>r.status==='pending')||!active||state.production!==active.id||state.active!==latest?.id;
   q('products').replaceChildren();catalog.forEach(product=>{const card=node('section','');card.className='card';card.append(node('p',product.category),node('h3',product.name),node('p',`${product.size} · ${money(product.cents)} sample price`));buttons(card,'Learn about these ingredients',()=>{q('education-content').textContent=product.ingredients;q('education').showModal();});buttons(card,'Add sample to cart',()=>commit(addToCart(state,product.id),'Sample product added.'));q('products').append(card);});
   q('cart').replaceChildren();if(!state.cart.length)q('cart').textContent='Your sample cart is empty.';state.cart.forEach((item,index)=>{const line=node('article',`${item.name} × ${item.quantity} · ${money(item.cents*item.quantity)}`);buttons(line,'Remove',()=>{const next=structuredClone(state);next.cart.splice(index,1);commit(next,'Removed from sample cart.');});q('cart').append(line);});renderQuote();
-  q('order-list').replaceChildren();if(!state.orders.length)q('order-list').textContent='No simulated orders yet.';state.orders.toReversed().forEach(order=>{const block=node('article',`${order.id} · ${money(order.total)} · ${order.fulfillment} · ${order.paymentStatus} · ${order.status}`);order.items.forEach(item=>block.append(node('p',`${item.name} × ${item.quantity}`)));q('order-list').append(block);});
+  q('order-list').replaceChildren();if(!state.orders.length)q('order-list').textContent='No simulated orders yet.';state.orders.toReversed().forEach(order=>{const block=node('article',`${order.id} · ${money(order.total)} · ${order.fulfillment} · ${order.paymentStatus} · ${order.status}`);order.items.forEach(item=>block.append(node('p',`${item.name} × ${item.quantity}`)));
+   const labels={collect:'Simulate collecting payment',prepare:'Simulate preparation started',ready:'Simulate arrival at pickup location',dispatch:'Simulate out for delivery',ship:'Simulate carrier handoff',complete:'Simulate completed handover'};
+   block.append(node('p','Operator simulation: use each control to represent an actual fulfillment update. Payment and fulfillment are separate; no notifications are sent.'));
+   orderActions(order).forEach(actionName=>buttons(block,labels[actionName],()=>commit(updateOrder(state,order.id,actionName,uuid(),order.status),'Simulated order update saved. No real payment or fulfillment occurred.')));
+   if(order.history?.length){const history=doc.createElement('details');history.append(node('summary','Order history'));order.history.forEach(event=>history.append(node('p',`${event.at} · ${event.action} · ${event.status} · ${event.paymentStatus}`)));block.append(history);}
+   q('order-list').append(block);});
   q('events').replaceChildren();state.events.forEach(event=>q('events').append(node('p',event)));
  }
  doc.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
