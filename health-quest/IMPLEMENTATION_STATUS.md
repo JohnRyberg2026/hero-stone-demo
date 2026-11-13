@@ -167,3 +167,14 @@ refill to cart and still submits checkout separately. Sample price is proportion
 to filled grams, clearly separate from real package pricing. Refill order snapshots
 store actual refill grams; fulfillment adds only that quantity. Checkout rejects
 refills if supply changed since proposal. 60 Health Quest checks pass.
+
+## Physician ingredient-change proposals — November 13, 2026
+
+Extended demo physician recommendations to seven ingredient amounts plus daily
+schedule and required authored reason. Stored recommendations preserve exact
+mix, source version, author and time. Acceptance creates recalculated proposal;
+it never directly changes active plan. Renewed member approval and exact-version
+production review are required before ordering. Validation rejects invalid mixes
+and blank reasons; member view shows proposed amounts. This remains a simulated
+role workflow without clinician authentication or actual clinical recommendations.
+63 Health Quest checks pass.

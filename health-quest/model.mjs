@@ -53,10 +53,14 @@ export function physicianView(state){
  if(!state.sharing.formula)return null;
  return {plan:copy(state.versions.at(-1)||null),request:state.sharing.request?state.request:null};
 }
-export function recommend(state,daily){
+export function recommend(state,daily,options={}){
  if(!physicianView(state)?.plan)throw Error('Member must share a formula first.');
  integer(daily,1,3,'daily smoothies');const next=copy(state);
- next.recommendations.push({id:next.recommendations.length+1,version:physicianView(state).plan.id,daily,author:'Demo physician',date:new Date().toISOString(),status:'pending',reason:'Hypothetical schedule revision for workflow testing.'});return next;
+ const shared=physicianView(state).plan,ingredients=copy(options.ingredients??shared.ingredients??baseIngredients);
+ calculate({...shared,daily,ingredients});
+ const reason=options.reason??'Hypothetical schedule revision for workflow testing.';
+ if(typeof reason!=='string'||!reason.trim()||reason.length>1000)throw Error('Add a reason of up to 1,000 characters.');
+ next.recommendations.push({id:next.recommendations.length+1,version:physicianView(state).plan.id,daily,author:'Demo physician',date:new Date().toISOString(),status:'pending',reason:reason.trim(),ingredients});return next;
 }
 export function applyRecommendation(state,id,accept){
  const next=copy(state),rec=next.recommendations.find(r=>r.id===id);
@@ -65,7 +69,7 @@ export function applyRecommendation(state,id,accept){
  const latest=next.versions.at(-1);if(rec.version!==latest?.id)throw Error('Recommendation refers to an older version. Request a new review.');
  rec.status=accept?'accepted for recalculation':'declined';
  if(!accept)return next;
- return propose(next,{days:latest.days,daily:rec.daily,pricing:latest.pricing,source:`${rec.author} recommendation ${rec.id}; member requested recalculation`});
+ return propose(next,{days:latest.days,daily:rec.daily,pricing:latest.pricing,ingredients:rec.ingredients??latest.ingredients,source:`${rec.author} recommendation ${rec.id}; member requested recalculation`});
 }
 export function productionReview(state){
  if(!state.active||state.active!==state.versions.at(-1)?.id)throw Error('Member must approve the latest proposal.');
