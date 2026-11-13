@@ -36,3 +36,10 @@ backend and credentials are not available. The existing 74-check prototype is
 unchanged. Three environment-guard tests were added; local total is 77 checks.
 Next: provide a dedicated test project, inspect/migrate it, then run the hosted
 journey before claiming live-account persistence or changing production.
+
+## Environment available — November 13, 2026 follow-up
+
+A separate $0-quoted Health Quest Test project is now active. Its tables are
+installed and development-config.mjs points there. The branch/Pro limitation no
+longer blocks the backend. See TEST_ENVIRONMENT.md. Two authenticated test accounts
+are still required; full hosted integration has not yet run.

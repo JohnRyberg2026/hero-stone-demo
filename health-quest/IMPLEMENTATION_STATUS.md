@@ -225,3 +225,14 @@ secret-key refusal, ephemeral SDK sessions and fictional test data cleanup.
 77 local checks passed. Runner's unconfigured execution stopped before network
 access; hosted integration remains unexecuted. Details: HOSTED_INTEGRATION.md.
 Dedicated test backend and test-account credentials are required to proceed.
+
+## Isolated test backend created — November 13, 2026
+
+User delegated organization choice; used “the Heartstone.” Supabase quoted $0/month
+and created Health Quest Test, separate from live project. Applied minimal test
+identity schema and private-record migration. Hosted SQL verified RLS/grants;
+actual unauthenticated API read returned 401/42501. Development config now targets
+test backend. No real profiles/accounts, messages or production changes. Security
+advisor only intentional default-deny audit INFO. Two authenticated fictional
+accounts and test sign-in entry remain before the hosted integration runner can
+verify cross-account save/correct/return. See TEST_ENVIRONMENT.md.
