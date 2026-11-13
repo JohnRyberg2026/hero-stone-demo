@@ -141,3 +141,12 @@ export function useSummary(state){
  const entries=state.journal||[];
  return {taken:entries.filter(e=>e.status==='taken').length,skipped:entries.filter(e=>e.status==='skipped').length,grams:Math.round(entries.reduce((n,e)=>n+(e.status==='taken'?e.grams:0),0)*1000)/1000};
 }
+
+export function supplySummary(state){
+ const groups=new Map();
+ function group(plan){const ingredients=plan.ingredients??baseIngredients,key=JSON.stringify(ingredients);if(!groups.has(key))groups.set(key,{versions:[],suppliedGrams:0,pendingGrams:0,usedGrams:0});const row=groups.get(key);if(!row.versions.includes(plan.id))row.versions.push(plan.id);return row;}
+ for(const order of state.orders)for(const item of order.items){if(item.id!=='plan'||!item.plan)continue;const row=group(item.plan),grams=calculate(item.plan).packages*28*item.quantity;if(order.status==='Simulated completed')row.suppliedGrams+=grams;else row.pendingGrams+=grams;}
+ for(const entry of state.journal||[]){if(entry.status!=='taken')continue;const plan=state.versions.find(v=>v.id===entry.version);if(plan)group(plan).usedGrams+=entry.grams;}
+ const active=state.versions.find(v=>v.id===state.active);if(active)group(active);
+ return [...groups.values()].map(row=>({...row,usedGrams:Math.round(row.usedGrams*1000)/1000,balanceGrams:Math.round((row.suppliedGrams-row.usedGrams)*1000)/1000}));
+}

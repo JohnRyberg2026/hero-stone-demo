@@ -145,3 +145,14 @@ Reports retain the formula version/serving weight originally recorded, including
 when correcting an older slot after a plan revision. Totals count only taken
 entries; skipped entries never generate catch-up servings. Browser-only sample
 data; no real health-data ingestion or nutrition estimates. 53 checks pass.
+
+## Supply estimates — November 13, 2026
+
+Added supply summary under My daily use. Completed simulated plan orders add
+full packaged grams; orders in progress remain pending. Reported consumption
+subtracts only from its ingredient mix; identical mixes pool across cost/pricing
+versions and changed mixes remain separate. Corrections recalculate the balance.
+Negative balances explicitly identify missing supply records instead of hiding
+them. Estimates exclude unreported use, waste and outside purchases. No automatic
+refill, purchase, actual inventory guarantee or production integration. 56 Health
+Quest checks pass.

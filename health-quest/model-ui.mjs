@@ -1,4 +1,4 @@
-import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder,recordUse,useSummary } from './model.mjs';
+import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder,recordUse,useSummary,supplySummary } from './model.mjs';
 export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
  const q=id=>doc.getElementById(id),money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100),key='heartstone-health-quest-fictional-model-v1';
  let state=initialModel(),checkoutKey=uuid(),storageAvailable=true;
@@ -53,6 +53,7 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
    orderActions(order).forEach(actionName=>buttons(block,labels[actionName],()=>commit(updateOrder(state,order.id,actionName,uuid(),order.status),'Simulated order update saved. No real payment or fulfillment occurred.')));
    if(order.history?.length){const history=doc.createElement('details');history.append(node('summary','Order history'));order.history.forEach(event=>history.append(node('p',`${event.at} · ${event.action} · ${event.status} · ${event.paymentStatus}`)));block.append(history);}
    q('order-list').append(block);});
+  q('supply-summary').replaceChildren();const supply=supplySummary(state);if(!supply.length)q('supply-summary').textContent='Approve a sample plan to start estimating supply.';supply.forEach(row=>q('supply-summary').append(node('p',`Formula versions ${row.versions.join(', ')} · supplied ${row.suppliedGrams} g · pending ${row.pendingGrams} g · reported used ${row.usedGrams} g · estimated balance ${row.balanceGrams} g.${row.balanceGrams<0?' Reported use exceeds recorded supply; check missing supply records.':''}`)));
   const usage=useSummary(state);q('use-summary').textContent=`Reported taken: ${usage.taken} · reported skipped: ${usage.skipped} · powder reported used: ${usage.grams} g. All other slots are unknown.`;
   const oldSlot=q('use-slot').value;q('use-slot').replaceChildren();if(active)for(let slot=1;slot<=Math.max(active.daily,...(state.journal||[]).map(e=>e.slot));slot++){const option=node('option',`Slot ${slot}`);option.value=String(slot);q('use-slot').append(option);}if([...q('use-slot').options].some(o=>o.value===oldSlot))q('use-slot').value=oldSlot;
   q('save-use').disabled=!active;q('use-day').max=Math.max(active?.days||90,...(state.journal||[]).map(e=>e.day));q('use-entries').replaceChildren();
