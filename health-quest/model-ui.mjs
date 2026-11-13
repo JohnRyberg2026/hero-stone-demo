@@ -1,4 +1,4 @@
-import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder } from './model.mjs';
+import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder,recordUse,useSummary } from './model.mjs';
 export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
  const q=id=>doc.getElementById(id),money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100),key='heartstone-health-quest-fictional-model-v1';
  let state=initialModel(),checkoutKey=uuid(),storageAvailable=true;
@@ -53,6 +53,10 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
    orderActions(order).forEach(actionName=>buttons(block,labels[actionName],()=>commit(updateOrder(state,order.id,actionName,uuid(),order.status),'Simulated order update saved. No real payment or fulfillment occurred.')));
    if(order.history?.length){const history=doc.createElement('details');history.append(node('summary','Order history'));order.history.forEach(event=>history.append(node('p',`${event.at} · ${event.action} · ${event.status} · ${event.paymentStatus}`)));block.append(history);}
    q('order-list').append(block);});
+  const usage=useSummary(state);q('use-summary').textContent=`Reported taken: ${usage.taken} · reported skipped: ${usage.skipped} · powder reported used: ${usage.grams} g. All other slots are unknown.`;
+  const oldSlot=q('use-slot').value;q('use-slot').replaceChildren();if(active)for(let slot=1;slot<=Math.max(active.daily,...(state.journal||[]).map(e=>e.slot));slot++){const option=node('option',`Slot ${slot}`);option.value=String(slot);q('use-slot').append(option);}if([...q('use-slot').options].some(o=>o.value===oldSlot))q('use-slot').value=oldSlot;
+  q('save-use').disabled=!active;q('use-day').max=Math.max(active?.days||90,...(state.journal||[]).map(e=>e.day));q('use-entries').replaceChildren();
+  (state.journal||[]).toSorted((a,b)=>a.day-b.day||a.slot-b.slot).forEach(entry=>{const block=node('article',`Day ${entry.day} · slot ${entry.slot}: ${entry.status} · version ${entry.version} · ${entry.grams} g recorded use`),history=doc.createElement('details');history.append(node('summary','Entry history'));entry.history.forEach(event=>history.append(node('p',`${event.at} · ${event.status} · version ${event.version} · ${event.grams} g`)));block.append(history);buttons(block,'Correct this entry',()=>{q('use-day').value=entry.day;q('use-slot').value=String(entry.slot);q('use-status').value=entry.status;message('Choose the corrected status, then save.');});q('use-entries').append(block);});
   q('events').replaceChildren();state.events.forEach(event=>q('events').append(node('p',event)));
  }
  doc.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
@@ -67,6 +71,7 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
  q('add-plan').onclick=()=>action(()=>{commit(addToCart(state,'plan'),'Approved sample plan added to cart.');tab('store');});
  ['fulfillment','payment','member'].forEach(id=>q(id).onchange=renderQuote);
  q('checkout-form').onsubmit=e=>{e.preventDefault();action(()=>{commit(checkout(state,options(),checkoutKey),'Simulated order saved. No money was charged and nothing was sent.');checkoutKey=uuid();tab('orders');});};
+ q('use-form').onsubmit=e=>{e.preventDefault();action(()=>commit(recordUse(state,Number(q('use-day').value),Number(q('use-slot').value),q('use-status').value,uuid()),'Sample use report saved. Planned and reported use remain separate.'));};
  q('reset').onclick=()=>action(()=>{try{storage.removeItem(key);storageAvailable=true;commit(initialModel(),'Fictional model reset.');checkoutKey=uuid();tab('plan');}catch{throw Error('Could not reset browser storage.');}});
  q('close-education').onclick=()=>q('education').close();render();tab('plan');return {getState:()=>structuredClone(state)};
 }

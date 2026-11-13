@@ -122,3 +122,22 @@ export function updateOrder(state,id,action,actionId,expectedStatus){
  next.events.push(`${order.id}: ${action==='collect'?'simulated payment collected':order.status}.`);
  return next;
 }
+
+
+export function recordUse(state,day,slot,status,actionId){
+ const recorded=(state.journal||[]).find(entry=>entry.day===day&&entry.slot===slot);
+ const plan=state.versions.find(v=>v.id===(recorded?.version??state.active));if(!plan)throw Error('Approve a plan before recording use.');
+ integer(day,1,plan.days,'plan day');integer(slot,1,plan.daily,'smoothie slot');
+ if(!['taken','skipped','unrecorded'].includes(status)||!actionId)throw Error('Choose a journal action.');
+ const next=copy(state);next.journal??=[];
+ const previous=next.journal.find(entry=>entry.day===day&&entry.slot===slot);
+ const retry=next.journal.flatMap(entry=>entry.history).find(event=>event.actionId===actionId);
+ if(retry){if(retry.day!==day||retry.slot!==slot||retry.status!==status)throw Error('Journal action reference reused.');return next;}
+ const entry={day,slot,status,version:plan.id,grams:status==='taken'?calculate(plan).servingGrams:0,history:previous?.history||[]};
+ entry.history.push({actionId,day,slot,status,version:plan.id,grams:entry.grams,at:new Date().toISOString()});
+ next.journal=next.journal.filter(item=>item.day!==day||item.slot!==slot);next.journal.push(entry);return next;
+}
+export function useSummary(state){
+ const entries=state.journal||[];
+ return {taken:entries.filter(e=>e.status==='taken').length,skipped:entries.filter(e=>e.status==='skipped').length,grams:Math.round(entries.reduce((n,e)=>n+(e.status==='taken'?e.grams:0),0)*1000)/1000};
+}

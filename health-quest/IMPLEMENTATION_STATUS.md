@@ -135,3 +135,13 @@ delivery uses preparing -> out for delivery -> handover; shipping uses preparing
 Completion requires simulated payment. No real notifications, charges, carrier
 updates or deliveries occur. Existing order item/version/price snapshots stay
 unchanged. 50 Health Quest checks pass, including UI fulfillment controls.
+
+## Reported daily use — November 13, 2026
+
+Added My daily use for the fictional month: taken, skipped and unrecorded states
+per day/slot. Plans never count as consumption. Corrections replace the current
+report and retain timestamped history; repeated action IDs do not duplicate use.
+Reports retain the formula version/serving weight originally recorded, including
+when correcting an older slot after a plan revision. Totals count only taken
+entries; skipped entries never generate catch-up servings. Browser-only sample
+data; no real health-data ingestion or nutrition estimates. 53 checks pass.
