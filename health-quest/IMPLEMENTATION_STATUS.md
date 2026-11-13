@@ -112,3 +112,15 @@ member approval and new demo production review before simulated ordering.
 Retail sample pricing remains fixed; this is not an ingredient-cost calculator.
 43 Health Quest checks pass, including formula validation and UI recalculation.
 No backend, production recipe, physician permission or payment changes.
+
+## Sample production-cost milestone — November 13, 2026
+
+Added editable hypothetical ingredient prices per kilogram, bag cost, labor and
+overhead. Calculation uses integer milligrams/cents and BigInt intermediate
+arithmetic, rounding once at the ingredient subtotal. Ingredient cost covers
+full filled packages including leftover supply. Production cost is separate
+from fixed demo retail price; difference excludes unentered costs and is not
+labeled net profit. Cost revisions preserve original versions and require fresh
+member approval/production review. Existing saved plans use explicit sample
+cost defaults. No supplier price lookup or real cost claims.
+46 Health Quest checks pass, including full-package costing and UI cost edits.

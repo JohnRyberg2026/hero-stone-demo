@@ -10,6 +10,7 @@ export const catalog = [
 export const baseIngredients = [
  ['Moringa',1400],['Baobab',800],['Jabuticaba',600],['Flax',700],['Chia',700],['Hemp hearts',700],['Pumpkin',700]
 ];
+export const sampleCosts = {perKgCents:[2000,3000,4000,600,800,1800,1200],bagCents:10,laborCents:500,overheadCents:200};
 export function initialModel(){return {schema:1,request:'Support everyday energy, movement and general wellness.',budget:10000,versions:[],active:null,production:null,sharing:{formula:false,request:false},recommendations:[],cart:[],orders:[],events:[]};}
 const copy = value => structuredClone(value);
 function integer(value,min,max,name){if(!Number.isInteger(value)||value<min||value>max)throw Error(`Check ${name}.`);}
@@ -23,15 +24,24 @@ export function calculate(plan){
  if(servingMg<100||servingMg>50000)throw Error('Sample serving must be 0.1–50 g.');
  const servings=plan.days*plan.daily,totalMg=servings*servingMg,grams=totalMg/1000;
  const packages=Math.ceil(totalMg/28000);
+ const costs=plan.costs??sampleCosts;
+ if(!Array.isArray(costs.perKgCents)||costs.perKgCents.length!==mix.length)throw Error('Check ingredient prices.');
+ costs.perKgCents.forEach(value=>integer(value,0,1000000,'sample cost per kilogram'));
+ ['bagCents','laborCents','overheadCents'].forEach(field=>integer(costs[field],0,1000000,field));
+ const weighted=mix.reduce((sum,entry,index)=>sum+BigInt(entry[1])*BigInt(costs.perKgCents[index]),0n);
+ const divisor=BigInt(servingMg)*1000000n;
+ const ingredientCost=Number((weighted*BigInt(packages*28000)+divisor/2n)/divisor);
+ const packagingCost=packages*costs.bagCents;
+ const productionCost=ingredientCost+packagingCost+costs.laborCents+costs.overheadCents;
  // Synthetic $120 baseline and $98 bundle for 90 servings. No hidden price override.
  const subtotal=Math.round(servings*12000/90),discount=plan.pricing==='bundle'?Math.round(servings*2200/90):0;
- return {servings,grams:grams,servingGrams:servingMg/1000,packages,leftover:(packages*28000-totalMg)/1000,subtotal,discount,total:subtotal-discount,
+ return {costs:copy(costs),ingredientCost,packagingCost,productionCost,contribution:subtotal-discount-productionCost,servings,grams:grams,servingGrams:servingMg/1000,packages,leftover:(packages*28000-totalMg)/1000,subtotal,discount,total:subtotal-discount,
  ingredients:mix.map(([name,mg])=>({name,perServing:mg/1000,totalGrams:mg*servings/1000})),
  calendar:Array.from({length:plan.days},(_,i)=>({day:i+1,slots:['Morning foundation',['Gut theme','Flexible theme','Radiant theme'][i%3],'Evening foundation'].slice(0,plan.daily)}))};
 }
 export function propose(state, options={}){
  const next=copy(state),parent=next.versions.at(-1);
- const plan={id:next.versions.length+1,days:options.days??parent?.days??30,daily:options.daily??parent?.daily??3,pricing:options.pricing??parent?.pricing??'standard',source:options.source||'Member request',request:next.request,ingredients:copy(options.ingredients??parent?.ingredients??baseIngredients)};
+ const plan={id:next.versions.length+1,days:options.days??parent?.days??30,daily:options.daily??parent?.daily??3,pricing:options.pricing??parent?.pricing??'standard',source:options.source||'Member request',request:next.request,costs:copy(options.costs??parent?.costs??sampleCosts),ingredients:copy(options.ingredients??parent?.ingredients??baseIngredients)};
  calculate(plan);next.versions.push(plan);next.events.push(`Proposed version ${plan.id}; active plan unchanged.`);return next;
 }
 export function approve(state,id){
