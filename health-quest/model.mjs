@@ -173,3 +173,22 @@ export function addRefill(state){
  const next=copy(state),plan=next.versions.find(v=>v.id===next.active);
  next.cart.push({id:'plan',name:`Sample refill · version ${plan.id} · ${refill.packages} × 28 g`,quantity:1,cents:refill.cents,plan:copy(plan),refill:copy(refill),supplyGrams:refill.supplyGrams});return next;
 }
+
+export function supportPreview(state,message,orderId=null){
+ if(typeof message!=='string'||!message.trim()||message.length>1500)throw Error('Enter a sample message of up to 1,500 characters.');
+ const order=orderId?state.orders.find(item=>item.id===orderId):null;
+ if(orderId&&!order)throw Error('Selected order is missing.');
+ return {message:message.trim(),order:order?{id:order.id,status:order.status,paymentStatus:order.paymentStatus,items:order.items.map(item=>({name:item.name,quantity:item.quantity})),total:order.total}:null};
+}
+export function submitSupport(state,preview,actionId){
+ if(!actionId)throw Error('Missing support reference.');
+ const prior=(state.support||[]).find(item=>item.actionId===actionId);if(prior){if(JSON.stringify(prior.content)!==JSON.stringify(preview))throw Error('Support reference reused.');return copy(state);}
+ const checked=supportPreview(state,preview.message,preview.order?.id||null);
+ if(JSON.stringify(checked)!==JSON.stringify(preview))throw Error('Order details changed. Review your message again.');
+ const next=copy(state);next.support??=[];next.support.push({id:`HELP-DEMO-${next.support.length+1}`,actionId,content:copy(preview),status:'Simulated received',createdAt:new Date().toISOString(),replies:[]});return next;
+}
+export function replySupport(state,id,text){
+ if(typeof text!=='string'||!text.trim()||text.length>1500)throw Error('Enter a demo reply of up to 1,500 characters.');
+ const next=copy(state),request=(next.support||[]).find(item=>item.id===id);if(!request)throw Error('Support request missing.');
+ request.replies.push({author:'Demo Heartstone team',text:text.trim(),at:new Date().toISOString()});request.status='Simulated replied';return next;
+}

@@ -178,3 +178,12 @@ production review are required before ordering. Validation rejects invalid mixes
 and blank reasons; member view shows proposed amounts. This remains a simulated
 role workflow without clinician authentication or actual clinical recommendations.
 63 Health Quest checks pass.
+
+## Contact a Person simulation — November 13, 2026
+
+Added message review and optional minimal order summary, reference/status and
+local demo-team replies. No automatic goals/formula/journal/transcript attachments.
+Exact reviewed order summaries are rechecked before submission; duplicate action
+references do not create duplicate requests. Local receipt explicitly does not
+claim delivery to staff, live monitoring or response-time commitments. There is
+no outbound messaging integration. 66 Health Quest checks pass.
