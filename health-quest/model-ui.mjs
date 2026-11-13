@@ -1,4 +1,4 @@
-import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder,recordUse,useSummary,supplySummary } from './model.mjs';
+import { initialModel,calculate,propose,approve,physicianView,recommend,applyRecommendation,productionReview,addToCart,quote,checkout,catalog,orderActions,updateOrder,recordUse,useSummary,supplySummary,refillQuote,addRefill } from './model.mjs';
 export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
  const q=id=>doc.getElementById(id),money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100),key='heartstone-health-quest-fictional-model-v1';
  let state=initialModel(),checkoutKey=uuid(),storageAvailable=true;
@@ -54,6 +54,7 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
    if(order.history?.length){const history=doc.createElement('details');history.append(node('summary','Order history'));order.history.forEach(event=>history.append(node('p',`${event.at} · ${event.action} · ${event.status} · ${event.paymentStatus}`)));block.append(history);}
    q('order-list').append(block);});
   q('supply-summary').replaceChildren();const supply=supplySummary(state);if(!supply.length)q('supply-summary').textContent='Approve a sample plan to start estimating supply.';supply.forEach(row=>q('supply-summary').append(node('p',`Formula versions ${row.versions.join(', ')} · supplied ${row.suppliedGrams} g · pending ${row.pendingGrams} g · reported used ${row.usedGrams} g · estimated balance ${row.balanceGrams} g.${row.balanceGrams<0?' Reported use exceeds recorded supply; check missing supply records.':''}`)));
+  try{const refill=refillQuote(state);q('refill-summary').textContent=`Next period ${refill.targetGrams} g · estimated available ${refill.availableGrams} g · additional need ${refill.neededGrams} g · ${refill.packages} × 28 g · sample price ${money(refill.cents)} · expected remaining after next period ${refill.leftoverGrams} g.`;q('add-refill').disabled=!refill.packages||state.cart.some(item=>item.id==='plan');}catch(e){q('refill-summary').textContent=e.message;q('add-refill').disabled=true;}
   const usage=useSummary(state);q('use-summary').textContent=`Reported taken: ${usage.taken} · reported skipped: ${usage.skipped} · powder reported used: ${usage.grams} g. All other slots are unknown.`;
   const oldSlot=q('use-slot').value;q('use-slot').replaceChildren();if(active)for(let slot=1;slot<=Math.max(active.daily,...(state.journal||[]).map(e=>e.slot));slot++){const option=node('option',`Slot ${slot}`);option.value=String(slot);q('use-slot').append(option);}if([...q('use-slot').options].some(o=>o.value===oldSlot))q('use-slot').value=oldSlot;
   q('save-use').disabled=!active;q('use-day').max=Math.max(active?.days||90,...(state.journal||[]).map(e=>e.day));q('use-entries').replaceChildren();
@@ -72,6 +73,7 @@ export function mountModel(doc, storage, uuid=()=>crypto.randomUUID()){
  q('add-plan').onclick=()=>action(()=>{commit(addToCart(state,'plan'),'Approved sample plan added to cart.');tab('store');});
  ['fulfillment','payment','member'].forEach(id=>q(id).onchange=renderQuote);
  q('checkout-form').onsubmit=e=>{e.preventDefault();action(()=>{commit(checkout(state,options(),checkoutKey),'Simulated order saved. No money was charged and nothing was sent.');checkoutKey=uuid();tab('orders');});};
+ q('add-refill').onclick=()=>action(()=>{commit(addRefill(state),'Sample refill added for review. Nothing was ordered.');tab('store');});
  q('use-form').onsubmit=e=>{e.preventDefault();action(()=>commit(recordUse(state,Number(q('use-day').value),Number(q('use-slot').value),q('use-status').value,uuid()),'Sample use report saved. Planned and reported use remain separate.'));};
  q('reset').onclick=()=>action(()=>{try{storage.removeItem(key);storageAvailable=true;commit(initialModel(),'Fictional model reset.');checkoutKey=uuid();tab('plan');}catch{throw Error('Could not reset browser storage.');}});
  q('close-education').onclick=()=>q('education').close();render();tab('plan');return {getState:()=>structuredClone(state)};

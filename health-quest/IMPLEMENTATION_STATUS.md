@@ -156,3 +156,14 @@ Negative balances explicitly identify missing supply records instead of hiding
 them. Estimates exclude unreported use, waste and outside purchases. No automatic
 refill, purchase, actual inventory guarantee or production integration. 56 Health
 Quest checks pass.
+
+## Sample refill proposals — November 13, 2026
+
+Added explicit refill proposals for another full active-plan period, deducting
+estimated available identical-formula supply and rounding shortfall to 28g packs.
+Pending matching orders block another proposal; negative supply requires record
+correction. Zero shortfall does not create a cart item. Member explicitly adds
+refill to cart and still submits checkout separately. Sample price is proportional
+to filled grams, clearly separate from real package pricing. Refill order snapshots
+store actual refill grams; fulfillment adds only that quantity. Checkout rejects
+refills if supply changed since proposal. 60 Health Quest checks pass.

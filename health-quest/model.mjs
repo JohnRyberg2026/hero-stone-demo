@@ -98,6 +98,7 @@ export function checkout(state,options,key){
  if(!state.cart.length)throw Error('Your sample cart is empty.');
  const plan=state.cart.find(item=>item.id==='plan');
  if(plan&&(state.recommendations.some(r=>r.status==='pending')||plan.plan.id!==state.active||state.production!==state.active||state.active!==state.versions.at(-1)?.id))throw Error('Plan changed. Remove it and add the newly approved version.');
+ if(plan?.refill){const current=refillQuote(state);if(JSON.stringify(current)!==JSON.stringify(plan.refill))throw Error('Supply changed. Remove this refill and prepare a new proposal.');}
  const total=quote(state,options),next=copy(state);
  next.orders.push({id:`DEMO-${next.orders.length+1}`,key,items:copy(next.cart),...total,paymentStatus:total.payment==='online'?'Simulated paid':'Simulated payment due',status:'Simulated received',createdAt:new Date().toISOString()});next.cart=[];return next;
 }
@@ -145,8 +146,26 @@ export function useSummary(state){
 export function supplySummary(state){
  const groups=new Map();
  function group(plan){const ingredients=plan.ingredients??baseIngredients,key=JSON.stringify(ingredients);if(!groups.has(key))groups.set(key,{versions:[],suppliedGrams:0,pendingGrams:0,usedGrams:0});const row=groups.get(key);if(!row.versions.includes(plan.id))row.versions.push(plan.id);return row;}
- for(const order of state.orders)for(const item of order.items){if(item.id!=='plan'||!item.plan)continue;const row=group(item.plan),grams=calculate(item.plan).packages*28*item.quantity;if(order.status==='Simulated completed')row.suppliedGrams+=grams;else row.pendingGrams+=grams;}
+ for(const order of state.orders)for(const item of order.items){if(item.id!=='plan'||!item.plan)continue;const row=group(item.plan),grams=(item.supplyGrams??calculate(item.plan).packages*28)*item.quantity;if(order.status==='Simulated completed')row.suppliedGrams+=grams;else row.pendingGrams+=grams;}
  for(const entry of state.journal||[]){if(entry.status!=='taken')continue;const plan=state.versions.find(v=>v.id===entry.version);if(plan)group(plan).usedGrams+=entry.grams;}
  const active=state.versions.find(v=>v.id===state.active);if(active)group(active);
  return [...groups.values()].map(row=>({...row,usedGrams:Math.round(row.usedGrams*1000)/1000,balanceGrams:Math.round((row.suppliedGrams-row.usedGrams)*1000)/1000}));
+}
+
+export function refillQuote(state){
+ const plan=state.versions.find(v=>v.id===state.active);
+ if(!plan||state.active!==state.versions.at(-1)?.id||state.production!==state.active)throw Error('Approve and review the latest plan before preparing a refill.');
+ if(state.recommendations.some(r=>r.status==='pending'))throw Error('Resolve the pending recommendation first.');
+ const totals=calculate(plan),mix=JSON.stringify(plan.ingredients??baseIngredients);
+ const supply=supplySummary(state).find(row=>row.versions.some(id=>JSON.stringify(state.versions.find(v=>v.id===id)?.ingredients??baseIngredients)===mix));
+ if(supply?.pendingGrams>0)throw Error('A matching sample order is still pending. Complete or review it before preparing another refill.');
+ if(supply?.balanceGrams<0)throw Error('Reported use exceeds recorded supply. Correct the sample records before calculating a refill.');
+ const available=supply?.balanceGrams||0,needed=Math.max(0,Math.round((totals.grams-available)*1000)/1000),packages=Math.ceil(Math.round(needed*1000)/28000),supplyGrams=packages*28;
+ return {version:plan.id,targetGrams:totals.grams,availableGrams:available,neededGrams:needed,packages,supplyGrams,leftoverGrams:Math.round((available+supplyGrams-totals.grams)*1000)/1000,cents:Math.round(totals.total*supplyGrams/(totals.packages*28))};
+}
+export function addRefill(state){
+ const refill=refillQuote(state);if(!refill.packages)throw Error('Recorded sample supply already covers another plan period.');
+ if(state.cart.some(item=>item.id==='plan'))throw Error('A sample plan or refill is already in the cart.');
+ const next=copy(state),plan=next.versions.find(v=>v.id===next.active);
+ next.cart.push({id:'plan',name:`Sample refill · version ${plan.id} · ${refill.packages} × 28 g`,quantity:1,cents:refill.cents,plan:copy(plan),refill:copy(refill),supplyGrams:refill.supplyGrams});return next;
 }
