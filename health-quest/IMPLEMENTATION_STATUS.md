@@ -100,3 +100,15 @@ formulation revisions; then connect nonproduction identity/private persistence
 and actual member/physician/manufacturer permissions. Real catalog readiness,
 Square sandbox, packed UPS quotes, support and production policies remain launch
 requirements. The shared Heartstone AI is not completed by this demo.
+
+## Editable sample formula milestone — November 13, 2026
+
+Added a seven-ingredient sample formula editor with milligram-precision storage.
+Edits recalculate serving weight, total ingredient grams, 28g package count and
+leftover. Revisions copy the latest proposal rather than reverting to an older
+active plan; budget and physician schedule revisions preserve ingredient edits.
+Existing approvals and order snapshots remain unchanged. A revised formula needs
+member approval and new demo production review before simulated ordering.
+Retail sample pricing remains fixed; this is not an ingredient-cost calculator.
+43 Health Quest checks pass, including formula validation and UI recalculation.
+No backend, production recipe, physician permission or payment changes.

@@ -16,16 +16,22 @@ function integer(value,min,max,name){if(!Number.isInteger(value)||value<min||val
 export function calculate(plan){
  integer(plan.days,1,90,'plan days');integer(plan.daily,1,3,'daily smoothies');
  if(!['standard','bundle'].includes(plan.pricing))throw Error('Choose sample pricing.');
- const servings=plan.days*plan.daily,grams=servings*5.6;
+ const mix=plan.ingredients??baseIngredients;
+ if(!Array.isArray(mix)||mix.length!==baseIngredients.length)throw Error('Use the seven sample ingredients.');
+ mix.forEach((entry,index)=>{if(!Array.isArray(entry)||entry[0]!==baseIngredients[index][0])throw Error('Unknown sample ingredient.');integer(entry[1],0,20000,'ingredient milligrams');});
+ const servingMg=mix.reduce((sum,entry)=>sum+entry[1],0);
+ if(servingMg<100||servingMg>50000)throw Error('Sample serving must be 0.1–50 g.');
+ const servings=plan.days*plan.daily,totalMg=servings*servingMg,grams=totalMg/1000;
+ const packages=Math.ceil(totalMg/28000);
  // Synthetic $120 baseline and $98 bundle for 90 servings. No hidden price override.
  const subtotal=Math.round(servings*12000/90),discount=plan.pricing==='bundle'?Math.round(servings*2200/90):0;
- return {servings,grams:Math.round(grams*10)/10,packages:Math.ceil(grams/28),leftover:Math.round((Math.ceil(grams/28)*28-grams)*10)/10,subtotal,discount,total:subtotal-discount,
- ingredients:baseIngredients.map(([name,mg])=>({name,perServing:mg/1000,totalGrams:Math.round(mg*servings/100)/10})),
+ return {servings,grams:grams,servingGrams:servingMg/1000,packages,leftover:(packages*28000-totalMg)/1000,subtotal,discount,total:subtotal-discount,
+ ingredients:mix.map(([name,mg])=>({name,perServing:mg/1000,totalGrams:mg*servings/1000})),
  calendar:Array.from({length:plan.days},(_,i)=>({day:i+1,slots:['Morning foundation',['Gut theme','Flexible theme','Radiant theme'][i%3],'Evening foundation'].slice(0,plan.daily)}))};
 }
 export function propose(state, options={}){
- const next=copy(state),parent=next.versions.find(v=>v.id===next.active)||next.versions.at(-1);
- const plan={id:next.versions.length+1,days:options.days??parent?.days??30,daily:options.daily??parent?.daily??3,pricing:options.pricing??parent?.pricing??'standard',source:options.source||'Member request',request:next.request};
+ const next=copy(state),parent=next.versions.at(-1);
+ const plan={id:next.versions.length+1,days:options.days??parent?.days??30,daily:options.daily??parent?.daily??3,pricing:options.pricing??parent?.pricing??'standard',source:options.source||'Member request',request:next.request,ingredients:copy(options.ingredients??parent?.ingredients??baseIngredients)};
  calculate(plan);next.versions.push(plan);next.events.push(`Proposed version ${plan.id}; active plan unchanged.`);return next;
 }
 export function approve(state,id){
