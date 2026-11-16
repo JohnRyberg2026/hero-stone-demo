@@ -1,0 +1,31 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {randomUUID} from 'node:crypto';
+import {PGlite} from '@electric-sql/pglite';
+import {JSDOM} from 'jsdom';
+import {mountPlans} from './plan-screen.mjs';
+
+test('member screen through account-bound adapter to PostgreSQL policies and RPCs',async t=>{
+ const db=new PGlite();t.after(()=>db.close());
+ const alice=randomUUID(),bob=randomUUID();let current=alice;
+ await db.exec(`create role anon;create role authenticated;create schema auth;grant usage on schema auth to authenticated;create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create table profiles(id uuid primary key);create schema health_quest_internal;`);
+ await db.query('insert into profiles values($1),($2)',[alice,bob]);
+ await db.exec(await readFile(new URL('../supabase/migrations/20261113213149_health_quest_private_plans.sql',import.meta.url),'utf8'));
+ async function request(sql,args){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[current]);await db.exec('set role authenticated');return db.query(sql,args);}
+ const listeners=new Set();let uncertain=false;
+ const client={auth:{getUser:async()=>({data:{user:{id:current}}}),onAuthStateChange(fn){listeners.add(fn);return {data:{subscription:{unsubscribe(){listeners.delete(fn);}}}};}},
+ from(table){assert.ok(['health_quest_plan_versions','health_quest_plan_approvals'].includes(table));let owner;return {select(){return this;},eq(key,value){assert.equal(key,'owner_id');owner=value;return this;},async order(){return {data:(await request(`select * from public.${table} where owner_id=$1 order by version`,[owner])).rows};}};},
+ async rpc(name,p){try{let result;if(name==='health_quest_propose_plan')result=await request('select health_quest_propose_plan($1,$2,$3,$4,$5) as value',[p.p_expected_user,p.p_plan_id,p.p_expected_version,p.p_payload,p.p_action_id]);else if(name==='health_quest_approve_plan')result=await request('select health_quest_approve_plan($1,$2,$3,$4,$5) as value',[p.p_expected_user,p.p_plan_id,p.p_version,p.p_action_id,p.p_approved]);else throw Error('unexpected RPC');if(uncertain){uncertain=false;return {error:{message:'response lost after commit'}};}return {data:result.rows[0].value};}catch(error){return {error};}}
+ };
+ const html=await readFile(new URL('member.html',import.meta.url),'utf8');
+ async function open(){const dom=new JSDOM(html);const ui=await mountPlans(dom.window.document,client,{uuid:randomUUID});return {doc:dom.window.document,ui};}
+ const submit=a=>a.doc.getElementById('plan-editor').onsubmit({preventDefault(){}});
+ const press=(a,id)=>a.doc.getElementById(id).onclick();
+ let a=await open();
+ await t.test('lost save response retries same action without duplicate',async()=>{submit(a);uncertain=true;await press(a,'plan-confirm');assert.match(a.doc.getElementById('plan-status').textContent,/not confirmed/);await press(a,'plan-confirm');assert.equal((await request('select * from health_quest_plan_versions',[])).rows.length,1);});
+ await t.test('return visit shows persisted proposal then exact approval',async()=>{a.ui.destroy();a=await open();assert.match(a.doc.getElementById('plan-summary').textContent,/504.0 g/);press(a,'plan-approve');await press(a,'plan-confirm');assert.match(a.doc.getElementById('plan-summary').textContent,/Approved version 1/);});
+ await t.test('stale second tab cannot overwrite a newer proposal',async()=>{const stale=await open();a.doc.getElementById('plan-days').value='20';submit(a);await press(a,'plan-confirm');submit(stale);await press(stale,'plan-confirm');assert.match(stale.doc.getElementById('plan-status').textContent,/not confirmed/);stale.ui.destroy();assert.match(a.doc.getElementById('plan-summary').textContent,/Approved version 1: 30 days/);assert.match(a.doc.getElementById('plan-summary').textContent,/Proposed version 2: 20 days/);});
+ await t.test('account B cannot read A and switching clears rendered contents',async()=>{current=bob;for(const fn of listeners)fn('SIGNED_IN',{user:{id:bob}});assert.equal(a.doc.getElementById('plan-workspace').hidden,true);assert.equal(a.doc.getElementById('plan-summary').textContent,'');a.ui.destroy();const b=await open();assert.match(b.doc.getElementById('plan-summary').textContent,/No saved sample plan/);assert.equal((await request('select * from health_quest_plan_versions',[])).rows.length,0);b.ui.destroy();});
+ await t.test('account A returns to preserved approved and proposed versions',async()=>{current=alice;a=await open();assert.match(a.doc.getElementById('plan-summary').textContent,/Latest proposal: version 2. Approved: version 1/);a.ui.destroy();});
+});

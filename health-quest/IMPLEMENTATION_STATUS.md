@@ -260,3 +260,9 @@ The test member page now mounts an account-bound sample-plan screen beside priva
 Validation: all 101 local tests pass, including three new screen journeys covering save/return/approval/revision, failed writes, and account switching, alongside the existing PostgreSQL RLS/version checks. Authenticated hosted plan-screen testing with the two existing test accounts is still pending. No live deployment, payment integration, clinician clearance, or manufacturer permission implementation is claimed. John-only pilot blend clearance remains a launch requirement; purchase is unavailable here. This screen approves fictional sample contents only, not price/directions/bag quantities for an order.
 
 Next: open the refreshed test-signin.html, sign in with existing test account A, save and approve a fictional sample plan, reload, then verify account B has none. Continue with server-enforced John review and exact order terms after hosted verification.
+
+## Screen-to-PostgreSQL verification — November 16, 2026
+
+Added a joined test that drives the actual plan screen through the account-bound storage adapter into PostgreSQL RPCs/RLS. Verified committed-save/lost-response retry without duplication, restored proposal and exact approval, stale second-tab rejection, preserved approved formula beside a newer proposal, visible account-switch clearing, account B denial, and account A return. All 107 local tests pass. This local PostgreSQL verification does not substitute for authenticated hosted/browser verification.
+
+Plan summaries now display readable ingredient amounts, serving count and total grams for both latest proposal and approved version; approval no longer exposes raw JSON. Clear/reset unlocks the screen, and restored browser pages reload private data. Hosted two-account plan check remains pending; production/purchase remains unavailable.

@@ -49,10 +49,16 @@ export async function mountPlans(doc,client,{uuid=()=>crypto.randomUUID()}={}){
  let epoch=0,busy=false,store,versions=[],approvals=[],pending=null,owner=null;
  const message=text=>q('plan-status').textContent=text;
  const lock=value=>{busy=value;root.querySelectorAll('button,input').forEach(el=>el.disabled=value);};
- function clear(){epoch++;store=null;owner=null;versions=[];approvals=[];pending=null;root.hidden=true;q('plan-summary').replaceChildren();q('plan-review-text').textContent='';q('plan-review').hidden=true;q('plan-editor').reset();}
+ function clear(){epoch++;store=null;owner=null;versions=[];approvals=[];pending=null;root.hidden=true;q('plan-summary').replaceChildren();q('plan-review-text').textContent='';q('plan-review').hidden=true;q('plan-editor').reset();lock(false);}
+ function describe(row){const p=row.payload,servings=p.days*p.daily,mg=p.ingredients.reduce((sum,item)=>sum+item[1],0);return `${p.days} days × ${p.daily} servings daily = ${servings} servings, ${(servings*mg/1000).toFixed(1)} g total. Per serving: ${p.ingredients.map(([name,amount])=>`${name} ${amount} mg`).join('; ')}.`;}
  function render(){
   const latest=versions.at(-1),approved=approvals.at(-1);
   q('plan-summary').textContent=latest?`Latest proposal: version ${latest.version}. ${approved?`Approved: version ${approved.version}.`:'No approved version.'} ${approved?.version===latest.version?'':'Awaiting your review.'} Purchase unavailable: awaiting John’s separate review and launch checks.`:'No saved sample plan yet.';
+  const details=doc.createElement('div');
+  if(latest){const proposed=doc.createElement('p');proposed.textContent=`Proposed version ${latest.version}: ${describe(latest)}`;details.append(proposed);}
+  const active=approved&&versions.find(v=>v.plan_id===approved.plan_id&&v.version===approved.version);
+  if(active){const saved=doc.createElement('p');saved.textContent=`Approved version ${active.version}: ${describe(active)}`;details.append(saved);}
+  q('plan-summary').append(details);
   q('plan-approve').hidden=!latest||approved?.version===latest.version;
  }
  async function load(){if(busy)return;const token=++epoch;lock(true);message('Loading private sample plans…');try{
@@ -66,12 +72,13 @@ export async function mountPlans(doc,client,{uuid=()=>crypto.randomUUID()}={}){
   q('plan-review-text').textContent=`Fictional proposal version ${pending.expectedVersion+1}: ${days} days × ${daily} servings = ${days*daily} servings, ${((days*daily*5600)/1000).toFixed(1)} g total. Per serving: ${payload.ingredients.map(([name,mg])=>`${name} ${mg} mg`).join('; ')}. No price or purchase is included.`;
   q('plan-review').hidden=false;q('plan-confirm').textContent='Save this proposal privately';
  };
- q('plan-approve').onclick=()=>{if(busy||!store)return;const latest=versions.at(-1);if(!latest)return;pending={kind:'approval',planId:latest.plan_id,version:latest.version,actionId:uuid(),approved:true};q('plan-review-text').textContent=`Approve saved version ${latest.version} exactly as shown: ${JSON.stringify(latest.payload)}. This records sample-plan consent only. John’s review, directions, bag quantity, price approval and purchase remain separate.`;q('plan-confirm').textContent=`Approve sample version ${latest.version}`;q('plan-review').hidden=false;};
+ q('plan-approve').onclick=()=>{if(busy||!store)return;const latest=versions.at(-1);if(!latest)return;pending={kind:'approval',planId:latest.plan_id,version:latest.version,actionId:uuid(),approved:true};q('plan-review-text').textContent=`Approve saved version ${latest.version} exactly as shown: ${describe(latest)}. This records sample-plan consent only. John’s review, directions, bag quantity, price approval and purchase remain separate.`;q('plan-confirm').textContent=`Approve sample version ${latest.version}`;q('plan-review').hidden=false;};
  q('plan-confirm').onclick=async()=>{if(busy||!pending||!store)return;const token=epoch,input=pending,storage=store;lock(true);try{const row=await storage[input.kind==='proposal'?'propose':'approve'](input);if(token!==epoch)return;if(input.kind==='proposal')versions=[...versions.filter(v=>v.version!==row.version),row];else approvals=[...approvals.filter(v=>v.version!==row.version),row];pending=null;q('plan-review').hidden=true;render();message(input.kind==='proposal'?'Proposal saved privately. Existing approval preserved.':'Exact sample version approved. Purchase remains unavailable.');}catch(e){if(token===epoch){if(e.message.startsWith('Account changed'))clear();message(e.message);}}finally{if(token===epoch)lock(false);}};
  q('plan-back').onclick=()=>{pending=null;q('plan-review').hidden=true;};q('plan-refresh').onclick=load;
  const sub=client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(owner&&session?.user?.id!==owner))clear();});
  doc.defaultView?.addEventListener('pagehide',clear);
- await load();return {reload:load,destroy(){clear();sub.data?.subscription?.unsubscribe();}};
+ const restore=event=>{if(event.persisted)load();};doc.defaultView?.addEventListener('pageshow',restore);
+ await load();return {reload:load,destroy(){clear();doc.defaultView?.removeEventListener('pagehide',clear);doc.defaultView?.removeEventListener('pageshow',restore);sub.data?.subscription?.unsubscribe();}};
 }
 
 // Account-bound Health Quest storage. No model calls or shared Quest memory.
