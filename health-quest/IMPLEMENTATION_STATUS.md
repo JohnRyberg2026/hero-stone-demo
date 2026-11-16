@@ -252,3 +252,11 @@ hosted two-account journey. No invitation, email or real profile import occurred
 Installed `20261113213149_health_quest_private_plans.sql` in **Health Quest Test only**. Owner-scoped immutable proposal versions and separate exact-version approvals preserve previously approved plans. Expected versions reject stale proposals; action IDs support safe retries. The account-bound `private-plans.mjs` adapter checks the signed-in user before and after operations.
 
 Validation: 18 local PostgreSQL/adapter tests passed for RLS separation, anonymous denial, immutable records, explicit approval, latest-proposal checks, stale versions, invalid mass, and retries. Hosted migration succeeded. No member plan data was created. Plan screen wiring and authenticated hosted plan testing remain next. This is fictional sample-plan storage, with no production, clinician, payment or clinical validation authority. Retention/deletion controls remain required before real health plan use.
+
+## Private plan screen connected — November 16, 2026
+
+The test member page now mounts an account-bound sample-plan screen beside private notes. Members review the exact seven-ingredient proposal before saving, reload saved versions, and separately review/approve the latest saved version. A later proposal preserves the prior approval. Sign-out/account changes clear the plan screen; failed saves retain the review and do not claim success. The downloadable test page was rebuilt.
+
+Validation: all 101 local tests pass, including three new screen journeys covering save/return/approval/revision, failed writes, and account switching, alongside the existing PostgreSQL RLS/version checks. Authenticated hosted plan-screen testing with the two existing test accounts is still pending. No live deployment, payment integration, clinician clearance, or manufacturer permission implementation is claimed. John-only pilot blend clearance remains a launch requirement; purchase is unavailable here. This screen approves fictional sample contents only, not price/directions/bag quantities for an order.
+
+Next: open the refreshed test-signin.html, sign in with existing test account A, save and approve a fictional sample plan, reload, then verify account B has none. Continue with server-enforced John review and exact order terms after hosted verification.

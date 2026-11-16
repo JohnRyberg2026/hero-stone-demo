@@ -1,5 +1,10 @@
+import { mountPlans } from './plan-screen.mjs';
 import { mountMember } from './member.mjs';
-export async function mountTestSession(doc,client,{openMember=mountMember}={}){
+async function mountTestWorkspace(doc,client){
+ const notes=await mountMember(doc,client);
+ try{const plans=await mountPlans(doc,client);return {destroy(){notes.destroy();plans.destroy();}};}catch(error){notes.destroy();throw error;}
+}
+export async function mountTestSession(doc,client,{openMember=mountTestWorkspace}={}){
  const q=id=>doc.getElementById(id);let member=null,owner=null,epoch=0,busy=false;
  const message=text=>q('session-status').textContent=text;
  function controls(){q('test-signin').hidden=!!owner;q('test-signout').hidden=!owner;q('test-signout').disabled=busy;q('test-login').disabled=busy;}

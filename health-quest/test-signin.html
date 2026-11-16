@@ -29,8 +29,51 @@
 </section>
 <section class="card"><h2>My notes</h2><p class="subtle">Plans and reported experiences stay separate. These notes are not shared with partners or friends.</p><div id="records"></div></section>
 </section>
+<section id="plan-workspace" class="card" hidden><h2>My sample wellness plan</h2><p>Fictional seven-ingredient test formula. No clinical review or purchase is included.</p><p id="plan-status" role="status" aria-live="polite"></p><p id="plan-summary"></p><button id="plan-refresh" type="button">Refresh my plans</button><form id="plan-editor"><label>Days<input id="plan-days" type="number" min="1" max="90" value="30" required></label><label>Servings per day<input id="plan-daily" type="number" min="1" max="3" value="3" required></label><button type="submit">Review sample proposal</button></form><button id="plan-approve" type="button" hidden>Review latest saved version for approval</button><section id="plan-review" hidden><h3>Review exact sample version</h3><p id="plan-review-text"></p><button id="plan-confirm" type="button">Save proposal</button><button id="plan-back" type="button">Go back</button></section></section>
 <noscript>Enable JavaScript to open your private Health Quest notes.</noscript>
 </main><script type="module">
+// Test-only sample plans; no production, clinician or payment authority.
+export function privatePlans(client, expectedUser) {
+ if(!expectedUser)throw new Error('Sign in to Health Quest.');
+ async function account(){const {data,error}=await client.auth.getUser();if(error||data?.user?.id!==expectedUser)throw new Error('Account changed. Reopen Health Quest.');}
+ async function rpc(name,args){await account();const {data,error}=await client.rpc(name,{p_expected_user:expectedUser,...args});if(error)throw new Error('Plan was not confirmed saved. Reload before trying again.',{cause:error});await account();if(data?.owner_id!==expectedUser||data.plan_id!==args.p_plan_id)throw new Error('Plan save could not be confirmed.');return data;}
+ return {
+  async list(){await account();const result={};for(const [key,table] of [['versions','health_quest_plan_versions'],['approvals','health_quest_plan_approvals']]){const {data,error}=await client.from(table).select('*').eq('owner_id',expectedUser).order('version');if(error)throw new Error('Plans could not be loaded.');result[key]=data;}await account();return result;},
+  async propose({planId,expectedVersion,payload,actionId,reviewed=false}){if(reviewed!==true)throw new Error('Review the proposal before saving.');return rpc('health_quest_propose_plan',{p_plan_id:planId,p_expected_version:expectedVersion,p_payload:payload,p_action_id:actionId});},
+  async approve({planId,version,actionId,approved=false}){if(approved!==true)throw new Error('Explicit plan approval required.');return rpc('health_quest_approve_plan',{p_plan_id:planId,p_version:version,p_action_id:actionId,p_approved:true});}
+ };
+}
+
+export async function mountPlans(doc,client,{uuid=()=>crypto.randomUUID()}={}){
+ const q=id=>doc.getElementById(id),root=q('plan-workspace');
+ let epoch=0,busy=false,store,versions=[],approvals=[],pending=null,owner=null;
+ const message=text=>q('plan-status').textContent=text;
+ const lock=value=>{busy=value;root.querySelectorAll('button,input').forEach(el=>el.disabled=value);};
+ function clear(){epoch++;store=null;owner=null;versions=[];approvals=[];pending=null;root.hidden=true;q('plan-summary').replaceChildren();q('plan-review-text').textContent='';q('plan-review').hidden=true;q('plan-editor').reset();}
+ function render(){
+  const latest=versions.at(-1),approved=approvals.at(-1);
+  q('plan-summary').textContent=latest?`Latest proposal: version ${latest.version}. ${approved?`Approved: version ${approved.version}.`:'No approved version.'} ${approved?.version===latest.version?'':'Awaiting your review.'} Purchase unavailable: awaiting John’s separate review and launch checks.`:'No saved sample plan yet.';
+  q('plan-approve').hidden=!latest||approved?.version===latest.version;
+ }
+ async function load(){if(busy)return;const token=++epoch;lock(true);message('Loading private sample plans…');try{
+  const auth=await client.auth.getUser();if(token!==epoch)return;if(auth.error||!auth.data?.user)throw Error('Sign in again.');
+  const candidate=privatePlans(client,auth.data.user.id),data=await candidate.list();if(token!==epoch)return;store=candidate;owner=auth.data.user.id;versions=data.versions;approvals=data.approvals;pending=null;q('plan-review').hidden=true;render();root.hidden=false;message('Sample plans ready. These are fictional test formulas.');
+ }catch(e){if(token===epoch){clear();message(e.message);}}finally{if(token===epoch)lock(false);}}
+ q('plan-editor').onsubmit=e=>{e.preventDefault();if(busy||!store)return;
+  const days=Number(q('plan-days').value),daily=Number(q('plan-daily').value);if(!Number.isInteger(days)||days<1||days>90||!Number.isInteger(daily)||daily<1||daily>3){message('Choose 1–90 days and 1–3 servings daily.');return;}
+  const latest=versions.at(-1),payload={days,daily,ingredients:[['Moringa',1400],['Baobab',800],['Jabuticaba',600],['Flax',700],['Chia',700],['Hemp hearts',700],['Pumpkin',700]]};
+  pending={kind:'proposal',planId:latest?.plan_id||uuid(),expectedVersion:latest?.version||0,payload,actionId:uuid(),reviewed:true};
+  q('plan-review-text').textContent=`Fictional proposal version ${pending.expectedVersion+1}: ${days} days × ${daily} servings = ${days*daily} servings, ${((days*daily*5600)/1000).toFixed(1)} g total. Per serving: ${payload.ingredients.map(([name,mg])=>`${name} ${mg} mg`).join('; ')}. No price or purchase is included.`;
+  q('plan-review').hidden=false;q('plan-confirm').textContent='Save this proposal privately';
+ };
+ q('plan-approve').onclick=()=>{if(busy||!store)return;const latest=versions.at(-1);if(!latest)return;pending={kind:'approval',planId:latest.plan_id,version:latest.version,actionId:uuid(),approved:true};q('plan-review-text').textContent=`Approve saved version ${latest.version} exactly as shown: ${JSON.stringify(latest.payload)}. This records sample-plan consent only. John’s review, directions, bag quantity, price approval and purchase remain separate.`;q('plan-confirm').textContent=`Approve sample version ${latest.version}`;q('plan-review').hidden=false;};
+ q('plan-confirm').onclick=async()=>{if(busy||!pending||!store)return;const token=epoch,input=pending,storage=store;lock(true);try{const row=await storage[input.kind==='proposal'?'propose':'approve'](input);if(token!==epoch)return;if(input.kind==='proposal')versions=[...versions.filter(v=>v.version!==row.version),row];else approvals=[...approvals.filter(v=>v.version!==row.version),row];pending=null;q('plan-review').hidden=true;render();message(input.kind==='proposal'?'Proposal saved privately. Existing approval preserved.':'Exact sample version approved. Purchase remains unavailable.');}catch(e){if(token===epoch){if(e.message.startsWith('Account changed'))clear();message(e.message);}}finally{if(token===epoch)lock(false);}};
+ q('plan-back').onclick=()=>{pending=null;q('plan-review').hidden=true;};q('plan-refresh').onclick=load;
+ const sub=client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(owner&&session?.user?.id!==owner))clear();});
+ doc.defaultView?.addEventListener('pagehide',clear);
+ await load();return {reload:load,destroy(){clear();sub.data?.subscription?.unsubscribe();}};
+}
+
 // Account-bound Health Quest storage. No model calls or shared Quest memory.
 export function privateRecords(client, expectedUser) {
   if (!expectedUser) throw new Error('Sign in to Health Quest.');
@@ -134,7 +177,11 @@ export async function mountMember(doc, client, { uuid = () => crypto.randomUUID(
   return { reload:load, destroy(){clear();subscription?.subscription?.unsubscribe();} };
 }
 
-export async function mountTestSession(doc,client,{openMember=mountMember}={}){
+async function mountTestWorkspace(doc,client){
+ const notes=await mountMember(doc,client);
+ try{const plans=await mountPlans(doc,client);return {destroy(){notes.destroy();plans.destroy();}};}catch(error){notes.destroy();throw error;}
+}
+export async function mountTestSession(doc,client,{openMember=mountTestWorkspace}={}){
  const q=id=>doc.getElementById(id);let member=null,owner=null,epoch=0,busy=false;
  const message=text=>q('session-status').textContent=text;
  function controls(){q('test-signin').hidden=!!owner;q('test-signout').hidden=!owner;q('test-signout').disabled=busy;q('test-login').disabled=busy;}
