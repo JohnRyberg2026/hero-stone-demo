@@ -50,3 +50,4 @@ begin
 end;$$;
 revoke all on function public.health_quest_set_review_request(uuid,uuid,integer,integer,text,uuid,boolean) from public,anon;
 grant execute on function public.health_quest_set_review_request(uuid,uuid,integer,integer,text,uuid,boolean) to authenticated;
+

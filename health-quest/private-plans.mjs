@@ -10,3 +10,4 @@ export function privatePlans(client, expectedUser) {
   async approve({planId,version,actionId,approved=false}){if(approved!==true)throw new Error('Explicit plan approval required.');return rpc('health_quest_approve_plan',{p_plan_id:planId,p_version:version,p_action_id:actionId,p_approved:true});}
  };
 }
+

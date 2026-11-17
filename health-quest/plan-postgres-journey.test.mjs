@@ -32,3 +32,4 @@ test('member screen through account-bound adapter to PostgreSQL policies and RPC
  await t.test('account B cannot read A and switching clears rendered contents',async()=>{current=bob;for(const fn of listeners)fn('SIGNED_IN',{user:{id:bob}});assert.equal(a.doc.getElementById('plan-workspace').hidden,true);assert.equal(a.doc.getElementById('plan-summary').textContent,'');a.ui.destroy();const b=await open();assert.match(b.doc.getElementById('plan-summary').textContent,/No saved sample plan/);assert.equal((await request('select * from health_quest_plan_versions',[])).rows.length,0);assert.equal((await request('select * from health_quest_review_requests',[])).rows.length,0);b.ui.destroy();});
  await t.test('account A returns to preserved approved and proposed versions',async()=>{current=alice;a=await open();assert.match(a.doc.getElementById('plan-summary').textContent,/Latest proposal: version 2. Approved: version 1/);a.ui.destroy();});
 });
+

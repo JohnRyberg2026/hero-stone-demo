@@ -30,8 +30,31 @@
 <section class="card"><h2>My notes</h2><p class="subtle">Plans and reported experiences stay separate. These notes are not shared with partners or friends.</p><div id="records"></div></section>
 </section>
 <section id="plan-workspace" class="card" hidden><h2>My sample wellness plan</h2><p>Fictional seven-ingredient test formula. No clinical review or purchase is included.</p><p id="plan-status" role="status" aria-live="polite"></p><p id="plan-summary"></p><button id="plan-refresh" type="button">Refresh my plans</button><form id="plan-editor"><label>Days<input id="plan-days" type="number" min="1" max="90" value="30" required></label><label>Servings per day<input id="plan-daily" type="number" min="1" max="3" value="3" required></label><button type="submit">Review sample proposal</button></form><button id="plan-approve" type="button" hidden>Review latest saved version for approval</button><p id="plan-request-status"></p><button id="plan-request" type="button" hidden>Review request for John</button><button id="plan-withdraw" type="button" hidden>Review withdrawal</button><section id="plan-review" hidden><h3>Review exact sample version</h3><p id="plan-review-text"></p><button id="plan-confirm" type="button">Save proposal</button><button id="plan-back" type="button">Go back</button></section></section>
+<section class="card"><h2>John’s test review workspace</h2><p id="reviewer-status" role="status" aria-live="polite">Reviewer access must be assigned to John’s confirmed test account.</p><button id="reviewer-open" type="button">Open reviewer workspace</button><section id="reviewer-workspace" hidden><p>Sample review only. Purchase and production remain unavailable.</p><button id="reviewer-refresh" type="button">Refresh review queue</button><div id="reviewer-queue"></div><section id="reviewer-preview" hidden><h3>Review exact submission</h3><p id="reviewer-preview-text"></p><label>Review reason<textarea id="reviewer-reason" rows="3" maxlength="500"></textarea></label><button id="reviewer-confirm" type="button">Confirm exact sample review</button><button id="reviewer-cancel" type="button">Go back</button></section></section></section>
 <noscript>Enable JavaScript to open your private Health Quest notes.</noscript>
 </main><script type="module">
+// Cross-member access exists only in the authenticated, server-authorized reviewer RPCs.
+export async function mountReviewer(doc,client,{uuid=()=>crypto.randomUUID()}={}){
+ const q=id=>doc.getElementById(id);let epoch=0,owner=null,pending=null,busy=false;
+ const status=text=>q('reviewer-status').textContent=text;
+ const lock=value=>{busy=value;q('reviewer-workspace').querySelectorAll('button,input,textarea').forEach(el=>el.disabled=value);q('reviewer-open').disabled=value;};
+ function clear(){epoch++;owner=null;pending=null;q('reviewer-workspace').hidden=true;q('reviewer-queue').replaceChildren();q('reviewer-preview-text').textContent='';q('reviewer-reason').value='';q('reviewer-preview').hidden=true;lock(false);}
+ async function rpc(name,args,expected=owner){const auth=await client.auth.getUser();if(auth.error||auth.data?.user?.id!==expected)throw Error('Account changed. Reopen reviewer workspace.');const {data,error}=await client.rpc(name,{p_expected_user:expected,...args});if(error)throw Error('Reviewer action not confirmed. Access may be unassigned or the request may have changed. Refresh before continuing.');const after=await client.auth.getUser();if(after.error||after.data?.user?.id!==expected)throw Error('Account changed. Reopen reviewer workspace.');return data;}
+ function render(rows){q('reviewer-queue').replaceChildren();if(!rows.length){q('reviewer-queue').textContent='No current submitted sample plans.';return;}
+  for(const row of rows){const article=doc.createElement('article'),text=doc.createElement('p');text.textContent=`Member ${row.owner_id} · version ${row.version} · request ${row.request_revision}. ${row.payload.days} days × ${row.payload.daily} servings daily. Per serving: ${row.payload.ingredients.map(([name,mg])=>`${name} ${mg} mg`).join('; ')}. ${row.decision?`Recorded review: ${row.decision}. ${row.reason}`:'Awaiting review.'}`;article.append(text);
+   if(!row.decision)for(const [decision,label] of [['held','Hold sample plan'],['cleared','Clear sample review']]){const button=doc.createElement('button');button.type='button';button.textContent=label;button.onclick=()=>{if(busy)return;pending={row:structuredClone(row),decision,actionId:uuid()};q('reviewer-reason').value='';q('reviewer-preview-text').textContent=`Review ${decision} for exactly this submission: ${text.textContent} This records sample review only; professional review, order terms, payment and production release remain separate.`;q('reviewer-preview').hidden=false;};article.append(button);}
+   q('reviewer-queue').append(article);
+  }
+ }
+ async function load(){if(busy)return;clear();const token=epoch;lock(true);status('Checking reviewer authority…');try{const auth=await client.auth.getUser();if(token!==epoch)return;if(auth.error||!auth.data?.user)throw Error('Sign in to your test account first.');const expected=auth.data.user.id;const rows=await rpc('health_quest_reviewer_queue',{},expected);if(token!==epoch)return;owner=expected;render(rows);q('reviewer-workspace').hidden=false;status('Authorized test reviewer workspace. Only current submitted sample plans are shown.');}catch(e){if(token===epoch)status(e.message);}finally{if(token===epoch)lock(false);}}
+ q('reviewer-open').onclick=load;q('reviewer-refresh').onclick=load;
+ q('reviewer-cancel').onclick=()=>{pending=null;q('reviewer-preview').hidden=true;q('reviewer-reason').value='';};
+ q('reviewer-confirm').onclick=async()=>{if(busy||!pending||!owner)return;const reason=q('reviewer-reason').value.trim();if(!reason||reason.length>500){status('Add a review reason, up to 500 characters.');return;}const input=pending;if(input.reason&&input.reason!==reason){status('A previous save was uncertain. Refresh before changing the review reason.');return;}input.reason=reason;const token=epoch;lock(true);try{const r=input.row;const result=await rpc('health_quest_review_plan',{p_owner_id:r.owner_id,p_plan_id:r.plan_id,p_version:r.version,p_request_revision:r.request_revision,p_decision:input.decision,p_reason:reason,p_action_id:input.actionId,p_confirmed:true});if(token!==epoch)return;if(result?.owner_id!==r.owner_id||result.plan_id!==r.plan_id||result.version!==r.version||result.request_revision!==r.request_revision)throw Error('Review could not be confirmed.');pending=null;q('reviewer-preview').hidden=true;q('reviewer-reason').value='';q('reviewer-queue').replaceChildren();status('Sample review recorded. Refresh to see current submissions. Purchase and production remain unavailable.');}catch(e){if(token===epoch){if(e.message.startsWith('Account changed'))clear();status(e.message);}}finally{if(token===epoch)lock(false);}};
+ const sub=client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(owner&&session?.user?.id!==owner)){clear();status('Reviewer workspace cleared.');}});
+ doc.defaultView?.addEventListener('pagehide',clear);
+ return {reload:load,destroy(){clear();doc.defaultView?.removeEventListener('pagehide',clear);sub.data?.subscription?.unsubscribe();}};
+}
+
 // Test-only sample plans; no production, clinician or payment authority.
 export function privatePlans(client, expectedUser) {
  if(!expectedUser)throw new Error('Sign in to Health Quest.');
@@ -44,6 +67,7 @@ export function privatePlans(client, expectedUser) {
   async approve({planId,version,actionId,approved=false}){if(approved!==true)throw new Error('Explicit plan approval required.');return rpc('health_quest_approve_plan',{p_plan_id:planId,p_version:version,p_action_id:actionId,p_approved:true});}
  };
 }
+
 
 export async function mountPlans(doc,client,{uuid=()=>crypto.randomUUID()}={}){
  const q=id=>doc.getElementById(id),root=q('plan-workspace');
@@ -87,6 +111,7 @@ export async function mountPlans(doc,client,{uuid=()=>crypto.randomUUID()}={}){
  const restore=event=>{if(event.persisted)load();};doc.defaultView?.addEventListener('pageshow',restore);
  await load();return {reload:load,destroy(){clear();doc.defaultView?.removeEventListener('pagehide',clear);doc.defaultView?.removeEventListener('pageshow',restore);sub.data?.subscription?.unsubscribe();}};
 }
+
 
 // Account-bound Health Quest storage. No model calls or shared Quest memory.
 export function privateRecords(client, expectedUser) {
@@ -193,7 +218,7 @@ export async function mountMember(doc, client, { uuid = () => crypto.randomUUID(
 
 async function mountTestWorkspace(doc,client){
  const notes=await mountMember(doc,client);
- try{const plans=await mountPlans(doc,client);return {destroy(){notes.destroy();plans.destroy();}};}catch(error){notes.destroy();throw error;}
+ try{const plans=await mountPlans(doc,client);const reviewer=await mountReviewer(doc,client);return {destroy(){notes.destroy();plans.destroy();reviewer.destroy();}};}catch(error){notes.destroy();throw error;}
 }
 export async function mountTestSession(doc,client,{openMember=mountTestWorkspace}={}){
  const q=id=>doc.getElementById(id);let member=null,owner=null,epoch=0,busy=false;
@@ -235,3 +260,4 @@ if (typeof supabase === 'undefined') { document.getElementById('session-status')
   document.getElementById('status').textContent = 'This development screen is waiting for its test environment. Your live account has not been changed.';
 }
 </script></body></html>
+

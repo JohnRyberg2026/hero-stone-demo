@@ -1,8 +1,9 @@
+import { mountReviewer } from './reviewer.mjs';
 import { mountPlans } from './plan-screen.mjs';
 import { mountMember } from './member.mjs';
 async function mountTestWorkspace(doc,client){
  const notes=await mountMember(doc,client);
- try{const plans=await mountPlans(doc,client);return {destroy(){notes.destroy();plans.destroy();}};}catch(error){notes.destroy();throw error;}
+ try{const plans=await mountPlans(doc,client);const reviewer=await mountReviewer(doc,client);return {destroy(){notes.destroy();plans.destroy();reviewer.destroy();}};}catch(error){notes.destroy();throw error;}
 }
 export async function mountTestSession(doc,client,{openMember=mountTestWorkspace}={}){
  const q=id=>doc.getElementById(id);let member=null,owner=null,epoch=0,busy=false;

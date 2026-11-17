@@ -41,3 +41,4 @@ export async function mountPlans(doc,client,{uuid=()=>crypto.randomUUID()}={}){
  const restore=event=>{if(event.persisted)load();};doc.defaultView?.addEventListener('pageshow',restore);
  await load();return {reload:load,destroy(){clear();doc.defaultView?.removeEventListener('pagehide',clear);doc.defaultView?.removeEventListener('pageshow',restore);sub.data?.subscription?.unsubscribe();}};
 }
+
