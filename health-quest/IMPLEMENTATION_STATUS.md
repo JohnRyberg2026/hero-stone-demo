@@ -291,3 +291,10 @@ Validation: 124 local tests passed, including 15 reviewer tests spanning UI + Po
 Security advisor has no new findings. The existing test Auth leaked-password-protection warning remains a launch prerequisite: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection . Internal note audit has intentionally no client policy. Production Heartstone unchanged.
 
 Resume: identify which test account is John’s reviewer identity, assign only that account server-side, download the updated test page from GitHub, and run the hosted review/withdrawal/version checks. Member-facing review-result presentation and exact purchase/production gating remain to build; old member text says portal not connected until activation. Restore included latest saved review-request sources after discovering the local workspace snapshot was older than GitHub.
+
+
+## Test reviewer activated — November 17, 2026
+
+John continued after the proposed account A reviewer designation. Assigned only healthquest-a@example.com to the single John reviewer slot in Health Quest Test. Account C remains an ordinary member. Hosted checks using transaction-local authenticated role/JWT subject verify that A can call the reviewer queue and C receives insufficient_privilege; these checks do not replace password/browser sign-in testing. No review decisions, emails, payments or production actions were created. Production Heartstone unchanged.
+
+Resume: download the reviewer-enabled test-signin.html from GitHub (the earlier local download predates this screen), sign in as A and open John’s test review workspace. Run the hosted preview/reason/confirmation check on the existing fictional submission, then inspect held/cleared state after refresh. Member-side review result display and exact order gates remain pending.
