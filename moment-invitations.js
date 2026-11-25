@@ -524,7 +524,12 @@
           card.append(node('p',item.completed_at?'Your time together has come to a close. Your own words can keep a little of it.':item.started_at?'Come back to the moment you have begun together.':'You have a little time together to look forward to.','letterAnticipation'));
         }
         card.append(node('h2',item.status==='accepted'&&incoming&&!item.started_at?'A moment waiting for us':item.title));
-        card.append(node('p',item.completed_at?'This shared moment has come to a close.':pendingTime?(needsTimeReview?'A time change is waiting for your review.':'Your time suggestion is waiting for your partner’s confirmation.'):item.status==='accepted'&&item.started_at?'Your shared moment is underway.':item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status),'notice'));
+        const closedOutcome=item.status==='declined'
+          ? (incoming?'You passed on this invitation.':(other?.name||'Your partner')+' passed on this invitation.')
+          : item.status==='cancelled'
+            ? (item.cancelled_by===c.user.id?'You canceled this invitation.':(other?.name||'Your partner')+' canceled this invitation.')
+            : null;
+        card.append(node('p',closedOutcome||(item.completed_at?'This shared moment has come to a close.':pendingTime?(needsTimeReview?'A time change is waiting for your review.':'Your time suggestion is waiting for your partner’s confirmation.'):item.status==='accepted'&&item.started_at?'Your shared moment is underway.':item.status==='pending'&&item.revision>0?'Revised time proposed. Waiting for a reply.':(statuses[item.status]||item.status)),'notice'));
         if(replyNeeded&&!pendingTime)card.append(node('p','Your reply is needed.','helper'));
         const details=node('details'),summary=node('summary','View invitation details');
         details.append(summary,node('div',item.message,'quote'),node('div',planText(item.plan),'quote'));
@@ -567,6 +572,9 @@
   el('refreshSharedInvitations').onclick=refreshInbox;
   el('backFromSharedInvitations').onclick=()=>{if(memoriesOnly)window.location.href='index.html#date-quest';else screen('feelings');};
   window.addEventListener('hashchange',()=>{if(['#our-memories','#shared-invitations'].includes(window.location.hash)){memoriesOnly=window.location.hash==='#our-memories';screen('sharedInbox');refreshInbox();}});
+  window.addEventListener('pageshow',event=>{
+    if(event.persisted&&!el('sharedInbox').classList.contains('hidden')&&!document.querySelector('dialog[open]'))refreshInbox();
+  });
   if(['#shared-invitations','#our-memories'].includes(window.location?.hash)){
     screen('sharedInbox');refreshInbox();
   }
