@@ -525,7 +525,7 @@
         }
         card.append(node('h2',item.status==='accepted'&&incoming&&!item.started_at?'A moment waiting for us':item.title));
         const closedOutcome=item.status==='declined'
-          ? (incoming?'You passed on this invitation.':(other?.name||'Your partner')+' passed on this invitation.')
+          ? (incoming?'You passed on this invitation.':(other?.name||'Your partner')+' passed on this invitation. This invitation is closed.')
           : item.status==='cancelled'
             ? (item.cancelled_by===c.user.id?'You canceled this invitation.':(other?.name||'Your partner')+' canceled this invitation.')
             : null;
