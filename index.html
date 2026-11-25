@@ -297,7 +297,23 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #homeCard .dq-memory-shortcut{text-align:center;margin:10px 0 18px}
 #homeCard .dq-memory-shortcut a{color:#174c3e;font-weight:700;display:inline-block;padding:10px}
 #homeCard #dqConversation{margin:0;border:0;box-shadow:none}
-#homeCard:not(.dq-talk-view) #dqConversation .hs-guide-body{display:none}
+#homeCard:not(.dq-talk-view) #dqConversation,
+#homeCard.dq-talk-view .dq-heartstone-hero{display:none}
+.dq-heartstone-hero{
+  display:grid;justify-items:center;gap:6px;margin:10px 0 16px;padding:10px 12px 20px;
+  overflow:hidden;border:1px solid #a97847;border-radius:18px;
+  background:radial-gradient(ellipse at 50% 38%,#44202b,#190e17 62%,#0b070c);
+  color:#ffe4ad;text-align:center;
+}
+.dq-heartstone-compass{
+  width:min(100%,230px);aspect-ratio:1.28;
+  background:url("images/combined-logo.png") center / 390% auto no-repeat;
+  mix-blend-mode:screen;mask-image:radial-gradient(ellipse closest-side,#000 74%,transparent 100%);
+}
+.dq-heartstone-wordmark{
+  font:700 clamp(21px,6vw,34px)/1.1 Georgia,serif;
+  letter-spacing:.18em;text-shadow:0 2px 12px #a85342;
+}
 #homeCard #dqMomentsSection{display:none}
 #homeCard.dq-talk-view .dq-welcome,#homeCard.dq-talk-view .dq-home-nav,#homeCard.dq-talk-view .dq-memory-shortcut,#homeCard.dq-talk-view #dqCalendarSection{display:none}
 #homeCard.dq-talk-view #dqReturnHome{display:block}
@@ -701,6 +717,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button class="secondary" id="homeProfileBtn">Profile & Settings</button>
     </div>
     <section class="dq-home-part dq-welcome" aria-labelledby="dqGreeting"><h1 id="dqGreeting">Welcome back.</h1><p class="dq-lead">What would you like to make room for today?</p><div class="home-couple" id="homeCoupleNames">OUR HEART STONE</div></section>
+    <div class="dq-heartstone-hero" role="img" aria-label="Heartstone logo with a ruby heart compass">
+      <span class="dq-heartstone-compass" aria-hidden="true"></span>
+      <span class="dq-heartstone-wordmark" aria-hidden="true">HEART STONE</span>
+    </div>
     <section id="dqConversation" class="hs-guide" data-heart-stone-guide aria-label="Heartstone"></section>
     <nav class="dq-home-nav" aria-label="Main actions">
       <button type="button" id="dqTalkButton">Talk to Heartstone</button>
