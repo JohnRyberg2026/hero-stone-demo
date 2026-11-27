@@ -210,7 +210,13 @@
       const verify=await c.sb.auth.getUser();
       if(verify.error||verify.data?.user?.id!==c.user.id)throw new Error('The request finished, but your account changed. Check Shared Invitations from the sending account.');
       el('sendInvitationDialog').close();prepared=null;
-      el('liveSendStatus').textContent='✓ Invitation sent to '+p.partners.find(x=>x.id===recipient).name+'. Check Shared Invitations for their reply.';
+      const sentStatus=el('liveSendStatus');
+      sentStatus.textContent='✓ Invitation sent to '+p.partners.find(x=>x.id===recipient).name+'.';
+      action(sentStatus,'View sent invitation',()=>{
+        memoriesOnly=false;
+        screen('sharedInbox');
+        refreshInbox(false,result.data);
+      });
       el('previewBanner').textContent='Create a moment · Shared invitations available';
       // The draft remains editable; sent invitations are immutable snapshots.
     }catch(e){el('sendDialogStatus').textContent=e.message;}
@@ -480,7 +486,7 @@
     action(panel,'Back — Keep Deciding',()=>{panel.hidden=true;open.setAttribute('aria-expanded','false');open.focus();});
     card.append(panel);
   }
-  async function refreshInbox(loadEarlier=false){
+  async function refreshInbox(loadEarlier=false,sentId=null){
     if(inboxBusy)return;collectionLabels();const memoryView=memoriesOnly,appendMemories=memoryView&&loadEarlier===true&&!!memoryCursor;
     const cursor=appendMemories?{...memoryCursor}:null,requestGeneration=collectionGeneration;inboxBusy=true;el('refreshSharedInvitations').disabled=true;
     if(!appendMemories){el('sharedInvitationList').replaceChildren();memoryCursor=null;memoryShown=0;loadOlderButton=null;}
@@ -501,7 +507,7 @@
         const last=items.at(-1);memoryCursor=allItems.length>50&&last?{completedAt:last.completed_at,id:last.id}:null;
       }
       el('sharedInvitationAccount').textContent='Signed in as '+(c.user.email||'your verified account');
-      let calendarTarget=null;
+      let calendarTarget=null,sentCard=null;
       for(const item of items){
         const incoming=item.recipient_id===c.user.id;
         const pendingTime=item.status==='accepted'&&!item.started_at&&!item.completed_at&&item.time_change?.status==='pending';
@@ -510,6 +516,7 @@
         const other=c.partners.find(x=>x.id===(incoming?item.sender_id:item.recipient_id));
         const card=node('article',undefined,'card invitationLetter'+(item.status==='accepted'?' acceptedLetter':''));card.style.marginTop='16px';
         if(calendarMoment===String(item.id))calendarTarget={item,card};
+        if(sentId===item.id&&item.sender_id===c.user.id)sentCard=card;
         const identity=node('div',undefined,'person');person(identity,other?.name||'your connected partner',other?.picture,incoming?'From ':'To ');card.append(identity);
         if(memoryView){
           card.append(node('h2',item.title));
@@ -558,6 +565,12 @@
       }
       if(memoryView&&memoryCursor){loadOlderButton=action(el('sharedInvitationList'),'Load Earlier Memories',()=>refreshInbox(true));}
       el('sharedInvitationStatus').textContent=memoryView?(memoryShown?'Showing '+memoryShown+' completed moment'+(memoryShown===1?'':'s')+'. Your written memories stay private.':'Your story has room to grow. Completed moments will appear here.') : items.length?'Showing '+items.length+' invitation'+(items.length===1?'':'s')+'. '+(items.filter(item=>needsMyReply(item,c.user.id)).length?items.filter(item=>needsMyReply(item,c.user.id)).length+' awaiting your reply. ':'')+'Tap Refresh Invitations to check for replies.':'There isn’t an invitation waiting right now.';
+      if(sentCard){
+        sentCard.tabIndex=-1;
+        sentCard.focus();
+      }else if(sentId){
+        el('sharedInvitationStatus').textContent='We couldn’t find that sent invitation. Tap Refresh Invitations to check again.';
+      }
       if(calendarMoment){
         const target=calendarTarget;
         calendarMoment=null;

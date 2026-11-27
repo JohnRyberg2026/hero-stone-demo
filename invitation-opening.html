@@ -70,7 +70,7 @@ body.collection-view .planner-navigation,body.collection-view #plannerStep,body.
 <label for="message">Your words, your way</label><textarea id="message" maxlength="1500" placeholder="What would you like to say?" aria-describedby="messageHint"></textarea>
 <p class="helper" id="messageHint" style="margin-top:8px">These are your words to shape. Nothing is sent until you choose to send a finished invitation.</p>
 <button type="button" class="textbutton help" id="helpWords">Help me say it ✨</button>
-<div id="suggestionBox" class="hidden"><div class="quote" id="suggestion"></div><button type="button" class="secondary" id="useSuggestion">Use these words</button><button type="button" class="textbutton" id="keepWords">Keep my words</button></div>
+<div id="suggestionBox" class="hidden"><label for="invitationReason">What made you think of them when you picked this? (optional)</label><textarea id="invitationReason" maxlength="250" placeholder="I remembered how long we talked at that café."></textarea><div class="quote" id="suggestion" aria-live="polite"></div><button type="button" class="secondary" id="useSuggestion">Use these words</button><button type="button" class="textbutton" id="keepWords">Keep my words</button></div>
 <div class="actions"><button type="button" class="primary" id="toMoments">Next — Choose Our Kind of Moment</button></div>
 <div class="exit"><button type="button" class="textbutton" data-home>Back to Our HEART STONE</button><button type="button" class="textbutton" data-cancel>Cancel invitation</button></div>
 </section>
@@ -152,14 +152,24 @@ function setPressed(button,on){button.setAttribute("aria-pressed",String(on));bu
 function renderSelections(){document.querySelectorAll("[data-feeling]").forEach(b=>setPressed(b,selected.has(b.dataset.feeling)));document.querySelectorAll("[data-kind]").forEach(b=>setPressed(b,b.dataset.kind===kind));$("review").disabled=!kind;$("review").title=kind?"Continue with your selected moment":"Choose a kind of moment above to continue";}
 function screen(id){document.body.classList.toggle("collection-view",id==="sharedInbox");
 const steps={feelings:[1,"Your words"],moments:[2,"Kind of moment"],details:[3,"Time & place"],reviewScreen:[4,"Review the plan"],experience:[5,"Choose the experience"],invitation:[6,"Review & send"]};
-const current=steps[id];$("plannerStep").textContent=current?"Step "+current[0]+" of 6 · "+current[1]:"Response preview";$("liveSendStatus").textContent="";["feelings","moments","details","reviewScreen","experience","invitation","responseScreen","responseResult","sharedInbox"].forEach(s=>$(s).classList.toggle("hidden",s!==id));$("suggestionBox").classList.add("hidden");status("");$(id).querySelector("h1").focus();window.scrollTo({top:0,behavior:"smooth"});}
+const current=steps[id];$("plannerStep").textContent=current?"Step "+current[0]+" of 6 · "+current[1]:"Response preview";$("liveSendStatus").textContent="";["feelings","moments","details","reviewScreen","experience","invitation","responseScreen","responseResult","sharedInbox"].forEach(s=>$(s).classList.toggle("hidden",s!==id));$("suggestionBox").classList.add("hidden");$("invitationReason").value="";status("");$(id).querySelector("h1").focus();window.scrollTo({top:0,behavior:"smooth"});}
 function updateStart(){if(!edited)$("message").value=[...selected].map(k=>starts[k]).join(" ");renderSelections();}
 document.querySelectorAll("[data-feeling]").forEach(b=>b.onclick=()=>{const k=b.dataset.feeling;selected.has(k)?selected.delete(k):selected.add(k);updateStart();});
 $("message").oninput=()=>{edited=true;};
 $("ownWords").onclick=()=>{$("message").focus();};
-$("helpWords").onclick=()=>{$("suggestion").textContent=selected.size?[...selected].map(k=>warm[k]).join(" "):"I’d love to make a little time for us. Would you share a moment with me?";$("suggestionBox").classList.remove("hidden");};
-$("useSuggestion").onclick=()=>{$("message").value=$("suggestion").textContent;edited=true;$("suggestionBox").classList.add("hidden");$("message").focus();};
-$("keepWords").onclick=()=>{$("suggestionBox").classList.add("hidden");$("message").focus();};
+function updateSuggestion(){
+  const opening=selected.size?[...selected].map(k=>warm[k]).join(" "):"I’d love to make a little time for us. Would you share a moment with me?";
+  const reason=$("invitationReason").value.trim();
+  $("suggestion").textContent=reason?opening+" "+reason:opening;
+}
+$("invitationReason").oninput=updateSuggestion;
+$("helpWords").onclick=()=>{
+  updateSuggestion();
+  $("suggestionBox").classList.remove("hidden");
+  $("invitationReason").focus();
+};
+$("useSuggestion").onclick=()=>{$("message").value=$("suggestion").textContent;edited=true;$("suggestionBox").classList.add("hidden");$("invitationReason").value="";$("message").focus();};
+$("keepWords").onclick=()=>{$("suggestionBox").classList.add("hidden");$("invitationReason").value="";$("message").focus();};
 $("toMoments").onclick=()=>{$("carriedMessage").textContent=$("message").value.trim()||"A little moment for us";screen("moments");};
 document.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>{kind=b.dataset.kind;renderSelections();});
 $("backMessage").onclick=()=>screen("feelings");
@@ -251,7 +261,7 @@ $("stay").onclick=()=>$("exitDialog").close();
 $("saveExit").onclick=()=>{if(save())location.href="index.html#date-quest";};
 $("discardExit").onclick=()=>{if(exitMode==="cancel"){try{localStorage.removeItem(draftKey);}catch{status("The saved beginning couldn’t be removed. Stay here and try again.");$("exitDialog").close();return;}}window.heartStonePlannerDiscardForExit?.();location.href="index.html#date-quest";};
 renderSelections();
-</script><script src="moment-invitations.js?v=closed-outcomes-1"></script>
+</script><script src="moment-invitations.js?v=sent-invitation-1"></script>
 <script src="invitation-store-plan.js?v=1"></script><script src="invitation-avatar-entry.js?v=simple-planner-2"></script><script>
 (function(){
  const day=new URLSearchParams(window.location.search).get('planDay');
